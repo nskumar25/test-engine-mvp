@@ -703,7 +703,6 @@ img {
 }
 
 .brand,
-.candidate-card,
 .side-title,
 .worksheet-head,
 .top-actions,
@@ -719,10 +718,6 @@ img {
   gap: 14px;
 }
 
-.candidate-brand {
-  align-items: flex-start;
-}
-
 .brand-mark {
   width: 42px;
   height: 42px;
@@ -735,7 +730,6 @@ img {
 }
 
 .brand span,
-.candidate-card span,
 .eyebrow {
   display: block;
   color: #6f8586;
@@ -760,40 +754,35 @@ img {
   line-height: 1.25;
 }
 
-.side-title-block {
+.student-meta {
   display: grid;
-  gap: 4px;
+  gap: 10px;
 }
 
-.side-title-block span {
+.student-meta section {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.student-meta span {
   color: #9eb4b3;
   text-transform: uppercase;
   font-size: 0.72rem;
   font-weight: 800;
 }
 
-.side-title-block strong {
+.student-meta strong {
   color: #ffffff;
   font-size: 0.98rem;
+  line-height: 1.22;
 }
 
-.side-title-block small {
-  color: #b7c9c7;
-  font-weight: 800;
-}
-
-.candidate-card {
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 5px;
-  padding: 13px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.candidate-card strong {
-  font-size: 1rem;
+.question-brand {
+  padding-top: 4px;
 }
 
 .side-section {
@@ -899,38 +888,16 @@ img {
   line-height: 1.1;
 }
 
-.top-actions {
-  gap: 11px;
-  justify-content: flex-end;
-}
-
-.candidate-top {
-  display: grid;
-  gap: 2px;
-  min-width: 150px;
-  text-align: right;
-}
-
-.candidate-top span,
-.candidate-top small {
-  color: #6f8586;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0;
-}
-
-.candidate-top strong {
-  color: #17212b;
-  font-size: 1rem;
-  line-height: 1.15;
-}
-
-.candidate-top small {
-  max-width: 220px;
+.assessment-title h1 {
+  max-width: 680px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.top-actions {
+  gap: 11px;
+  justify-content: flex-end;
 }
 
 .timer {
@@ -1225,25 +1192,31 @@ img {
   justify-content: center;
 }
 
-.tools-rail-button {
+.tools-rail {
   width: 100%;
   min-height: 100%;
   display: grid;
-  place-items: center;
-  align-content: center;
+  align-content: start;
   gap: 10px;
+}
+
+.tools-rail button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
   border: 1px solid #dfe6df;
   border-radius: 8px;
   background: #ffffff;
   color: #17212b;
   cursor: pointer;
-  font-weight: 900;
+  font-size: 1.05rem;
+  box-shadow: 0 10px 24px rgba(43, 56, 63, 0.08);
 }
 
-.tools-rail-button span {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  letter-spacing: 0;
+.tools-rail button:hover {
+  border-color: #365f9f;
+  background: #eef3fb;
 }
 
 .worksheet-head {

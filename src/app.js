@@ -262,21 +262,27 @@ function render() {
   root.innerHTML = `
     <main class="shell" aria-label="Assessment workspace">
       <aside class="sidebar">
-        <div class="brand candidate-brand">
-          <div class="brand-mark">${icons.book}</div>
-          <div>
+        <div class="student-meta">
+          <section>
             <span>Name:</span>
             <strong>${escapeHtml(state.student?.name || assessment.candidate)}</strong>
-            <small>Test: ${escapeHtml(assessment.title)}</small>
-          </div>
+          </section>
+          <section>
+            <span>Test:</span>
+            <strong>${escapeHtml(assessment.title)}</strong>
+          </section>
         </div>
 
-        <div class="side-section">
-          <div class="side-title-block">
+        <div class="brand question-brand">
+          <div class="brand-mark">${icons.grid}</div>
+          <div>
             <span>Questions</span>
             <strong>${answeredCount}/${questions.length} answered</strong>
             <small>${skippedCount} skipped</small>
           </div>
+        </div>
+
+        <div class="side-section">
           <div class="question-grid">
             ${questions.map(renderGridCell).join("")}
           </div>
@@ -291,7 +297,10 @@ function render() {
 
       <section class="exam-window ${state.toolsOpen ? "" : "tools-closed"}">
         <header class="topbar">
-          <div></div>
+          <div class="assessment-title">
+            <p class="eyebrow">Pre-Test</p>
+            <h1>${escapeHtml(assessment.title)}</h1>
+          </div>
 
           <div class="top-actions">
             <button class="timer" data-action="toggle-timer" data-timer aria-label="Toggle timer">${renderTimerContent()}</button>
@@ -322,7 +331,10 @@ function render() {
             ${
               state.toolsOpen
                 ? toolsBody
-                : `<button class="tools-rail-button" data-action="toggle-tools" title="Tools">${icons.pencil}<span>Tools</span></button>`
+                : `<div class="tools-rail" aria-label="Assessment tools">
+                    ${assessment.tools?.calculator ? `<button data-action="toggle-tools" title="Calculator">${icons.calc}</button>` : ""}
+                    ${assessment.tools?.scratchpad !== false ? `<button data-action="toggle-tools" title="Scratch pad">${icons.pencil}</button>` : ""}
+                  </div>`
             }
           </aside>
         </section>
