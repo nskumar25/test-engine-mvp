@@ -1,6 +1,7 @@
 const STORAGE_KEY = "assessment-engine-mvp";
 const RESULTS_DB_NAME = "assessment-engine-results";
 const RESULTS_STORE = "attempts";
+const ATTEMPT_SCHEMA_VERSION = "attempt-v1";
 const QUESTION_SOURCE = "input/pre-test-for-demo.json";
 
 const icons = {
@@ -30,7 +31,6 @@ let scratchColor = "#18212b";
 let drawing = false;
 let calculatorValue = "";
 let pendingQuestionScroll = null;
-let timerStarted = false;
 
 const root = document.getElementById("root");
 
@@ -656,43 +656,106 @@ function submitAssessment() {
 }
 
 function buildEvaluation() {
-  const correct = questions.filter((question) => state.answers[question.id] === question.answer).length;
+  const responses = questions.map((question) => {
+    const selected = state.answers[question.id] || null;
+    const selectedOption = question.options.find((option) => option.id === selected);
+    const correctOption = question.options.find((option) => option.id === question.answer);
+
+    return {
+      questionId: question.id,
+      number: question.number,
+      topic: question.topic,
+      level: question.level || question.topic,
+      selected,
+      selectedLabel: selectedOption?.label || "",
+      correctAnswer: question.answer,
+      correctLabel: correctOption?.label || "",
+      isCorrect: selected === question.answer,
+      isFlagged: Boolean(state.flagged[question.id]),
+      explanation: question.explanation || "",
+      distractorFeedback: selected && question.distractors?.[selected]
+        ? question.distractors[selected]
+        : null
+    };
+  });
+
+  const correct = responses.filter((response) => response.isCorrect).length;
   const answered = getAnsweredCount();
   const total = questions.length;
   const percentage = Math.round((correct / total) * 100);
   const submittedAt = new Date().toISOString();
+  const durationSeconds = assessment.durationMinutes * 60;
+  const timeUsedSeconds = Math.max(0, durationSeconds - state.remainingSeconds);
+  const topicBreakdown = buildTopicBreakdown(responses);
+  const attemptId = `${state.student?.id || assessment.studentId || "demo-student"}-${Date.now()}`;
+  const strengths = topicBreakdown
+    .filter((topic) => topic.total > 0 && topic.percentage >= 75)
+    .map((topic) => topic.topic);
+  const needsReview = topicBreakdown
+    .filter((topic) => topic.total > 0 && topic.percentage < 75)
+    .map((topic) => topic.topic);
 
   return {
-    id: `${state.student?.id || assessment.studentId || "demo-student"}-${Date.now()}`,
+    schemaVersion: ATTEMPT_SCHEMA_VERSION,
+    id: attemptId,
+    attemptId,
     studentId: state.student?.id || assessment.studentId || "demo-student",
     studentName: state.student?.name || assessment.candidate || "Demo Candidate",
-    accessCode: state.student?.accessCode || "",
     assessmentTitle: assessment.title,
-    sourceDocument: assessment.sourceDocument || null,
     submittedAt,
     startedAt: state.startedAt,
-    score: correct,
-    total,
-    percentage,
-    answered,
-    unanswered: total - answered,
-    flagged: getFlaggedCount(),
-    timeRemainingSeconds: state.remainingSeconds,
-    responses: questions.map((question) => {
-      const selected = state.answers[question.id] || null;
-      return {
-        questionId: question.id,
-        number: question.number,
-        topic: question.topic,
-        selected,
-        correctAnswer: question.answer,
-        isCorrect: selected === question.answer,
-        explanation: question.explanation || "",
-        selectedLabel: question.options.find((option) => option.id === selected)?.label || "",
-        correctLabel: question.options.find((option) => option.id === question.answer)?.label || ""
-      };
-    })
+    student: {
+      id: state.student?.id || assessment.studentId || "demo-student",
+      name: state.student?.name || assessment.candidate || "Demo Candidate",
+      accessCode: state.student?.accessCode || ""
+    },
+    assessment: {
+      title: assessment.title,
+      sourceDocument: assessment.sourceDocument || null,
+      durationMinutes: assessment.durationMinutes,
+      questionCount: total,
+      inputFormatVersion: assessment.inputFormatVersion || "mvp-1"
+    },
+    timing: {
+      durationSeconds,
+      timeUsedSeconds,
+      timeRemainingSeconds: state.remainingSeconds
+    },
+    score: {
+      correct,
+      total,
+      percentage,
+      answered,
+      unanswered: total - answered,
+      flagged: getFlaggedCount()
+    },
+    summary: {
+      strengths,
+      needsReview,
+      topicBreakdown
+    },
+    responses
   };
+}
+
+function buildTopicBreakdown(responses) {
+  const byTopic = new Map();
+  for (const response of responses) {
+    const topic = response.topic || "General";
+    if (!byTopic.has(topic)) {
+      byTopic.set(topic, { topic, correct: 0, total: 0, unanswered: 0 });
+    }
+
+    const current = byTopic.get(topic);
+    current.total += 1;
+    if (response.isCorrect) current.correct += 1;
+    if (!response.selected) current.unanswered += 1;
+  }
+
+  return Array.from(byTopic.values()).map((topic) => ({
+    ...topic,
+    percentage: Math.round((topic.correct / topic.total) * 100)
+  }));
 }
 
 function saveAttempt(evaluation) {
@@ -708,8 +771,8 @@ function saveAttempt(evaluation) {
   request.onupgradeneeded = () => {
     const db = request.result;
     const store = db.createObjectStore(RESULTS_STORE, { keyPath: "id" });
-    store.createIndex("studentId", "studentId", { unique: false });
-    store.createIndex("assessmentTitle", "assessmentTitle", { unique: false });
+    store.createIndex("studentId", "student.id", { unique: false });
+    store.createIndex("assessmentTitle", "assessment.title", { unique: false });
     store.createIndex("submittedAt", "submittedAt", { unique: false });
   };
   request.onsuccess = () => {
@@ -823,6 +886,14 @@ function openImageZoom(src) {
 function renderSubmitted() {
   const evaluation = state.evaluation || buildEvaluation();
   const missed = evaluation.responses.filter((response) => !response.isCorrect);
+  const score = normalizeScore(evaluation);
+  const student = normalizeStudent(evaluation);
+  const timing = normalizeTiming(evaluation);
+  const summary = evaluation.summary || {
+    strengths: [],
+    needsReview: [],
+    topicBreakdown: buildTopicBreakdown(evaluation.responses || [])
+  };
 
   root.innerHTML = `
     <main class="shell locked-shell">
@@ -831,17 +902,47 @@ function renderSubmitted() {
         <p class="eyebrow">Assessment submitted</p>
         <h1>${escapeHtml(assessment.title)}</h1>
         <div class="score-ring">
-          <strong>${evaluation.percentage}%</strong>
-          <span>${evaluation.score}/${evaluation.total} correct</span>
+          <strong>${score.percentage}%</strong>
+          <span>${score.correct}/${score.total} correct</span>
         </div>
         <div class="result-stats">
-          <span>${evaluation.answered} answered</span>
-          <span>${evaluation.unanswered} unanswered</span>
-          <span>${evaluation.flagged} flagged</span>
-          <span>Stored for ${escapeHtml(evaluation.studentName)}</span>
+          <span>${score.answered} answered</span>
+          <span>${score.unanswered} unanswered</span>
+          <span>${score.flagged} flagged</span>
+          <span>${formatDuration(timing.timeUsedSeconds)} used</span>
+          <span>Stored for ${escapeHtml(student.name)}</span>
         </div>
+
+        <div class="result-actions">
+          <button class="secondary-action" data-action="download-json">Download JSON</button>
+          <button class="secondary-action" data-action="download-csv">Download CSV</button>
+        </div>
+
+        <div class="performance-panels">
+          <section>
+            <h2>Strengths</h2>
+            ${renderTagList(summary.strengths, "No strong topic yet.")}
+          </section>
+          <section>
+            <h2>Review Next</h2>
+            ${renderTagList(summary.needsReview, "No review areas flagged.")}
+          </section>
+        </div>
+
+        <div class="topic-report">
+          <h2>Topic Breakdown</h2>
+          ${summary.topicBreakdown.map((topic) => `
+            <div class="topic-row">
+              <span>${escapeHtml(topic.topic)}</span>
+              <strong>${topic.correct}/${topic.total}</strong>
+              <div class="topic-bar"><i style="width:${topic.percentage}%"></i></div>
+              <em>${topic.percentage}%</em>
+            </div>
+          `).join("")}
+        </div>
+
         <div class="result-review">
-          <h2>Review</h2>
+          <h2>Question Review</h2>
           ${
             missed.length
               ? missed.map((response) => `
@@ -849,6 +950,7 @@ function renderSubmitted() {
                   <strong>Question ${response.number}</strong>
                   <span>Your answer: ${escapeHtml(response.selected ? response.selected.toUpperCase() : "Not answered")}</span>
                   <span>Expected answer: ${escapeHtml(response.correctAnswer.toUpperCase())}</span>
+                  ${response.distractorFeedback?.feedback ? `<span>Feedback: ${escapeHtml(response.distractorFeedback.feedback)}</span>` : ""}
                   <p>${escapeHtml(response.explanation)}</p>
                 </article>
               `).join("")
@@ -860,11 +962,111 @@ function renderSubmitted() {
     </main>
   `;
 
+  document.querySelector("[data-action='download-json']").addEventListener("click", () => {
+    downloadText(
+      `${fileSafe(student.id)}-${fileSafe(assessment.title)}-result.json`,
+      JSON.stringify(evaluation, null, 2),
+      "application/json"
+    );
+  });
+
+  document.querySelector("[data-action='download-csv']").addEventListener("click", () => {
+    downloadText(
+      `${fileSafe(student.id)}-${fileSafe(assessment.title)}-responses.csv`,
+      buildResponseCsv(evaluation),
+      "text/csv"
+    );
+  });
+
   document.querySelector("[data-action='restart']").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
     state = getInitialState(questions.length);
     render();
   });
+}
+
+function normalizeScore(evaluation) {
+  return evaluation.score && typeof evaluation.score === "object"
+    ? evaluation.score
+    : {
+      correct: evaluation.score || 0,
+      total: evaluation.total || questions.length,
+      percentage: evaluation.percentage || 0,
+      answered: evaluation.answered || 0,
+      unanswered: evaluation.unanswered || 0,
+      flagged: evaluation.flagged || 0
+    };
+}
+
+function normalizeStudent(evaluation) {
+  return evaluation.student || {
+    id: evaluation.studentId || "demo-student",
+    name: evaluation.studentName || "Demo Candidate",
+    accessCode: evaluation.accessCode || ""
+  };
+}
+
+function normalizeTiming(evaluation) {
+  return evaluation.timing || {
+    durationSeconds: assessment.durationMinutes * 60,
+    timeUsedSeconds: Math.max(0, assessment.durationMinutes * 60 - (evaluation.timeRemainingSeconds || 0)),
+    timeRemainingSeconds: evaluation.timeRemainingSeconds || 0
+  };
+}
+
+function renderTagList(items, emptyText) {
+  if (!items.length) return `<p class="empty-review">${emptyText}</p>`;
+  return `<div class="tag-list">${items.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>`;
+}
+
+function buildResponseCsv(evaluation) {
+  const rows = [
+    ["student_id", "student_name", "assessment", "question", "topic", "selected", "correct_answer", "is_correct"]
+  ];
+  const student = normalizeStudent(evaluation);
+  const title = evaluation.assessment?.title || evaluation.assessmentTitle || assessment.title;
+
+  for (const response of evaluation.responses || []) {
+    rows.push([
+      student.id,
+      student.name,
+      title,
+      response.number,
+      response.topic,
+      response.selected || "",
+      response.correctAnswer,
+      response.isCorrect ? "true" : "false"
+    ]);
+  }
+
+  return rows.map((row) => row.map(csvEscape).join(",")).join("\n");
+}
+
+function csvEscape(value) {
+  const text = String(value ?? "");
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function downloadText(filename, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function fileSafe(value) {
+  return String(value || "result").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function formatDuration(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 }
 
 function escapeHtml(value) {

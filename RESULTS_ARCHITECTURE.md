@@ -19,12 +19,29 @@ For a production system, replace this with an API-backed model:
 
 The current attempt shape already maps cleanly to that backend:
 
+- `schemaVersion`
+- `attemptId`
 - Student identity
-- Assessment title/source
+- Assessment title/source/duration
 - Submitted timestamp
-- Score and percentage
-- Answered/unanswered counts
-- Per-question response, correct answer, and explanation
+- Started timestamp
+- Timing summary
+- Score, percentage, answered/unanswered counts, flagged count
+- Topic breakdown
+- Strengths and review areas
+- Per-question response, correct answer, explanation, and distractor feedback
+
+The result page can export:
+
+- Full JSON attempt record
+- CSV response rows
 
 For 1,000 to 10,000 students, use a hosted database such as PostgreSQL or managed serverless storage. Keep browser IndexedDB only as an offline cache or emergency sync queue.
 
+Suggested backend tables:
+
+- `students(id, name, section, metadata)`
+- `assessments(id, title, duration_minutes, version, source_document)`
+- `attempts(id, student_id, assessment_id, started_at, submitted_at, score, percentage, time_used_seconds)`
+- `responses(id, attempt_id, question_id, selected_answer, correct_answer, is_correct, topic)`
+- `question_bank(id, topic, standard, difficulty, body, answer_key, metadata)`

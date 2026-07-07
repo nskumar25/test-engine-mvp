@@ -963,9 +963,17 @@ img {
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   color: #52656b;
   font-weight: 800;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
 }
 
 .score-ring {
@@ -1022,6 +1030,81 @@ img {
   line-height: 1.42;
 }
 
+.performance-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.performance-panels section,
+.topic-report {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #dfe6df;
+  border-radius: 8px;
+  background: #fbfbf8;
+}
+
+.performance-panels h2,
+.topic-report h2 {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-list span {
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #eef3fb;
+  color: #263c63;
+  font-weight: 800;
+}
+
+.topic-report {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.topic-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 56px minmax(120px, 1.4fr) 48px;
+  align-items: center;
+  gap: 12px;
+  color: #52606b;
+  font-weight: 800;
+}
+
+.topic-row span {
+  color: #17212b;
+}
+
+.topic-row em {
+  font-style: normal;
+  text-align: right;
+}
+
+.topic-bar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e5ebe8;
+}
+
+.topic-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #365f9f;
+}
+
 @media (max-width: 1040px) {
   body {
     overflow: auto;
@@ -1060,6 +1143,10 @@ img {
   }
 
   .review-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-panels {
     grid-template-columns: 1fr;
   }
 }
@@ -1117,5 +1204,14 @@ img {
   .review-summary {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .topic-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .topic-row em {
+    text-align: left;
   }
 }
