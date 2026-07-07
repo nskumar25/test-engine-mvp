@@ -2,7 +2,11 @@
   "name": "assessment-test-engine",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
+    "start": "node api/postgres-api.js",
     "dev": "node server.js",
     "api": "node api/postgres-api.js",
     "sync:students": "node scripts/sync-students-to-neon.js",

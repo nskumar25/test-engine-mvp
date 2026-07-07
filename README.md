@@ -92,6 +92,42 @@ window.ASSESSMENT_API_BASE_URL = "http://127.0.0.1:9000";
 
 When the API is hosted, update only `ASSESSMENT_API_BASE_URL`.
 
+## Shared Live Testing
+
+For multiple team members to test with the same database, use:
+
+```text
+GitHub Pages frontend
+  -> Render Node API
+  -> Neon PostgreSQL
+```
+
+The repo includes `render.yaml` for deploying `api/postgres-api.js` to Render.
+
+Render environment variables:
+
+```text
+DATABASE_URL=<Neon pooled connection string>
+DATABASE_SSL=true
+STUDENT_VIEW=test_engine_registered_students
+API_HOST=0.0.0.0
+CORS_ORIGIN=https://nskumar25.github.io
+```
+
+After Render deploys, test:
+
+```text
+https://YOUR-RENDER-SERVICE.onrender.com/health
+https://YOUR-RENDER-SERVICE.onrender.com/api/student-filters
+```
+
+Then update `src/config.js` for live:
+
+```js
+window.ASSESSMENT_DATA_PROVIDER = "api";
+window.ASSESSMENT_API_BASE_URL = "https://YOUR-RENDER-SERVICE.onrender.com";
+```
+
 ## GitHub Pages
 
 GitHub Pages can host the frontend only. PostgreSQL requires a separate backend host such as Render, Railway, Fly.io, Vercel serverless functions, or your own server.

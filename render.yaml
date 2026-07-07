@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: assessment-test-engine-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: STUDENT_VIEW
+        value: test_engine_registered_students
+      - key: DATABASE_SSL
+        value: "true"
+      - key: CORS_ORIGIN
+        value: https://nskumar25.github.io
+      - key: DATABASE_URL
+        sync: false
