@@ -30,6 +30,7 @@ let scratchColor = "#18212b";
 let drawing = false;
 let calculatorValue = "";
 let pendingQuestionScroll = null;
+let timerStarted = false;
 
 const root = document.getElementById("root");
 
@@ -61,7 +62,21 @@ function getInitialState(total) {
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      if (parsed.total === total) return parsed;
+      if (parsed.total === total) {
+        return {
+          ...parsed,
+          started: Boolean(parsed.started),
+          student: parsed.student || {
+            id: assessment.studentId || "",
+            name: assessment.candidate || "",
+            accessCode: ""
+          },
+          scratchWork: parsed.scratchWork || {},
+          eliminated: parsed.eliminated || {},
+          flagged: parsed.flagged || {},
+          answers: parsed.answers || {}
+        };
+      }
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -74,6 +89,13 @@ function getInitialState(total) {
     eliminated: {},
     scratchWork: {},
     calculatorOpen: Boolean(assessment.tools?.calculator),
+    started: false,
+    startedAt: null,
+    student: {
+      id: assessment.studentId || "",
+      name: assessment.candidate || "",
+      accessCode: ""
+    },
     submitted: false,
     evaluation: null,
     remainingSeconds: assessment.durationMinutes * 60,
@@ -128,7 +150,7 @@ function installSecurityGuards() {
 
 function installTimer() {
   window.setInterval(() => {
-    if (state.submitted) return;
+    if (!state.started || state.submitted) return;
 
     if (state.remainingSeconds <= 1) {
       submitAssessment();
@@ -170,6 +192,11 @@ function render() {
     return;
   }
 
+  if (!state.started) {
+    renderStartScreen();
+    return;
+  }
+
   const question = questions[state.currentIndex];
   const answeredCount = getAnsweredCount();
   const flaggedCount = getFlaggedCount();
@@ -187,7 +214,7 @@ function render() {
 
         <div class="candidate-card">
           <span>Candidate</span>
-          <strong>${escapeHtml(assessment.candidate)}</strong>
+          <strong>${escapeHtml(state.student?.name || assessment.candidate)}</strong>
         </div>
 
         <div class="side-section">
@@ -279,6 +306,71 @@ function render() {
 
   bindActions();
   initScratchPad();
+}
+
+function renderStartScreen() {
+  const enabledTools = [
+    assessment.tools?.calculator ? "Calculator" : null,
+    assessment.tools?.scratchpad !== false ? "Scratch pad" : null,
+    assessment.tools?.imageZoom !== false ? "Image zoom" : null,
+    assessment.tools?.eliminator ? "Answer eliminator" : null
+  ].filter(Boolean);
+
+  root.innerHTML = `
+    <main class="start-shell">
+      <section class="start-panel">
+        <div class="start-copy">
+          <p class="eyebrow">Ready to begin</p>
+          <h1>${escapeHtml(assessment.title)}</h1>
+          <div class="start-facts">
+            <span>${questions.length} questions</span>
+            <span>${assessment.durationMinutes} minutes</span>
+            <span>MCQ assessment</span>
+          </div>
+          <div class="instruction-list">
+            ${(assessment.instructions || []).map((instruction) => `<p>${escapeHtml(instruction)}</p>`).join("")}
+          </div>
+          <div class="tool-list">
+            ${enabledTools.map((tool) => `<span>${escapeHtml(tool)}</span>`).join("")}
+          </div>
+        </div>
+
+        <form class="student-form">
+          <div>
+            <p class="eyebrow">Student details</p>
+            <h2>Confirm your information</h2>
+          </div>
+          <label>
+            Student name
+            <input name="studentName" value="${escapeAttribute(state.student?.name || "")}" autocomplete="name" required />
+          </label>
+          <label>
+            Student ID
+            <input name="studentId" value="${escapeAttribute(state.student?.id || "")}" autocomplete="off" required />
+          </label>
+          <label>
+            Access code
+            <input name="accessCode" value="${escapeAttribute(state.student?.accessCode || "")}" autocomplete="off" placeholder="For demo, any code works" />
+          </label>
+          <button class="primary-action" type="submit">Begin Assessment ${icons.next}</button>
+        </form>
+      </section>
+    </main>
+  `;
+
+  document.querySelector(".student-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setState({
+      started: true,
+      startedAt: new Date().toISOString(),
+      student: {
+        name: String(form.get("studentName") || "").trim(),
+        id: String(form.get("studentId") || "").trim(),
+        accessCode: String(form.get("accessCode") || "").trim()
+      }
+    });
+  });
 }
 
 function renderGridCell(question, index) {
@@ -470,12 +562,14 @@ function buildEvaluation() {
   const submittedAt = new Date().toISOString();
 
   return {
-    id: `${assessment.studentId || "demo-student"}-${Date.now()}`,
-    studentId: assessment.studentId || "demo-student",
-    studentName: assessment.candidate || "Demo Candidate",
+    id: `${state.student?.id || assessment.studentId || "demo-student"}-${Date.now()}`,
+    studentId: state.student?.id || assessment.studentId || "demo-student",
+    studentName: state.student?.name || assessment.candidate || "Demo Candidate",
+    accessCode: state.student?.accessCode || "",
     assessmentTitle: assessment.title,
     sourceDocument: assessment.sourceDocument || null,
     submittedAt,
+    startedAt: state.startedAt,
     score: correct,
     total,
     percentage,
