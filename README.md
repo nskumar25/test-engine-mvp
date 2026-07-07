@@ -69,6 +69,14 @@ $env:STUDENT_VIEW="test_engine_registered_students"
 npm run api
 ```
 
+Sync students from local PostgreSQL to Neon:
+
+```powershell
+$env:LOCAL_DATABASE_URL="postgres://postgres:LOCAL_PASSWORD@localhost:5432/postgres"
+$env:NEON_DATABASE_URL="postgresql://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require"
+npm run sync:students
+```
+
 The frontend is configured in:
 
 ```text

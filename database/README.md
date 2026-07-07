@@ -37,6 +37,36 @@ $env:STUDENT_VIEW="test_engine_registered_students"
 npm run api
 ```
 
+## One-Way Student Sync To Neon
+
+For free live testing, keep the local PostgreSQL student system as the source of truth and sync only the fields needed by the test engine into Neon:
+
+```text
+Local public."Student"
+        ->
+npm run sync:students
+        ->
+Neon test_engine_student_seed
+```
+
+Run:
+
+```powershell
+cd "E:\Python\Test Engine"
+
+$env:LOCAL_DATABASE_URL="postgres://postgres:LOCAL_PASSWORD@localhost:5432/postgres"
+$env:NEON_DATABASE_URL="postgresql://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require"
+
+npm run sync:students
+```
+
+The script creates/updates:
+
+- `test_engine_student_seed`
+- `test_engine_registered_students`
+
+It upserts students by `student_external_id`. It does not delete Neon rows when local rows disappear.
+
 ## Migration Path
 
 1. Run `database/postgres-schema.sql` in the existing PostgreSQL database or a separate schema in the same database.
