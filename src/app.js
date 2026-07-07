@@ -5,29 +5,20 @@ const RESULTS_DB_NAME = "assessment-engine-results";
 const RESULTS_STORE = "attempts";
 const ATTEMPT_SCHEMA_VERSION = "attempt-v1";
 const IS_GITHUB_PAGES = window.location.hostname.endsWith("github.io");
-const CONFIGURED_DATA_PROVIDER =
-  window.ASSESSMENT_DATA_PROVIDER || "api";
-
-const CONFIGURED_API_BASE_URL =
-  String(window.ASSESSMENT_API_BASE_URL || "")
-    .trim()
-    .replace(/\/+$/, "");
-
-const DATA_PROVIDER = CONFIGURED_DATA_PROVIDER;
-
-const API_BASE_URL =
-  DATA_PROVIDER === "api"
-    ? CONFIGURED_API_BASE_URL
-    : "";
-
-if (DATA_PROVIDER === "api" && !API_BASE_URL) {
-  console.error(
-    "ASSESSMENT_API_BASE_URL is missing. Configure the backend API URL before loading app.js."
-  );
-}
+const CONFIGURED_DATA_PROVIDER = window.ASSESSMENT_DATA_PROVIDER || "local";
+const CONFIGURED_API_BASE_URL = window.ASSESSMENT_API_BASE_URL || "";
+const HAS_PUBLIC_API_URL = /^https?:\/\//.test(CONFIGURED_API_BASE_URL)
+  && !/\/\/(localhost|127\.0\.0\.1|\[::1\])(?::|\/|$)/.test(CONFIGURED_API_BASE_URL);
+const DATA_PROVIDER = IS_GITHUB_PAGES && !HAS_PUBLIC_API_URL ? "local" : CONFIGURED_DATA_PROVIDER;
+const API_BASE_URL = DATA_PROVIDER === "api" ? CONFIGURED_API_BASE_URL : "";
 const QUESTION_SOURCE = "input/pre-test-for-demo.json";
 const ASSESSMENT_CATALOG_SOURCE = "input/assessment-catalog.json";
 const DEMO_STUDENTS = [];
+
+if (IS_GITHUB_PAGES && DATA_PROVIDER !== "api") {
+  localStorage.removeItem("assessment-engine-students");
+  localStorage.removeItem("assessment-engine-students-v2");
+}
 
 const icons = {
   book: "&#9670;",
@@ -1648,50 +1639,16 @@ function renderStartScreen() {
 }
 
 async function findRegisteredStudent(username) {
-  const normalizedUsername = normalizeIdentity(username);
-
-  if (!normalizedUsername) {
-    throw new Error("Enter your student username or email.");
+  const normalized = normalizeIdentity(username);
+  const students = await getDataAdapter().listStudents(username);
+  if (!students.length) {
+    throw new Error(`No registered student matched "${username}". Confirm this email exists in Neon and was synced.`);
   }
-
-  console.log("Looking up student:", normalizedUsername);
-
-  const students =
-    await getDataAdapter().listStudents(normalizedUsername);
-
-  if (!Array.isArray(students) || students.length === 0) {
-    throw new Error(
-      `No registered student matched "${username}".`
-    );
-  }
-
-  const student = students.find((item) => {
-    const identities = [
-      item.username,
-      item.email,
-      item.id
-    ];
-
-    return identities
+  return students.find((student) => {
+    return [student.username, student.email, student.id, student.name]
       .filter(Boolean)
-      .some(
-        (value) =>
-          normalizeIdentity(value) === normalizedUsername
-      );
-  });
-
-  if (!student) {
-    console.error(
-      "Student search returned records, but none exactly matched:",
-      students
-    );
-
-    throw new Error(
-      `Student "${username}" was not found. Check the username or email.`
-    );
-  }
-
-  return student;
+      .some((value) => normalizeIdentity(value) === normalized);
+  }) || null;
 }
 
 function normalizeIdentity(value) {
@@ -1699,38 +1656,11 @@ function normalizeIdentity(value) {
 }
 
 async function findActiveAssignmentForStudent(studentId) {
-  const assignments =
-    await getDataAdapter().listAssignments();
-
-  const normalizedStudentId =
-    normalizeIdentity(studentId);
-
-  const currentAssessmentKey =
-    normalizeIdentity(getCurrentAssessmentKey());
-
-  console.log("Checking assignments:", {
-    studentId: normalizedStudentId,
-    assessmentKey: currentAssessmentKey,
-    assignments
-  });
-
-  const assignment = assignments.find((item) => {
-    const sameStudent =
-      normalizeIdentity(item.studentId) ===
-      normalizedStudentId;
-
-    const active =
-      normalizeIdentity(item.status) !== "cancelled";
-
-    const sameAssessment =
-      !item.assessmentKey ||
-      normalizeIdentity(item.assessmentKey) ===
-        currentAssessmentKey;
-
-    return sameStudent && active && sameAssessment;
-  });
-
-  return assignment || null;
+  const assignments = await getDataAdapter().listAssignments();
+  return assignments.find((assignment) =>
+    normalizeIdentity(assignment.studentId) === normalizeIdentity(studentId)
+      && assignment.status !== "cancelled"
+  ) || null;
 }
 
 async function applyAssignedAssessment(assignment) {
