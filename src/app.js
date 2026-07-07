@@ -15,7 +15,7 @@ const QUESTION_SOURCE = "input/pre-test-for-demo.json";
 const ASSESSMENT_CATALOG_SOURCE = "input/assessment-catalog.json";
 const DEMO_STUDENTS = [];
 
-if (IS_GITHUB_PAGES) {
+if (IS_GITHUB_PAGES && DATA_PROVIDER !== "api") {
   localStorage.removeItem("assessment-engine-students");
   localStorage.removeItem("assessment-engine-students-v2");
 }
