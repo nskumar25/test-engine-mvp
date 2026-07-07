@@ -503,6 +503,163 @@ img {
   margin-bottom: 0;
 }
 
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.setting-pill {
+  display: grid;
+  gap: 4px;
+  padding: 13px;
+  border-radius: 8px;
+  border: 1px solid #dfe6df;
+  background: #fbfbf8;
+}
+
+.setting-pill span {
+  color: #52606b;
+  font-weight: 800;
+}
+
+.setting-pill.enabled {
+  border-color: #b7c7e0;
+  background: #eef3fb;
+}
+
+.setting-pill.disabled {
+  opacity: 0.7;
+}
+
+.admin-note {
+  padding: 13px;
+  border-radius: 8px;
+  background: #fff8ea;
+  border: 1px solid #e4c36f;
+  color: #5f4b19;
+  line-height: 1.45;
+}
+
+.validation-score {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #dfe6df;
+}
+
+.validation-score strong {
+  font-size: 1.3rem;
+}
+
+.validation-score.clean {
+  background: #eef7f3;
+  border-color: #a8d1c4;
+}
+
+.validation-score.has-errors {
+  background: #fff2ef;
+  border-color: #e7a69c;
+}
+
+.validation-list {
+  display: grid;
+  gap: 8px;
+}
+
+.validation-list h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.validation-list ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #52606b;
+}
+
+.question-admin-list small {
+  color: #6d7a7e;
+  font-weight: 800;
+}
+
+.pipeline-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pipeline-list div {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #fbfbf8;
+}
+
+.pipeline-list strong {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #17212b;
+  color: #ffffff;
+}
+
+.admin-link-button {
+  text-decoration: none;
+}
+
+.ilp-admin-list {
+  display: grid;
+  gap: 14px;
+}
+
+.ilp-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #dfe6df;
+  border-radius: 8px;
+  background: #fbfbf8;
+}
+
+.ilp-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.ilp-card-head div {
+  display: grid;
+  gap: 4px;
+}
+
+.ilp-card-head span {
+  color: #52606b;
+  font-weight: 800;
+}
+
+.skill-gap {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e3e9e6;
+}
+
+.skill-gap span,
+.skill-gap p {
+  margin: 0;
+  color: #52606b;
+}
+
 .sidebar {
   background: #101820;
   color: #f3f7f4;
@@ -1283,6 +1440,28 @@ img {
   text-align: left;
 }
 
+.student-ilp-panel {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #dfe6df;
+  background: #fbfbf8;
+  text-align: left;
+}
+
+.student-ilp-panel h2,
+.student-ilp-panel p {
+  margin: 0;
+}
+
+.student-plan-list {
+  display: grid;
+  gap: 8px;
+  color: #52606b;
+}
+
 .topic-row {
   display: grid;
   grid-template-columns: minmax(120px, 1fr) 56px minmax(120px, 1.4fr) 48px;
@@ -1374,7 +1553,8 @@ img {
 
   .admin-kpis,
   .admin-grid,
-  .admin-form {
+  .admin-form,
+  .settings-grid {
     grid-template-columns: 1fr;
   }
 }

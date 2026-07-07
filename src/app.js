@@ -339,9 +339,11 @@ function renderAdminDashboard() {
         </div>
         <nav class="admin-nav">
           <a href="#overview">Overview</a>
-          <a href="#students">Students</a>
-          <a href="#assessments">Pre-Test</a>
+          <a href="#assessments">Settings</a>
+          <a href="#questions">Questions</a>
+          <a href="#import">Import</a>
           <a href="#results">Results</a>
+          <a href="#ilp">ILP</a>
         </nav>
         <a class="admin-student-link" href="./">Open student test</a>
       </aside>
@@ -381,6 +383,8 @@ function paintAdminDashboard(attempts, students) {
   const completedStudents = new Set(attempts.map((attempt) => normalizeStudent(attempt).id)).size;
   const latestAttempts = [...attempts].sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
   const topicRows = aggregateAttemptTopics(attempts);
+  const validation = validateAssessment();
+  const ilpAttempts = latestAttempts.filter((attempt) => attempt.ilp);
 
   document.querySelector(".admin-main").innerHTML = `
     <header class="admin-header">
@@ -395,53 +399,61 @@ function paintAdminDashboard(attempts, students) {
     </header>
 
     <section class="admin-kpis" id="overview">
-      <article><span>Students</span><strong>${students.length}</strong></article>
+      <article><span>Questions</span><strong>${questions.length}</strong></article>
       <article><span>Submitted</span><strong>${attempts.length}</strong></article>
       <article><span>Completed Students</span><strong>${completedStudents}</strong></article>
       <article><span>Average Score</span><strong>${scoreAverage}%</strong></article>
     </section>
 
     <section class="admin-grid">
-      <article class="admin-card" id="students">
-        <div class="admin-card-head">
-          <div>
-            <p class="eyebrow">Registration</p>
-            <h2>Students</h2>
-          </div>
-        </div>
-        <form class="admin-form" data-action="add-student">
-          <input name="studentId" placeholder="Student ID" required />
-          <input name="studentName" placeholder="Student name" required />
-          <input name="section" placeholder="Class / section" />
-          <button class="primary-action" type="submit">Add Student</button>
-        </form>
-        <div class="admin-table-wrap">
-          <table class="admin-table">
-            <thead><tr><th>ID</th><th>Name</th><th>Section</th></tr></thead>
-            <tbody>
-              ${
-                students.length
-                  ? students.map((student) => `<tr><td>${escapeHtml(student.id)}</td><td>${escapeHtml(student.name)}</td><td>${escapeHtml(student.section || "")}</td></tr>`).join("")
-                  : `<tr><td colspan="3">No registered students yet.</td></tr>`
-              }
-            </tbody>
-          </table>
-        </div>
-      </article>
-
       <article class="admin-card" id="assessments">
         <div class="admin-card-head">
           <div>
-            <p class="eyebrow">Assessment</p>
+            <p class="eyebrow">Assessment Settings</p>
             <h2>${escapeHtml(assessment.title)}</h2>
           </div>
         </div>
         <div class="assessment-config">
           <span>${questions.length} questions</span>
           <span>${assessment.durationMinutes} minutes</span>
-          <span>${assessment.tools?.calculator ? "Calculator on" : "Calculator off"}</span>
-          <span>${assessment.tools?.scratchpad !== false ? "Scratch pad on" : "Scratch pad off"}</span>
-          <span>${assessment.tools?.eliminator ? "Eliminator on" : "Eliminator off"}</span>
+          <span>Input: ${escapeHtml(assessment.inputFormatVersion || "mvp-1")}</span>
+          <span>Source: ${escapeHtml(assessment.sourceDocument || "JSON")}</span>
+        </div>
+        <div class="settings-grid">
+          ${renderSetting("Calculator", assessment.tools?.calculator)}
+          ${renderSetting("Scratch pad", assessment.tools?.scratchpad !== false)}
+          ${renderSetting("Image zoom", assessment.tools?.imageZoom !== false)}
+          ${renderSetting("Answer eliminator", assessment.tools?.eliminator)}
+        </div>
+        <div class="admin-note">
+          Student identity will come from your existing registration system later. This test engine only needs a student payload, assignment, and assessment code at launch.
+        </div>
+      </article>
+
+      <article class="admin-card" id="validation">
+        <div class="admin-card-head">
+          <div>
+            <p class="eyebrow">Quality Gate</p>
+            <h2>Assessment Validation</h2>
+          </div>
+        </div>
+        <div class="validation-score ${validation.errors.length ? "has-errors" : "clean"}">
+          <strong>${validation.errors.length ? "Needs Review" : "Ready"}</strong>
+          <span>${validation.errors.length} errors · ${validation.warnings.length} warnings</span>
+        </div>
+        ${renderValidationList("Errors", validation.errors, "No blocking errors.")}
+        ${renderValidationList("Warnings", validation.warnings, "No warnings.")}
+      </article>
+    </section>
+
+    <section class="admin-grid">
+      <article class="admin-card" id="questions">
+        <div class="admin-card-head">
+          <div>
+            <p class="eyebrow">Question Management</p>
+            <h2>Question Bank View</h2>
+          </div>
+          <a class="secondary-action admin-link-button" href="./" target="_blank">Preview Student View</a>
         </div>
         <div class="question-admin-list">
           ${questions.map((question) => `
@@ -449,8 +461,27 @@ function paintAdminDashboard(attempts, students) {
               <strong>Q${question.number || questions.indexOf(question) + 1}</strong>
               <span>${escapeHtml(question.topic || "General")}</span>
               <p>${escapeHtml(question.question)}</p>
+              <small>${question.options.length} options · Answer ${escapeHtml(String(question.answer || "").toUpperCase())} · ${question.image ? "Has image" : "No image"}</small>
             </div>
           `).join("")}
+        </div>
+      </article>
+
+      <article class="admin-card" id="import">
+        <div class="admin-card-head">
+          <div>
+            <p class="eyebrow">Import Pipeline</p>
+            <h2>Word / JSON Intake</h2>
+          </div>
+        </div>
+        <div class="pipeline-list">
+          <div><strong>1</strong><span>Upload or place DOCX in input source.</span></div>
+          <div><strong>2</strong><span>Convert to assessment JSON with images.</span></div>
+          <div><strong>3</strong><span>Validate questions, answer keys, and image paths.</span></div>
+          <div><strong>4</strong><span>Preview student experience before publishing.</span></div>
+        </div>
+        <div class="admin-note">
+          For this MVP the converted file is <strong>input/pre-test-for-demo.json</strong>. Later this import step should become a dashboard upload workflow.
         </div>
       </article>
     </section>
@@ -504,19 +535,23 @@ function paintAdminDashboard(attempts, students) {
         </table>
       </div>
     </section>
-  `;
 
-  document.querySelector("[data-action='add-student']").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    await localDataAdapter.saveStudent({
-      id: String(form.get("studentId") || "").trim(),
-      name: String(form.get("studentName") || "").trim(),
-      section: String(form.get("section") || "").trim(),
-      createdAt: new Date().toISOString()
-    });
-    renderAdminDashboard();
-  });
+    <section class="admin-card" id="ilp">
+      <div class="admin-card-head">
+        <div>
+          <p class="eyebrow">Personalized Learning</p>
+          <h2>Automatic ILP Review</h2>
+        </div>
+      </div>
+      <div class="ilp-admin-list">
+        ${
+          ilpAttempts.length
+            ? ilpAttempts.map((attempt) => renderAdminILPCard(attempt)).join("")
+            : `<p class="empty-review">No ILPs yet. Submit a student attempt to generate one automatically.</p>`
+        }
+      </div>
+    </section>
+  `;
 
   document.querySelector("[data-action='export-attempts-json']").addEventListener("click", () => {
     downloadText("assessment-attempts.json", JSON.stringify(attempts, null, 2), "application/json");
@@ -524,6 +559,19 @@ function paintAdminDashboard(attempts, students) {
 
   document.querySelector("[data-action='export-attempts-csv']").addEventListener("click", () => {
     downloadText("assessment-attempts.csv", buildAttemptsCsv(attempts), "text/csv");
+  });
+
+  document.querySelectorAll("[data-action='export-ilp']").forEach((button) => {
+    button.addEventListener("click", () => {
+      const attempt = attempts.find((item) => (item.attemptId || item.id) === button.dataset.attemptId);
+      if (!attempt) return;
+      const student = normalizeStudent(attempt);
+      downloadText(
+        `${fileSafe(student.id)}-ilp.json`,
+        JSON.stringify(attempt.ilp || {}, null, 2),
+        "application/json"
+      );
+    });
   });
 }
 
@@ -683,6 +731,97 @@ function renderReviewList(items, emptyText) {
         </button>
       `).join("")}
     </div>
+  `;
+}
+
+function renderSetting(label, enabled) {
+  return `
+    <div class="setting-pill ${enabled ? "enabled" : "disabled"}">
+      <strong>${escapeHtml(label)}</strong>
+      <span>${enabled ? "Enabled" : "Disabled"}</span>
+    </div>
+  `;
+}
+
+function validateAssessment() {
+  const errors = [];
+  const warnings = [];
+  const ids = new Set();
+
+  if (!assessment.title) errors.push("Assessment title is missing.");
+  if (!assessment.durationMinutes || assessment.durationMinutes <= 0) errors.push("Duration must be greater than 0.");
+  if (!questions.length) errors.push("No questions found.");
+
+  for (const question of questions) {
+    const label = `Question ${question.number || question.id}`;
+    if (!question.id) errors.push(`${label}: missing question id.`);
+    if (ids.has(question.id)) errors.push(`${label}: duplicate question id ${question.id}.`);
+    ids.add(question.id);
+    if (question.type !== "mcq") errors.push(`${label}: only MCQ questions are supported in this MVP.`);
+    if (!question.question) errors.push(`${label}: missing question text.`);
+    if (!Array.isArray(question.options) || question.options.length !== 4) {
+      errors.push(`${label}: expected exactly 4 options.`);
+    }
+    if (!question.answer) errors.push(`${label}: missing answer key.`);
+    if (question.answer && !question.options.some((option) => option.id === question.answer)) {
+      errors.push(`${label}: answer key does not match an option id.`);
+    }
+    if (!question.topic) warnings.push(`${label}: topic is missing.`);
+    if (!question.explanation) warnings.push(`${label}: explanation is missing.`);
+    if (!question.image && question.imageDescription) warnings.push(`${label}: has image description but no extracted image.`);
+  }
+
+  return { errors, warnings };
+}
+
+function renderValidationList(title, items, emptyText) {
+  return `
+    <div class="validation-list">
+      <h3>${escapeHtml(title)}</h3>
+      ${
+        items.length
+          ? `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+          : `<p class="empty-review">${escapeHtml(emptyText)}</p>`
+      }
+    </div>
+  `;
+}
+
+function renderAdminILPCard(attempt) {
+  const student = normalizeStudent(attempt);
+  const score = normalizeScore(attempt);
+  const ilp = attempt.ilp || generateILP(attempt.responses || [], attempt.summary?.topicBreakdown || [], [], []);
+
+  return `
+    <article class="ilp-card">
+      <div class="ilp-card-head">
+        <div>
+          <strong>${escapeHtml(student.name)}</strong>
+          <span>${escapeHtml(student.id)} · ${score.percentage}% · ${escapeHtml(ilp.readinessLevel)}</span>
+        </div>
+        <button class="secondary-action" data-action="export-ilp" data-attempt-id="${escapeAttribute(attempt.attemptId || attempt.id)}">Export ILP</button>
+      </div>
+      <div class="performance-panels">
+        <section>
+          <h2>Priority Skills</h2>
+          ${
+            ilp.prioritySkills?.length
+              ? ilp.prioritySkills.slice(0, 4).map((skill) => `
+                <div class="skill-gap">
+                  <strong>${escapeHtml(skill.topic)}</strong>
+                  <span>${escapeHtml(skill.lesson)}</span>
+                  <p>${escapeHtml(skill.recommendation)}</p>
+                </div>
+              `).join("")
+              : `<p class="empty-review">No priority gaps detected.</p>`
+          }
+        </section>
+        <section>
+          <h2>Teacher Notes</h2>
+          ${renderTagList(ilp.teacherNotes || [], "No notes generated.")}
+        </section>
+      </div>
+    </article>
   `;
 }
 
@@ -906,6 +1045,7 @@ function buildEvaluation() {
   const needsReview = topicBreakdown
     .filter((topic) => topic.total > 0 && topic.percentage < 75)
     .map((topic) => topic.topic);
+  const ilp = generateILP(responses, topicBreakdown, strengths, needsReview);
 
   return {
     schemaVersion: ATTEMPT_SCHEMA_VERSION,
@@ -946,8 +1086,104 @@ function buildEvaluation() {
       needsReview,
       topicBreakdown
     },
+    ilp,
     responses
   };
+}
+
+function generateILP(responses, topicBreakdown, strengths, needsReview) {
+  const missed = responses.filter((response) => !response.isCorrect);
+  const lessonMap = new Map();
+
+  for (const response of missed) {
+    const lesson = response.distractorFeedback?.lesson || response.topic || "General review";
+    const feedback = response.distractorFeedback?.feedback || response.explanation || "Review the underlying skill for this question.";
+    if (!lessonMap.has(lesson)) {
+      lessonMap.set(lesson, {
+        lesson,
+        topic: response.topic || "General",
+        questions: [],
+        reasons: new Set(),
+        recommendation: buildRecommendation(response.topic, lesson)
+      });
+    }
+
+    const item = lessonMap.get(lesson);
+    item.questions.push(response.number);
+    item.reasons.add(feedback);
+  }
+
+  const prioritySkills = Array.from(lessonMap.values())
+    .map((item) => ({
+      lesson: item.lesson,
+      topic: item.topic,
+      questions: item.questions,
+      reasons: Array.from(item.reasons),
+      recommendation: item.recommendation
+    }))
+    .sort((a, b) => b.questions.length - a.questions.length);
+
+  const overallPercent = responses.length
+    ? Math.round((responses.filter((response) => response.isCorrect).length / responses.length) * 100)
+    : 0;
+
+  return {
+    readinessLevel: getReadinessLevel(overallPercent),
+    strengths,
+    needsReview,
+    prioritySkills,
+    teacherNotes: buildTeacherNotes(prioritySkills, topicBreakdown),
+    studentPlan: buildStudentPlan(prioritySkills, needsReview)
+  };
+}
+
+function buildRecommendation(topic, lesson) {
+  const lower = `${topic || ""} ${lesson || ""}`.toLowerCase();
+  if (lower.includes("number line")) {
+    return "Practice modeling addition and subtraction on horizontal number lines, focusing on start point and direction.";
+  }
+  if (lower.includes("decimal") || lower.includes("nbt")) {
+    return "Practice aligning decimal points, adding placeholder zeroes, and checking place-value columns before calculating.";
+  }
+  if (lower.includes("regroup") || lower.includes("borrow")) {
+    return "Practice regrouping with decimals and annotate each borrowing step before subtracting.";
+  }
+  return "Review the related mini-lesson, complete guided examples, then retry similar independent practice.";
+}
+
+function getReadinessLevel(percentage) {
+  if (percentage >= 85) return "Ready for enrichment";
+  if (percentage >= 70) return "Near mastery";
+  if (percentage >= 50) return "Needs targeted support";
+  return "Needs foundational support";
+}
+
+function buildTeacherNotes(prioritySkills, topicBreakdown) {
+  const notes = [];
+  if (prioritySkills.length) {
+    notes.push(`Prioritize ${prioritySkills[0].topic}: missed questions ${prioritySkills[0].questions.join(", ")}.`);
+  }
+  const lowTopics = topicBreakdown.filter((topic) => topic.percentage < 60).map((topic) => topic.topic);
+  if (lowTopics.length) {
+    notes.push(`Low-scoring topics: ${lowTopics.join(", ")}.`);
+  }
+  if (!notes.length) {
+    notes.push("Student is performing consistently; consider enrichment or mixed review.");
+  }
+  return notes;
+}
+
+function buildStudentPlan(prioritySkills, needsReview) {
+  if (!prioritySkills.length) {
+    return [
+      "Review your correct strategies and complete one enrichment set.",
+      "Explain your solution steps for two problems to confirm mastery."
+    ];
+  }
+
+  return prioritySkills.slice(0, 3).map((skill, index) =>
+    `${index + 1}. ${skill.recommendation}`
+  ).concat(needsReview.length ? [`Complete a short mixed practice set for: ${needsReview.join(", ")}.`] : []);
 }
 
 function buildTopicBreakdown(responses) {
@@ -1172,6 +1408,7 @@ function renderSubmitted() {
     needsReview: [],
     topicBreakdown: buildTopicBreakdown(evaluation.responses || [])
   };
+  const ilp = evaluation.ilp || generateILP(evaluation.responses || [], summary.topicBreakdown, summary.strengths, summary.needsReview);
 
   root.innerHTML = `
     <main class="shell locked-shell">
@@ -1212,6 +1449,14 @@ function renderSubmitted() {
               <em>${topic.percentage}%</em>
             </div>
           `).join("")}
+        </div>
+
+        <div class="student-ilp-panel">
+          <h2>Practice Plan</h2>
+          <strong>${escapeHtml(ilp.readinessLevel)}</strong>
+          <div class="student-plan-list">
+            ${(ilp.studentPlan || []).map((item) => `<p>${escapeHtml(item)}</p>`).join("")}
+          </div>
         </div>
 
         <div class="result-review">
