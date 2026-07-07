@@ -573,6 +573,22 @@ img {
   gap: 14px;
 }
 
+.admin-shell,
+.admin-shell strong,
+.admin-shell th,
+.admin-shell label,
+.admin-shell button,
+.admin-shell input,
+.admin-shell select,
+.admin-shell .eyebrow,
+.admin-shell .assignment-count,
+.admin-shell .assignment-actions span,
+.admin-shell .status-pill,
+.admin-shell small,
+.admin-shell em {
+  font-weight: 400;
+}
+
 .assignment-count {
   padding: 7px 10px;
   border-radius: 8px;
@@ -647,7 +663,7 @@ img {
 }
 
 .tiny-menu-button {
-  width: 24px;
+  min-width: 44px;
   height: 24px;
   border: 1px solid #d5dfdb;
   border-radius: 6px;
@@ -655,6 +671,7 @@ img {
   color: #17212b;
   font-weight: 900;
   cursor: pointer;
+  font-size: 0.76rem;
 }
 
 .selection-menu {
@@ -757,6 +774,21 @@ img {
   font-weight: 800;
 }
 
+.admin-shell strong,
+.admin-shell th,
+.admin-shell label,
+.admin-shell button,
+.admin-shell small,
+.admin-shell em,
+.admin-shell span,
+.admin-shell .eyebrow,
+.admin-shell .assignment-count,
+.admin-shell .status-pill,
+.admin-shell .assignment-actions span,
+.admin-shell .bulk-settings label {
+  font-weight: 400 !important;
+}
+
 .student-assignment-list {
   max-height: calc(100vh - 330px);
   overflow: auto;
@@ -808,6 +840,23 @@ img {
   justify-content: flex-end;
   gap: 10px;
   padding-top: 4px;
+}
+
+.pager-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+  color: #52606b;
+}
+
+.pager-size select {
+  min-height: 34px;
+  border: 1px solid #d5dfdb;
+  border-radius: 7px;
+  padding: 5px 8px;
+  background: #ffffff;
+  font: inherit;
 }
 
 .assignment-pager span {

@@ -942,15 +942,6 @@ function renderAdminAssignmentsPage(context) {
             Attempts
             <input data-assignment-attempt-limit type="number" min="1" max="5" value="1" />
           </label>
-          <label>
-            Per page
-            <select data-assignment-page-size>
-              <option value="10" selected>10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
-          </label>
         </div>
 
         <div class="assignment-actions">
@@ -1166,8 +1157,9 @@ function bindAssignmentControls() {
     return { search, grade, school };
   };
 
-  const loadStudents = async (nextOffset = 0) => {
+  const loadStudents = async (nextOffset = 0, nextLimit = limit) => {
     offset = nextOffset;
+    limit = nextLimit;
     const status = document.querySelector("[data-assignment-status]");
     status.textContent = "Loading matching students...";
     results.innerHTML = `<p class="empty-review">Loading students...</p>`;
@@ -1211,11 +1203,6 @@ function bindAssignmentControls() {
     loadStudents(0);
   });
 
-  document.querySelector("[data-assignment-page-size]")?.addEventListener("change", (event) => {
-    limit = Number(event.currentTarget.value || 10);
-    loadStudents(0);
-  });
-
   document.querySelector("[data-action='prepare-assignment']")?.addEventListener("click", async () => {
     const status = document.querySelector("[data-assignment-status]");
     const selectedStudents = await getSelectedAssignmentStudents(visibleStudents, limit);
@@ -1239,12 +1226,12 @@ function renderAssignmentResults(students, payload) {
           <tr>
             <th class="select-col">
               <span class="select-menu">
-                <input type="checkbox" data-action="toggle-visible-students" aria-label="Select visible students" />
-                <button type="button" class="tiny-menu-button" data-action="toggle-selection-menu" aria-label="Selection options">⌄</button>
+                <input type="checkbox" data-action="toggle-visible-students" aria-label="Visible" />
+                <button type="button" class="tiny-menu-button" data-action="toggle-selection-menu" aria-label="Selection options">More</button>
                 <span class="selection-menu" data-selection-menu hidden>
-                  <button type="button" data-action="select-visible-students">Select visible students</button>
-                  <button type="button" data-action="select-all-matching-students">Select all matching students</button>
-                  <button type="button" data-action="clear-student-selection">Clear selection</button>
+                  <button type="button" data-action="select-visible-students">Visible</button>
+                  <button type="button" data-action="select-all-matching-students">All matches</button>
+                  <button type="button" data-action="clear-student-selection">Clear</button>
                 </span>
               </span>
             </th>
@@ -1274,6 +1261,14 @@ function renderAssignmentResults(students, payload) {
       </table>
     </div>
     <div class="assignment-pager">
+      <label class="pager-size">Rows
+        <select data-assignment-page-size>
+          <option value="10" ${payload.limit === 10 ? "selected" : ""}>10</option>
+          <option value="25" ${payload.limit === 25 ? "selected" : ""}>25</option>
+          <option value="50" ${payload.limit === 50 ? "selected" : ""}>50</option>
+          <option value="100" ${payload.limit === 100 ? "selected" : ""}>100</option>
+        </select>
+      </label>
       <button class="secondary-action" data-action="assignment-page" data-offset="${Math.max(0, payload.offset - payload.limit)}" ${payload.offset <= 0 ? "disabled" : ""}>Previous</button>
       <span>${payload.offset + 1}-${Math.min(payload.offset + payload.limit, payload.total)} of ${payload.total}</span>
       <button class="secondary-action" data-action="assignment-page" data-offset="${payload.offset + payload.limit}" ${payload.offset + payload.limit >= payload.total ? "disabled" : ""}>Next</button>
@@ -1478,6 +1473,9 @@ function bindAssignmentPaging(loadStudents) {
       loadStudents(Number(button.dataset.offset || 0));
     });
   });
+  document.querySelector("[data-assignment-page-size]")?.addEventListener("change", (event) => {
+    loadStudents(0, Number(event.currentTarget.value || 10));
+  });
 }
 
 function uniqueValues(values) {
@@ -1599,66 +1597,63 @@ function renderStartScreen() {
     submitButton.disabled = true;
     message.textContent = "Checking student registration...";
 
-    const student = await findRegisteredStudent(username);
-    if (!student) {
-      submitButton.disabled = false;
-      message.textContent = "Student username was not found. Please check the username and try again.";
-      return;
-    }
-
-    const assigned = await findActiveAssignmentForStudent(student.id);
-    if (!assigned) {
-      submitButton.disabled = false;
-      message.textContent = "This pre-test is not assigned to this student yet. Please contact the administrator.";
-      return;
-    }
-
-    message.textContent = "Loading assigned pre-test...";
-    await applyAssignedAssessment(assigned);
-
-    setState({
-      started: true,
-      startedAt: new Date().toISOString(),
-      studentLookupError: "",
-      remainingSeconds: (assessment.durationMinutes || 30) * 60,
-      assignment: assigned,
-      assignmentSettings: assigned.metadata || {},
-      student: {
-        name: student.name,
-        id: student.id,
-        username: student.username || username,
-        email: student.email || "",
-        gradeLevel: student.gradeLevel || "",
-        section: student.section || ""
+    try {
+      const student = await findRegisteredStudent(username);
+      if (!student) {
+        submitButton.disabled = false;
+        message.textContent = "Student username was not found. Please check the username and try again.";
+        return;
       }
-    });
+
+      const assigned = await findActiveAssignmentForStudent(student.id);
+      if (!assigned) {
+        submitButton.disabled = false;
+        message.textContent = "This pre-test is not assigned to this student yet. Please contact the administrator.";
+        return;
+      }
+
+      message.textContent = "Loading assigned pre-test...";
+      await applyAssignedAssessment(assigned);
+
+      setState({
+        started: true,
+        startedAt: new Date().toISOString(),
+        studentLookupError: "",
+        remainingSeconds: (assessment.durationMinutes || 30) * 60,
+        assignment: assigned,
+        assignmentSettings: assigned.metadata || {},
+        student: {
+          name: student.name,
+          id: student.id,
+          username: student.username || username,
+          email: student.email || "",
+          gradeLevel: student.gradeLevel || "",
+          section: student.section || ""
+        }
+      });
+    } catch (error) {
+      submitButton.disabled = false;
+      message.textContent = error.message || "Could not begin the assessment. Please contact the administrator.";
+    }
   });
 }
 
 async function findRegisteredStudent(username) {
   const normalized = username.toLowerCase();
-  try {
-    const students = await getDataAdapter().listStudents(username);
-    return students.find((student) => {
-      return [student.username, student.email, student.id, student.name]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase() === normalized);
-    }) || null;
-  } catch {
-    return null;
-  }
+  const students = await getDataAdapter().listStudents(username);
+  return students.find((student) => {
+    return [student.username, student.email, student.id, student.name]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase() === normalized);
+  }) || null;
 }
 
 async function findActiveAssignmentForStudent(studentId) {
-  try {
-    const assignments = await getDataAdapter().listAssignments();
-    return assignments.find((assignment) =>
-      String(assignment.studentId) === String(studentId)
-        && assignment.status !== "cancelled"
-    ) || null;
-  } catch {
-    return null;
-  }
+  const assignments = await getDataAdapter().listAssignments();
+  return assignments.find((assignment) =>
+    String(assignment.studentId) === String(studentId)
+      && assignment.status !== "cancelled"
+  ) || null;
 }
 
 async function applyAssignedAssessment(assignment) {
@@ -2934,3 +2929,4 @@ function escapeHtml(value) {
 function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#096;");
 }
+
