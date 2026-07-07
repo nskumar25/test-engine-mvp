@@ -137,6 +137,10 @@ function sendJson(response, status, payload) {
   response.end(JSON.stringify(payload));
 }
 
+function trimValue(value) {
+  return value == null ? "" : String(value).trim();
+}
+
 function readJson(request) {
   return new Promise((resolve, reject) => {
     let body = "";
@@ -460,7 +464,7 @@ async function saveAttempt(attempt) {
 async function listStudents(options = {}) {
   if (!safeStudentView) return [];
 
-  const search = options.search || "";
+  const search = String(options.search || "").trim();
   const school = options.school || "";
   const grade = options.grade || "";
   const limit = Math.min(Math.max(Number(options.limit || 50), 1), 100);
@@ -469,8 +473,8 @@ async function listStudents(options = {}) {
   const params = [];
 
   if (search) {
-    params.push(`%${search}%`);
-    conditions.push(`(display_name ilike $${params.length} or student_external_id ilike $${params.length} or coalesce(email, '') ilike $${params.length})`);
+    params.push(`%${search.toLowerCase()}%`);
+    conditions.push(`(lower(trim(display_name)) like $${params.length} or lower(trim(student_external_id)) like $${params.length} or lower(trim(coalesce(email, ''))) like $${params.length})`);
   }
   if (school) {
     params.push(school);
@@ -496,16 +500,16 @@ async function listStudents(options = {}) {
   `, queryParams);
 
   const items = rows.map((row) => ({
-    id: row.student_external_id,
-    name: row.display_name,
-    username: row.email || row.student_external_id,
-    email: row.email,
-    status: row.status,
-    gradeId: row.grade_external_id,
-    gradeLevel: row.grade_level,
-    section: row.section,
-    schoolId: row.school_external_id,
-    schoolName: row.school_name
+    id: trimValue(row.student_external_id),
+    name: trimValue(row.display_name),
+    username: trimValue(row.email || row.student_external_id),
+    email: trimValue(row.email),
+    status: trimValue(row.status),
+    gradeId: trimValue(row.grade_external_id),
+    gradeLevel: trimValue(row.grade_level),
+    section: trimValue(row.section),
+    schoolId: trimValue(row.school_external_id),
+    schoolName: trimValue(row.school_name)
   }));
 
   if (!options.paged) return items;

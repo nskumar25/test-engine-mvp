@@ -1639,19 +1639,26 @@ function renderStartScreen() {
 }
 
 async function findRegisteredStudent(username) {
-  const normalized = username.toLowerCase();
+  const normalized = normalizeIdentity(username);
   const students = await getDataAdapter().listStudents(username);
+  if (!students.length) {
+    throw new Error(`No registered student matched "${username}". Confirm this email exists in Neon and was synced.`);
+  }
   return students.find((student) => {
     return [student.username, student.email, student.id, student.name]
       .filter(Boolean)
-      .some((value) => String(value).toLowerCase() === normalized);
+      .some((value) => normalizeIdentity(value) === normalized);
   }) || null;
+}
+
+function normalizeIdentity(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
 async function findActiveAssignmentForStudent(studentId) {
   const assignments = await getDataAdapter().listAssignments();
   return assignments.find((assignment) =>
-    String(assignment.studentId) === String(studentId)
+    normalizeIdentity(assignment.studentId) === normalizeIdentity(studentId)
       && assignment.status !== "cancelled"
   ) || null;
 }
