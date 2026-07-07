@@ -6,6 +6,14 @@ For this MVP, submitted attempts are stored in browser IndexedDB under:
 - Store: `attempts`
 - Student key: `studentId`
 
+The admin dashboard reads data through a small local adapter in `src/app.js`:
+
+- `localDataAdapter.listAttempts()`
+- `localDataAdapter.listStudents()`
+- `localDataAdapter.saveStudent(student)`
+
+When moving to Supabase, Firebase, Neon, or another backend, replace this adapter with API calls while keeping the dashboard UI and attempt shape mostly unchanged.
+
 This is suitable for demo-scale local testing because it avoids localStorage limits and can hold many more attempt records in a browser profile.
 
 For a production system, replace this with an API-backed model:

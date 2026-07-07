@@ -18,7 +18,8 @@ const contentTypes = {
 };
 
 const server = http.createServer((request, response) => {
-  const requestPath = request.url === "/" ? "/index.html" : request.url.split("?")[0];
+  const pathname = request.url.split("?")[0];
+  const requestPath = pathname === "/" ? "/index.html" : pathname;
   const filePath = path.normalize(path.join(root, decodeURIComponent(requestPath)));
 
   if (!filePath.startsWith(root)) {

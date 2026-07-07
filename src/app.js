@@ -1,4 +1,5 @@
 const STORAGE_KEY = "assessment-engine-mvp";
+const STUDENTS_STORAGE_KEY = "assessment-engine-students";
 const RESULTS_DB_NAME = "assessment-engine-results";
 const RESULTS_STORE = "attempts";
 const ATTEMPT_SCHEMA_VERSION = "attempt-v1";
@@ -126,6 +127,7 @@ function setState(patch, options = {}) {
 
 function installSecurityGuards() {
   const guard = (event) => {
+    if (isAdminMode()) return;
     event.preventDefault();
   };
 
@@ -186,6 +188,11 @@ function updateTimerOnly() {
 
 function render() {
   if (!questions.length) return;
+
+  if (isAdminMode()) {
+    renderAdminDashboard();
+    return;
+  }
 
   saveState();
 
@@ -313,6 +320,211 @@ function render() {
 
   bindActions();
   initScratchPad();
+}
+
+function isAdminMode() {
+  return new URLSearchParams(window.location.search).get("admin") === "1";
+}
+
+function renderAdminDashboard() {
+  root.innerHTML = `
+    <main class="admin-shell">
+      <aside class="admin-sidebar">
+        <div class="brand">
+          <div class="brand-mark">${icons.book}</div>
+          <div>
+            <span>Admin</span>
+            <strong>Assessment Console</strong>
+          </div>
+        </div>
+        <nav class="admin-nav">
+          <a href="#overview">Overview</a>
+          <a href="#students">Students</a>
+          <a href="#assessments">Pre-Test</a>
+          <a href="#results">Results</a>
+        </nav>
+        <a class="admin-student-link" href="./">Open student test</a>
+      </aside>
+      <section class="admin-main">
+        <header class="admin-header">
+          <div>
+            <p class="eyebrow">Local MVP Dashboard</p>
+            <h1>Pre-Test Management</h1>
+          </div>
+          <div class="admin-actions">
+            <button class="secondary-action" data-action="export-attempts-json">Export Attempts JSON</button>
+            <button class="secondary-action" data-action="export-attempts-csv">Export Attempts CSV</button>
+          </div>
+        </header>
+        <div class="admin-loading">Loading dashboard...</div>
+      </section>
+    </main>
+  `;
+
+  loadAdminData().then(({ attempts, students }) => {
+    paintAdminDashboard(attempts, students);
+  });
+}
+
+async function loadAdminData() {
+  const [attempts, students] = await Promise.all([
+    localDataAdapter.listAttempts(),
+    localDataAdapter.listStudents()
+  ]);
+  return { attempts, students };
+}
+
+function paintAdminDashboard(attempts, students) {
+  const scoreAverage = attempts.length
+    ? Math.round(attempts.reduce((sum, attempt) => sum + normalizeScore(attempt).percentage, 0) / attempts.length)
+    : 0;
+  const completedStudents = new Set(attempts.map((attempt) => normalizeStudent(attempt).id)).size;
+  const latestAttempts = [...attempts].sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
+  const topicRows = aggregateAttemptTopics(attempts);
+
+  document.querySelector(".admin-main").innerHTML = `
+    <header class="admin-header">
+      <div>
+        <p class="eyebrow">Local MVP Dashboard</p>
+        <h1>Pre-Test Management</h1>
+      </div>
+      <div class="admin-actions">
+        <button class="secondary-action" data-action="export-attempts-json">Export Attempts JSON</button>
+        <button class="secondary-action" data-action="export-attempts-csv">Export Attempts CSV</button>
+      </div>
+    </header>
+
+    <section class="admin-kpis" id="overview">
+      <article><span>Students</span><strong>${students.length}</strong></article>
+      <article><span>Submitted</span><strong>${attempts.length}</strong></article>
+      <article><span>Completed Students</span><strong>${completedStudents}</strong></article>
+      <article><span>Average Score</span><strong>${scoreAverage}%</strong></article>
+    </section>
+
+    <section class="admin-grid">
+      <article class="admin-card" id="students">
+        <div class="admin-card-head">
+          <div>
+            <p class="eyebrow">Registration</p>
+            <h2>Students</h2>
+          </div>
+        </div>
+        <form class="admin-form" data-action="add-student">
+          <input name="studentId" placeholder="Student ID" required />
+          <input name="studentName" placeholder="Student name" required />
+          <input name="section" placeholder="Class / section" />
+          <button class="primary-action" type="submit">Add Student</button>
+        </form>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Section</th></tr></thead>
+            <tbody>
+              ${
+                students.length
+                  ? students.map((student) => `<tr><td>${escapeHtml(student.id)}</td><td>${escapeHtml(student.name)}</td><td>${escapeHtml(student.section || "")}</td></tr>`).join("")
+                  : `<tr><td colspan="3">No registered students yet.</td></tr>`
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="admin-card" id="assessments">
+        <div class="admin-card-head">
+          <div>
+            <p class="eyebrow">Assessment</p>
+            <h2>${escapeHtml(assessment.title)}</h2>
+          </div>
+        </div>
+        <div class="assessment-config">
+          <span>${questions.length} questions</span>
+          <span>${assessment.durationMinutes} minutes</span>
+          <span>${assessment.tools?.calculator ? "Calculator on" : "Calculator off"}</span>
+          <span>${assessment.tools?.scratchpad !== false ? "Scratch pad on" : "Scratch pad off"}</span>
+          <span>${assessment.tools?.eliminator ? "Eliminator on" : "Eliminator off"}</span>
+        </div>
+        <div class="question-admin-list">
+          ${questions.map((question) => `
+            <div>
+              <strong>Q${question.number || questions.indexOf(question) + 1}</strong>
+              <span>${escapeHtml(question.topic || "General")}</span>
+              <p>${escapeHtml(question.question)}</p>
+            </div>
+          `).join("")}
+        </div>
+      </article>
+    </section>
+
+    <section class="admin-card" id="results">
+      <div class="admin-card-head">
+        <div>
+          <p class="eyebrow">Performance</p>
+          <h2>Results</h2>
+        </div>
+      </div>
+      <div class="topic-report admin-topic-report">
+        <h3>Topic Analysis</h3>
+        ${
+          topicRows.length
+            ? topicRows.map((topic) => `
+              <div class="topic-row">
+                <span>${escapeHtml(topic.topic)}</span>
+                <strong>${topic.correct}/${topic.total}</strong>
+                <div class="topic-bar"><i style="width:${topic.percentage}%"></i></div>
+                <em>${topic.percentage}%</em>
+              </div>
+            `).join("")
+            : `<p class="empty-review">No attempt data yet.</p>`
+        }
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Student</th><th>ID</th><th>Score</th><th>Answered</th><th>Time Used</th><th>Submitted</th></tr>
+          </thead>
+          <tbody>
+            ${
+              latestAttempts.length
+                ? latestAttempts.map((attempt) => {
+                  const student = normalizeStudent(attempt);
+                  const score = normalizeScore(attempt);
+                  const timing = normalizeTiming(attempt);
+                  return `<tr>
+                    <td>${escapeHtml(student.name)}</td>
+                    <td>${escapeHtml(student.id)}</td>
+                    <td>${score.correct}/${score.total} (${score.percentage}%)</td>
+                    <td>${score.answered}</td>
+                    <td>${formatDuration(timing.timeUsedSeconds)}</td>
+                    <td>${formatDateTime(attempt.submittedAt)}</td>
+                  </tr>`;
+                }).join("")
+                : `<tr><td colspan="6">No submissions yet.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+
+  document.querySelector("[data-action='add-student']").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    await localDataAdapter.saveStudent({
+      id: String(form.get("studentId") || "").trim(),
+      name: String(form.get("studentName") || "").trim(),
+      section: String(form.get("section") || "").trim(),
+      createdAt: new Date().toISOString()
+    });
+    renderAdminDashboard();
+  });
+
+  document.querySelector("[data-action='export-attempts-json']").addEventListener("click", () => {
+    downloadText("assessment-attempts.json", JSON.stringify(attempts, null, 2), "application/json");
+  });
+
+  document.querySelector("[data-action='export-attempts-csv']").addEventListener("click", () => {
+    downloadText("assessment-attempts.csv", buildAttemptsCsv(attempts), "text/csv");
+  });
 }
 
 function renderStartScreen() {
@@ -782,6 +994,72 @@ function saveAttempt(evaluation) {
   };
 }
 
+const localDataAdapter = {
+  async listAttempts() {
+    if (!("indexedDB" in window)) {
+      return JSON.parse(localStorage.getItem("assessment-engine-results-fallback") || "[]");
+    }
+
+    return new Promise((resolve) => {
+      const request = indexedDB.open(RESULTS_DB_NAME, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(RESULTS_STORE)) {
+          const store = db.createObjectStore(RESULTS_STORE, { keyPath: "id" });
+          store.createIndex("studentId", "studentId", { unique: false });
+          store.createIndex("assessmentTitle", "assessmentTitle", { unique: false });
+          store.createIndex("submittedAt", "submittedAt", { unique: false });
+        }
+      };
+      request.onerror = () => resolve([]);
+      request.onsuccess = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(RESULTS_STORE)) {
+          resolve([]);
+          return;
+        }
+        const transaction = db.transaction(RESULTS_STORE, "readonly");
+        const getAll = transaction.objectStore(RESULTS_STORE).getAll();
+        getAll.onsuccess = () => resolve(getAll.result || []);
+        getAll.onerror = () => resolve([]);
+      };
+    });
+  },
+
+  async listStudents() {
+    return JSON.parse(localStorage.getItem(STUDENTS_STORAGE_KEY) || "[]");
+  },
+
+  async saveStudent(student) {
+    const students = await this.listStudents();
+    const next = [
+      student,
+      ...students.filter((existing) => existing.id !== student.id)
+    ];
+    localStorage.setItem(STUDENTS_STORAGE_KEY, JSON.stringify(next));
+    return student;
+  }
+};
+
+function aggregateAttemptTopics(attempts) {
+  const byTopic = new Map();
+  for (const attempt of attempts) {
+    for (const topic of attempt.summary?.topicBreakdown || buildTopicBreakdown(attempt.responses || [])) {
+      if (!byTopic.has(topic.topic)) {
+        byTopic.set(topic.topic, { topic: topic.topic, correct: 0, total: 0 });
+      }
+      const current = byTopic.get(topic.topic);
+      current.correct += topic.correct;
+      current.total += topic.total;
+    }
+  }
+
+  return Array.from(byTopic.values()).map((topic) => ({
+    ...topic,
+    percentage: topic.total ? Math.round((topic.correct / topic.total) * 100) : 0
+  }));
+}
+
 function pressCalculator(key) {
   if (key === "clear") {
     calculatorValue = "";
@@ -913,11 +1191,6 @@ function renderSubmitted() {
           <span>Stored for ${escapeHtml(student.name)}</span>
         </div>
 
-        <div class="result-actions">
-          <button class="secondary-action" data-action="download-json">Download JSON</button>
-          <button class="secondary-action" data-action="download-csv">Download CSV</button>
-        </div>
-
         <div class="performance-panels">
           <section>
             <h2>Strengths</h2>
@@ -961,22 +1234,6 @@ function renderSubmitted() {
       </section>
     </main>
   `;
-
-  document.querySelector("[data-action='download-json']").addEventListener("click", () => {
-    downloadText(
-      `${fileSafe(student.id)}-${fileSafe(assessment.title)}-result.json`,
-      JSON.stringify(evaluation, null, 2),
-      "application/json"
-    );
-  });
-
-  document.querySelector("[data-action='download-csv']").addEventListener("click", () => {
-    downloadText(
-      `${fileSafe(student.id)}-${fileSafe(assessment.title)}-responses.csv`,
-      buildResponseCsv(evaluation),
-      "text/csv"
-    );
-  });
 
   document.querySelector("[data-action='restart']").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -1042,6 +1299,34 @@ function buildResponseCsv(evaluation) {
   return rows.map((row) => row.map(csvEscape).join(",")).join("\n");
 }
 
+function buildAttemptsCsv(attempts) {
+  const rows = [
+    ["attempt_id", "student_id", "student_name", "assessment", "score", "total", "percentage", "answered", "unanswered", "flagged", "time_used_seconds", "submitted_at"]
+  ];
+
+  for (const attempt of attempts) {
+    const student = normalizeStudent(attempt);
+    const score = normalizeScore(attempt);
+    const timing = normalizeTiming(attempt);
+    rows.push([
+      attempt.attemptId || attempt.id || "",
+      student.id,
+      student.name,
+      attempt.assessment?.title || attempt.assessmentTitle || assessment.title,
+      score.correct,
+      score.total,
+      score.percentage,
+      score.answered,
+      score.unanswered,
+      score.flagged,
+      timing.timeUsedSeconds,
+      attempt.submittedAt || ""
+    ]);
+  }
+
+  return rows.map((row) => row.map(csvEscape).join(",")).join("\n");
+}
+
 function csvEscape(value) {
   const text = String(value ?? "");
   return `"${text.replaceAll('"', '""')}"`;
@@ -1067,6 +1352,11 @@ function formatDuration(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+}
+
+function formatDateTime(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleString();
 }
 
 function escapeHtml(value) {
