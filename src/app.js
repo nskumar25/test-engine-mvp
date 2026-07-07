@@ -4,8 +4,9 @@ const ASSIGNMENTS_STORAGE_KEY = "assessment-engine-assignments";
 const RESULTS_DB_NAME = "assessment-engine-results";
 const RESULTS_STORE = "attempts";
 const ATTEMPT_SCHEMA_VERSION = "attempt-v1";
-const DATA_PROVIDER = window.ASSESSMENT_DATA_PROVIDER || "local";
-const API_BASE_URL = window.ASSESSMENT_API_BASE_URL || "";
+const IS_GITHUB_PAGES = window.location.hostname.endsWith("github.io");
+const DATA_PROVIDER = IS_GITHUB_PAGES ? "local" : window.ASSESSMENT_DATA_PROVIDER || "local";
+const API_BASE_URL = IS_GITHUB_PAGES ? "" : window.ASSESSMENT_API_BASE_URL || "";
 const QUESTION_SOURCE = "input/pre-test-for-demo.json";
 
 const icons = {
