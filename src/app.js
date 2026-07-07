@@ -10,7 +10,6 @@ const icons = {
   book: "&#9670;",
   grid: "&#9638;",
   clock: "&#128337;",
-  flag: "&#9873;",
   file: "&#128196;",
   calc: "&#8721;",
   pencil: "&#9998;",
@@ -33,6 +32,8 @@ let scratchColor = "#18212b";
 let drawing = false;
 let calculatorValue = "";
 let pendingQuestionScroll = null;
+let zoomScale = 1;
+let zoomImageSrc = "";
 
 const root = document.getElementById("root");
 
@@ -75,8 +76,12 @@ function getInitialState(total) {
           },
           scratchWork: parsed.scratchWork || {},
           eliminated: parsed.eliminated || {},
-          flagged: parsed.flagged || {},
+          visited: parsed.visited || {},
           answers: parsed.answers || {},
+          toolsOpen: Boolean(parsed.toolsOpen),
+          calculatorOpen: Boolean(parsed.calculatorOpen),
+          scratchOpen: parsed.scratchOpen !== false,
+          timerMode: parsed.timerMode || "remaining",
           reviewing: Boolean(parsed.reviewing)
         };
       }
@@ -88,10 +93,13 @@ function getInitialState(total) {
   return {
     currentIndex: 0,
     answers: {},
-    flagged: {},
+    visited: {},
     eliminated: {},
     scratchWork: {},
-    calculatorOpen: Boolean(assessment.tools?.calculator),
+    toolsOpen: false,
+    calculatorOpen: false,
+    scratchOpen: true,
+    timerMode: "remaining",
     started: false,
     startedAt: null,
     student: {
@@ -172,19 +180,26 @@ function getAnsweredCount() {
   return Object.keys(state.answers).length;
 }
 
-function getFlaggedCount() {
-  return Object.values(state.flagged).filter(Boolean).length;
-}
-
 function minutesAndSeconds() {
-  const minutes = String(Math.floor(state.remainingSeconds / 60)).padStart(2, "0");
-  const seconds = String(state.remainingSeconds % 60).padStart(2, "0");
+  const secondsValue = state.timerMode === "elapsed"
+    ? Math.max(0, assessment.durationMinutes * 60 - state.remainingSeconds)
+    : state.remainingSeconds;
+  const minutes = String(Math.floor(secondsValue / 60)).padStart(2, "0");
+  const seconds = String(secondsValue % 60).padStart(2, "0");
   return `${minutes}:${seconds}`;
 }
 
 function updateTimerOnly() {
   const timer = document.querySelector("[data-timer]");
-  if (timer) timer.innerHTML = `${icons.clock} ${minutesAndSeconds()}`;
+  if (timer) timer.innerHTML = renderTimerContent();
+}
+
+function renderTimerContent() {
+  return `${icons.clock} <span>${state.timerMode === "elapsed" ? "Elapsed" : "Time Remaining"}:</span> ${minutesAndSeconds()}`;
+}
+
+function getSkippedCount() {
+  return questions.filter((question) => state.visited?.[question.id] && !state.answers[question.id]).length;
 }
 
 function render() {
@@ -214,26 +229,20 @@ function render() {
 
   const question = questions[state.currentIndex];
   const answeredCount = getAnsweredCount();
-  const flaggedCount = getFlaggedCount();
+  const skippedCount = getSkippedCount();
   const progress = Math.round((answeredCount / questions.length) * 100);
   root.innerHTML = `
     <main class="shell" aria-label="Assessment workspace">
       <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark">${icons.book}</div>
-          <div>
-            <span>Current Test</span>
-            <strong>${escapeHtml(assessment.title)}</strong>
-          </div>
-        </div>
-
-        <div class="candidate-card">
-          <span>Candidate</span>
-          <strong>${escapeHtml(state.student?.name || assessment.candidate)}</strong>
-        </div>
-
         <div class="side-section">
-          <div class="side-title">${icons.grid} Questions</div>
+          <div class="brand">
+            <div class="brand-mark">${icons.book}</div>
+            <div>
+              <span>Questions</span>
+              <strong>${answeredCount}/${questions.length} answered</strong>
+              <small>${skippedCount} skipped</small>
+            </div>
+          </div>
           <div class="question-grid">
             ${questions.map(renderGridCell).join("")}
           </div>
@@ -242,20 +251,26 @@ function render() {
         <div class="legend">
           <span><i class="dot answered-dot"></i> Answered</span>
           <span><i class="dot active-dot"></i> Current</span>
-          <span><i class="dot flagged-dot"></i> Flagged</span>
+          <span><i class="dot skipped-dot"></i> Skipped</span>
         </div>
       </aside>
 
-      <section class="exam-window">
+      <section class="exam-window ${state.toolsOpen ? "" : "tools-closed"}">
         <header class="topbar">
           <div>
-            <p class="eyebrow">${escapeHtml(question.topic)}</p>
+            <p class="eyebrow">Question ${state.currentIndex + 1} of ${questions.length}</p>
             <h1>${escapeHtml(assessment.title)}</h1>
           </div>
 
           <div class="top-actions">
-            <div class="timer" data-timer aria-label="Time remaining">${icons.clock} ${minutesAndSeconds()}</div>
+            <div class="candidate-top">
+              <span>Candidate</span>
+              <strong>${escapeHtml(state.student?.name || assessment.candidate)}</strong>
+              <small>${escapeHtml(assessment.title)}</small>
+            </div>
+            <button class="timer" data-action="toggle-timer" data-timer aria-label="Toggle timer">${renderTimerContent()}</button>
             <button class="icon-button" data-action="fullscreen" title="Enter fullscreen">${icons.fullscreen}</button>
+            <button class="secondary-action compact-action" data-action="toggle-tools">${state.toolsOpen ? "Hide Tools" : "Open Tools"}</button>
           </div>
         </header>
 
@@ -268,7 +283,6 @@ function render() {
           <article class="question-pane">
             <div class="question-head">
               <span>Question ${state.currentIndex + 1} of ${questions.length}</span>
-              <button class="ghost-button" data-action="flag">${icons.flag} ${state.flagged[question.id] ? "Unflag" : "Flag"}</button>
             </div>
 
             <h2>${escapeHtml(question.question)}</h2>
@@ -280,7 +294,7 @@ function render() {
             </div>
           </article>
 
-          <aside class="worksheet">
+          <aside class="worksheet ${state.toolsOpen ? "open" : ""}">
             ${assessment.tools?.calculator ? renderCalculator() : ""}
             ${assessment.tools?.scratchpad !== false ? `
             <div class="worksheet-head">
@@ -288,32 +302,37 @@ function render() {
                 <p class="eyebrow">Workspace</p>
                 <h3>Scratch Pad</h3>
               </div>
-              <button class="icon-button" data-action="clear-scratch" title="Clear scratch pad">${icons.clear}</button>
+              <div class="tool-head-actions">
+                <button class="icon-button" data-action="toggle-scratch" title="Toggle scratch pad">${state.scratchOpen ? "-" : "+"}</button>
+                <button class="icon-button" data-action="clear-scratch" title="Clear scratch pad">${icons.clear}</button>
+              </div>
             </div>
 
-            <div class="scratch-tools" role="toolbar" aria-label="Scratch pad tools">
-              <button class="tool-button ${scratchTool === "pencil" ? "active" : ""}" data-tool="pencil" title="Pencil">${icons.pencil}</button>
-              <button class="tool-button ${scratchTool === "eraser" ? "active" : ""}" data-tool="eraser" title="Eraser">${icons.eraser}</button>
-              <button class="swatch active" data-color="#18212b" style="--swatch:#18212b" title="Black"></button>
-              <button class="swatch" data-color="#365f9f" style="--swatch:#365f9f" title="Blue"></button>
-              <button class="swatch" data-color="#9b4d32" style="--swatch:#9b4d32" title="Brown"></button>
+            <div class="scratch-body ${state.scratchOpen ? "open" : ""}">
+              <div class="scratch-tools" role="toolbar" aria-label="Scratch pad tools">
+                <button class="tool-button ${scratchTool === "pencil" ? "active" : ""}" data-tool="pencil" title="Pencil">${icons.pencil}</button>
+                <button class="tool-button ${scratchTool === "eraser" ? "active" : ""}" data-tool="eraser" title="Eraser">${icons.eraser}</button>
+                <button class="swatch active" data-color="#18212b" style="--swatch:#18212b" title="Black"></button>
+                <button class="swatch" data-color="#365f9f" style="--swatch:#365f9f" title="Blue"></button>
+                <button class="swatch" data-color="#c43d32" style="--swatch:#c43d32" title="Red"></button>
+                <button class="swatch" data-color="#9b4d32" style="--swatch:#9b4d32" title="Brown"></button>
+              </div>
+              <canvas class="scratch-canvas" width="560" height="500" aria-label="Scratch pad"></canvas>
             </div>
-            <canvas class="scratch-canvas" width="560" height="500" aria-label="Scratch pad"></canvas>
             ` : ""}
           </aside>
         </section>
 
         <footer class="bottombar">
-          <button class="secondary-action" data-action="previous" ${state.currentIndex === 0 ? "disabled" : ""}>${icons.previous} Previous</button>
-          <div class="footer-center">
-            <span>${answeredCount}/${questions.length} answered</span>
-            <span>${flaggedCount} flagged</span>
+          <div></div>
+          <div class="nav-actions">
+            <button class="primary-action" data-action="previous" ${state.currentIndex === 0 ? "disabled" : ""}>${icons.previous} Previous</button>
+            ${
+              state.currentIndex === questions.length - 1
+                ? `<button class="primary-action" data-action="submit">${icons.submit} Submit</button>`
+                : `<button class="primary-action" data-action="next">Next ${icons.next}</button>`
+            }
           </div>
-          ${
-            state.currentIndex === questions.length - 1
-              ? `<button class="primary-action" data-action="submit">${icons.submit} Submit</button>`
-              : `<button class="primary-action" data-action="next">Next ${icons.next}</button>`
-          }
         </footer>
       </section>
     </main>
@@ -716,7 +735,6 @@ function renderStartScreen() {
 function renderSubmitReview() {
   const answeredCount = getAnsweredCount();
   const unanswered = questions.filter((question) => !state.answers[question.id]);
-  const flagged = questions.filter((question) => state.flagged[question.id]);
 
   root.innerHTML = `
     <main class="review-shell">
@@ -726,13 +744,13 @@ function renderSubmitReview() {
             <p class="eyebrow">Before you submit</p>
             <h1>Review your assessment</h1>
           </div>
-          <div class="timer" data-timer aria-label="Time remaining">${icons.clock} ${minutesAndSeconds()}</div>
+          <div class="timer" data-timer aria-label="Time remaining">${renderTimerContent()}</div>
         </header>
 
         <div class="review-summary">
           <span><strong>${answeredCount}</strong> answered</span>
           <span><strong>${unanswered.length}</strong> unanswered</span>
-          <span><strong>${flagged.length}</strong> flagged</span>
+          <span><strong>${getSkippedCount()}</strong> skipped</span>
         </div>
 
         <div class="review-grid-panel">
@@ -743,10 +761,6 @@ function renderSubmitReview() {
           <section>
             <h2>Unanswered</h2>
             ${renderReviewList(unanswered, "No unanswered questions.")}
-          </section>
-          <section>
-            <h2>Flagged</h2>
-            ${renderReviewList(flagged, "No flagged questions.")}
           </section>
         </div>
 
@@ -778,17 +792,17 @@ function renderSubmitReview() {
 
 function renderReviewCell(question, index) {
   const answered = Boolean(state.answers[question.id]);
-  const flagged = Boolean(state.flagged[question.id]);
+  const skipped = Boolean(state.visited?.[question.id]) && !answered;
   const classes = [
     "review-cell",
     answered ? "answered" : "unanswered",
-    flagged ? "flagged" : ""
+    skipped ? "skipped" : ""
   ].join(" ");
 
   return `
     <button class="${classes}" data-review-index="${index}">
       <strong>${index + 1}</strong>
-      <span>${answered ? "Answered" : "Unanswered"}${flagged ? " / Flagged" : ""}</span>
+      <span>${answered ? "Answered" : skipped ? "Skipped" : "Unanswered"}</span>
     </button>
   `;
 }
@@ -899,11 +913,13 @@ function renderAdminILPCard(attempt) {
 }
 
 function renderGridCell(question, index) {
+  const isAnswered = Boolean(state.answers[question.id]);
+  const isSkipped = Boolean(state.visited?.[question.id]) && !isAnswered;
   const classes = [
     "grid-cell",
     index === state.currentIndex ? "active" : "",
-    state.answers[question.id] ? "answered" : "",
-    state.flagged[question.id] ? "flagged" : ""
+    isAnswered ? "answered" : "",
+    isSkipped ? "skipped" : ""
   ].join(" ");
 
   return `<button class="${classes}" data-question-index="${index}" aria-label="Question ${index + 1}">${index + 1}</button>`;
@@ -914,13 +930,14 @@ function renderOption(question, option) {
   const isEliminated = Boolean(state.eliminated?.[question.id]?.[option.id]);
 
   return `
-    <button class="option ${selected ? "selected" : ""} ${isEliminated ? "eliminated" : ""}" data-option-id="${escapeAttribute(option.id)}">
+    <button class="option ${selected ? "selected" : ""} ${isEliminated ? "eliminated" : ""}" data-option-id="${escapeAttribute(option.id)}" ${isEliminated ? "aria-disabled=\"true\"" : ""}>
       <span class="option-letter">${escapeHtml(option.id.toUpperCase())}</span>
       <span class="option-body">
         <span>${escapeHtml(option.label)}</span>
         ${option.image ? `<img src="${escapeAttribute(assetUrl(option.image))}" alt="" draggable="false" />` : ""}
+        ${isEliminated ? `<small class="eliminated-note">Eliminated</small>` : ""}
       </span>
-      ${assessment.tools?.eliminator ? `<span class="eliminate" data-eliminate-id="${escapeAttribute(option.id)}" title="Eliminate option">-</span>` : ""}
+      ${assessment.tools?.eliminator ? `<span class="eliminate" data-eliminate-id="${escapeAttribute(option.id)}" title="${isEliminated ? "Restore this option" : "Eliminate this option"}">${isEliminated ? "+" : "-"}</span>` : ""}
     </button>
   `;
 }
@@ -930,7 +947,7 @@ function renderQuestionMedia(question) {
     return `
       <figure class="question-image">
         <img src="${escapeAttribute(assetUrl(question.image))}" alt="${escapeAttribute(question.imageDescription || "")}" draggable="false" />
-        ${assessment.tools?.imageZoom !== false ? `<button class="image-zoom" data-zoom-image="${escapeAttribute(assetUrl(question.image))}" title="Zoom image">${icons.zoom}</button>` : ""}
+        ${assessment.tools?.imageZoom !== false ? `<button class="image-zoom" data-zoom-image="${escapeAttribute(assetUrl(question.image))}" title="Open image zoom">${icons.zoom} Zoom</button>` : ""}
       </figure>
     `;
   }
@@ -975,15 +992,19 @@ function renderCalculator() {
 function bindActions() {
   document.querySelectorAll("[data-question-index]").forEach((button) => {
     button.addEventListener("click", () => {
-      setState({ currentIndex: Number(button.dataset.questionIndex) });
+      setState(markVisited({
+        currentIndex: Number(button.dataset.questionIndex)
+      }));
     });
   });
 
   document.querySelectorAll("[data-option-id]").forEach((button) => {
     button.addEventListener("click", () => {
       const question = questions[state.currentIndex];
+      const optionId = button.dataset.optionId;
+      if (state.eliminated?.[question.id]?.[optionId]) return;
       setState({
-        answers: { ...state.answers, [question.id]: button.dataset.optionId }
+        answers: { ...state.answers, [question.id]: optionId }
       }, { preserveQuestionScroll: true });
     });
   });
@@ -995,13 +1016,19 @@ function bindActions() {
       const optionId = button.dataset.eliminateId;
       const allEliminated = state.eliminated || {};
       const questionEliminated = allEliminated[question.id] || {};
+      const nextQuestionEliminated = {
+        ...questionEliminated,
+        [optionId]: !questionEliminated[optionId]
+      };
+      const nextAnswers = { ...state.answers };
+      if (nextQuestionEliminated[optionId] && nextAnswers[question.id] === optionId) {
+        delete nextAnswers[question.id];
+      }
       setState({
+        answers: nextAnswers,
         eliminated: {
           ...allEliminated,
-          [question.id]: {
-            ...questionEliminated,
-            [optionId]: !questionEliminated[optionId]
-          }
+          [question.id]: nextQuestionEliminated
         }
       }, { preserveQuestionScroll: true });
     });
@@ -1011,15 +1038,20 @@ function bindActions() {
     document.documentElement.requestFullscreen?.();
   });
 
-  document.querySelector("[data-action='flag']")?.addEventListener("click", () => {
-    const question = questions[state.currentIndex];
-    setState({
-      flagged: { ...state.flagged, [question.id]: !state.flagged[question.id] }
-    });
-  });
-
   document.querySelector("[data-action='toggle-calculator']")?.addEventListener("click", () => {
     setState({ calculatorOpen: !state.calculatorOpen });
+  });
+
+  document.querySelector("[data-action='toggle-tools']")?.addEventListener("click", () => {
+    setState({ toolsOpen: !state.toolsOpen });
+  });
+
+  document.querySelector("[data-action='toggle-scratch']")?.addEventListener("click", () => {
+    setState({ scratchOpen: !state.scratchOpen });
+  });
+
+  document.querySelector("[data-action='toggle-timer']")?.addEventListener("click", () => {
+    setState({ timerMode: state.timerMode === "elapsed" ? "remaining" : "elapsed" });
   });
 
   document.querySelectorAll("[data-calc-key]").forEach((button) => {
@@ -1057,16 +1089,28 @@ function bindActions() {
   });
 
   document.querySelector("[data-action='previous']")?.addEventListener("click", () => {
-    setState({ currentIndex: Math.max(0, state.currentIndex - 1) });
+    setState(markVisited({ currentIndex: Math.max(0, state.currentIndex - 1) }));
   });
 
   document.querySelector("[data-action='next']")?.addEventListener("click", () => {
-    setState({ currentIndex: Math.min(questions.length - 1, state.currentIndex + 1) });
+    setState(markVisited({ currentIndex: Math.min(questions.length - 1, state.currentIndex + 1) }));
   });
 
   document.querySelector("[data-action='submit']")?.addEventListener("click", () => {
     setState({ reviewing: true });
   });
+}
+
+function markVisited(patch = {}) {
+  const question = questions[state.currentIndex];
+  if (!question) return patch;
+  return {
+    ...patch,
+    visited: {
+      ...(state.visited || {}),
+      [question.id]: true
+    }
+  };
 }
 
 function submitAssessment() {
@@ -1095,7 +1139,6 @@ function buildEvaluation() {
       correctAnswer: question.answer,
       correctLabel: correctOption?.label || "",
       isCorrect: selected === question.answer,
-      isFlagged: Boolean(state.flagged[question.id]),
       explanation: question.explanation || "",
       distractorFeedback: selected && question.distractors?.[selected]
         ? question.distractors[selected]
@@ -1151,8 +1194,7 @@ function buildEvaluation() {
       total,
       percentage,
       answered,
-      unanswered: total - answered,
-      flagged: getFlaggedCount()
+      unanswered: total - answered
     },
     summary: {
       strengths,
@@ -1472,16 +1514,59 @@ function captureScratch() {
 }
 
 function openImageZoom(src) {
+  zoomImageSrc = src;
+  zoomScale = 1;
   const overlay = document.createElement("div");
   overlay.className = "zoom-overlay";
   overlay.innerHTML = `
-    <button class="zoom-close" title="Close">Close</button>
-    <img src="${escapeAttribute(src)}" alt="" draggable="false" />
+    <div class="zoom-toolbar" aria-label="Image zoom controls">
+      <button data-zoom-control="out" title="Zoom out">-</button>
+      <span data-zoom-label>100%</span>
+      <button data-zoom-control="in" title="Zoom in">+</button>
+      <button data-zoom-control="reset" title="Reset zoom">Reset</button>
+      <button class="zoom-close" data-zoom-control="close" title="Close">Close</button>
+    </div>
+    <div class="zoom-stage">
+      <img src="${escapeAttribute(zoomImageSrc)}" alt="" draggable="false" />
+    </div>
   `;
+
+  const image = overlay.querySelector("img");
+  const label = overlay.querySelector("[data-zoom-label]");
+  const applyZoom = () => {
+    image.style.transform = `scale(${zoomScale})`;
+    label.textContent = `${Math.round(zoomScale * 100)}%`;
+  };
+  const changeZoom = (amount) => {
+    zoomScale = Math.min(3, Math.max(0.5, Number((zoomScale + amount).toFixed(2))));
+    applyZoom();
+  };
+
   overlay.addEventListener("click", (event) => {
-    if (event.target === overlay || event.target.className === "zoom-close") overlay.remove();
+    const control = event.target.closest("[data-zoom-control]");
+    if (!control) {
+      if (event.target === overlay) overlay.remove();
+      return;
+    }
+
+    if (control.dataset.zoomControl === "in") changeZoom(0.2);
+    if (control.dataset.zoomControl === "out") changeZoom(-0.2);
+    if (control.dataset.zoomControl === "reset") {
+      zoomScale = 1;
+      applyZoom();
+    }
+    if (control.dataset.zoomControl === "close") overlay.remove();
   });
+  overlay.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    changeZoom(event.deltaY < 0 ? 0.12 : -0.12);
+  }, { passive: false });
+  overlay.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") overlay.remove();
+  });
+  overlay.tabIndex = -1;
   document.body.appendChild(overlay);
+  overlay.focus();
 }
 
 function renderSubmitted() {
@@ -1510,32 +1595,8 @@ function renderSubmitted() {
         <div class="result-stats">
           <span>${score.answered} answered</span>
           <span>${score.unanswered} unanswered</span>
-          <span>${score.flagged} flagged</span>
           <span>${formatDuration(timing.timeUsedSeconds)} used</span>
           <span>Stored for ${escapeHtml(student.name)}</span>
-        </div>
-
-        <div class="performance-panels">
-          <section>
-            <h2>Strengths</h2>
-            ${renderTagList(summary.strengths, "No strong topic yet.")}
-          </section>
-          <section>
-            <h2>Review Next</h2>
-            ${renderTagList(summary.needsReview, "No review areas flagged.")}
-          </section>
-        </div>
-
-        <div class="topic-report">
-          <h2>Topic Breakdown</h2>
-          ${summary.topicBreakdown.map((topic) => `
-            <div class="topic-row">
-              <span>${escapeHtml(topic.topic)}</span>
-              <strong>${topic.correct}/${topic.total}</strong>
-              <div class="topic-bar"><i style="width:${topic.percentage}%"></i></div>
-              <em>${topic.percentage}%</em>
-            </div>
-          `).join("")}
         </div>
 
         <div class="student-ilp-panel">
@@ -1582,8 +1643,7 @@ function normalizeScore(evaluation) {
       total: evaluation.total || questions.length,
       percentage: evaluation.percentage || 0,
       answered: evaluation.answered || 0,
-      unanswered: evaluation.unanswered || 0,
-      flagged: evaluation.flagged || 0
+      unanswered: evaluation.unanswered || 0
     };
 }
 
@@ -1633,7 +1693,7 @@ function buildResponseCsv(evaluation) {
 
 function buildAttemptsCsv(attempts) {
   const rows = [
-    ["attempt_id", "student_id", "student_name", "assessment", "score", "total", "percentage", "answered", "unanswered", "flagged", "time_used_seconds", "submitted_at"]
+    ["attempt_id", "student_id", "student_name", "assessment", "score", "total", "percentage", "answered", "unanswered", "time_used_seconds", "submitted_at"]
   ];
 
   for (const attempt of attempts) {
@@ -1650,7 +1710,6 @@ function buildAttemptsCsv(attempts) {
       score.percentage,
       score.answered,
       score.unanswered,
-      score.flagged,
       timing.timeUsedSeconds,
       attempt.submittedAt || ""
     ]);
