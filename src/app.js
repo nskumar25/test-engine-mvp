@@ -1,9 +1,11 @@
 const STORAGE_KEY = "assessment-engine-mvp";
 const STUDENTS_STORAGE_KEY = "assessment-engine-students";
+const ASSIGNMENTS_STORAGE_KEY = "assessment-engine-assignments";
 const RESULTS_DB_NAME = "assessment-engine-results";
 const RESULTS_STORE = "attempts";
 const ATTEMPT_SCHEMA_VERSION = "attempt-v1";
-const DATA_PROVIDER = "local";
+const DATA_PROVIDER = window.ASSESSMENT_DATA_PROVIDER || "local";
+const API_BASE_URL = window.ASSESSMENT_API_BASE_URL || "";
 const QUESTION_SOURCE = "input/pre-test-for-demo.json";
 
 const icons = {
@@ -82,6 +84,7 @@ function getInitialState(total) {
           calculatorOpen: Boolean(parsed.calculatorOpen),
           scratchOpen: parsed.scratchOpen !== false,
           timerMode: parsed.timerMode || "remaining",
+          studentLookupError: parsed.studentLookupError || "",
           reviewing: Boolean(parsed.reviewing)
         };
       }
@@ -108,6 +111,7 @@ function getInitialState(total) {
       accessCode: ""
     },
     reviewing: false,
+    studentLookupError: "",
     submitted: false,
     evaluation: null,
     remainingSeconds: assessment.durationMinutes * 60,
@@ -383,6 +387,7 @@ function renderAdminDashboard() {
         <nav class="admin-nav">
           <a href="#overview">Overview</a>
           <a href="#assessments">Settings</a>
+          <a href="#assignments">Assignments</a>
           <a href="#questions">Questions</a>
           <a href="#import">Import</a>
           <a href="#results">Results</a>
@@ -407,20 +412,40 @@ function renderAdminDashboard() {
     </main>
   `;
 
-  loadAdminData().then(({ attempts, students }) => {
-    paintAdminDashboard(attempts, students);
+  loadAdminData().then(({ attempts, students, assignments, dataErrors, studentFilters }) => {
+    paintAdminDashboard(attempts, students, assignments, dataErrors, studentFilters);
   });
 }
 
 async function loadAdminData() {
-  const [attempts, students] = await Promise.all([
-    localDataAdapter.listAttempts(),
-    localDataAdapter.listStudents()
+  const adapter = getDataAdapter();
+  const [attempts, studentFilters, assignments] = await Promise.all([
+    loadAdminDataset(() => adapter.listAttempts()),
+    loadAdminDataset(() => adapter.listStudentFilters()),
+    loadAdminDataset(() => adapter.listAssignments())
   ]);
-  return { attempts, students };
+  return {
+    attempts: attempts.data,
+    students: [],
+    studentFilters: studentFilters.data,
+    assignments: assignments.data,
+    dataErrors: {
+      attempts: attempts.error,
+      students: studentFilters.error,
+      assignments: assignments.error
+    }
+  };
 }
 
-function paintAdminDashboard(attempts, students) {
+async function loadAdminDataset(loader) {
+  try {
+    return { data: await loader(), error: "" };
+  } catch (error) {
+    return { data: [], error: error.message || "Could not load data" };
+  }
+}
+
+function paintAdminDashboardLegacy(attempts, students) {
   const activePage = getAdminPage();
   const scoreAverage = attempts.length
     ? Math.round(attempts.reduce((sum, attempt) => sum + normalizeScore(attempt).percentage, 0) / attempts.length)
@@ -608,30 +633,28 @@ function paintAdminDashboard(attempts, students) {
       </div>
       <div class="database-plan">
         <article>
-          <h3>Current MVP</h3>
-          <p>Active provider: ${escapeHtml(DATA_PROVIDER)}. Student attempts are stored locally in IndexedDB and admin helper data is stored in localStorage through a data adapter.</p>
+          <h3>Connected Now</h3>
+          <p>Active provider: ${escapeHtml(DATA_PROVIDER)}. Students are looked up from your existing PostgreSQL registration data using only the student username.</p>
         </article>
         <article>
-          <h3>Recommended Production Database</h3>
-          <p>Supabase Postgres for assessments, questions, attempts, responses, ILPs, and external student mapping.</p>
+          <h3>Needed For This MVP</h3>
+          <p>Student lookup, submitted attempts, answer responses, and generated ILPs. Questions can stay in JSON until the admin question library is ready.</p>
         </article>
         <article>
-          <h3>Migration Strategy</h3>
-          <p>Replace adapter functions with Supabase calls. Keep the dashboard UI and attempt schema mostly unchanged.</p>
+          <h3>Later</h3>
+          <p>Move assessments, reusable questions, assignments, and assets into PostgreSQL when you want full admin-managed test publishing.</p>
         </article>
       </div>
       <div class="admin-table-wrap">
         <table class="admin-table">
           <thead><tr><th>Table</th><th>Purpose</th></tr></thead>
           <tbody>
-            <tr><td>external_students</td><td>Maps this engine to your existing registered student system.</td></tr>
-            <tr><td>assessments</td><td>Stores test metadata, duration, status, and tool settings.</td></tr>
-            <tr><td>questions</td><td>Stores reusable question content and answer keys.</td></tr>
-            <tr><td>assessment_questions</td><td>Controls question order and assessment membership.</td></tr>
-            <tr><td>attempts</td><td>Stores student attempt summary, score, timing, and status.</td></tr>
-            <tr><td>responses</td><td>Stores every student answer choice and correctness result.</td></tr>
-            <tr><td>ilp_plans</td><td>Stores generated individualized learning plans.</td></tr>
-            <tr><td>question_assets</td><td>Stores image/file metadata for question assets.</td></tr>
+            <tr><td>public."Student"</td><td>Existing registration table. The student enters username/email; the app uses the real student ID and name.</td></tr>
+            <tr><td>test_engine_registered_students</td><td>View that maps your registration table into the test engine lookup shape.</td></tr>
+            <tr><td>test_engine_attempts</td><td>Stores student attempt summary, score, timing, and raw attempt JSON.</td></tr>
+            <tr><td>test_engine_responses</td><td>Stores every selected answer and correctness result.</td></tr>
+            <tr><td>test_engine_ilp_plans</td><td>Stores generated individualized learning plans.</td></tr>
+            <tr><td>Future library tables</td><td>Assessments, questions, assignments, and assets can be used later when JSON is replaced.</td></tr>
           </tbody>
         </table>
       </div>
@@ -662,8 +685,597 @@ function paintAdminDashboard(attempts, students) {
   });
 }
 
+function paintAdminDashboard(attempts, students, assignments = [], dataErrors = {}, studentFilters = {}) {
+  const activePage = getAdminPage();
+  const latestAttempts = [...attempts].sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
+  const context = {
+    attempts,
+    students,
+    studentFilters,
+    assignments,
+    dataErrors,
+    latestAttempts,
+    scoreAverage: attempts.length
+      ? Math.round(attempts.reduce((sum, attempt) => sum + normalizeScore(attempt).percentage, 0) / attempts.length)
+      : 0,
+    completedStudents: new Set(attempts.map((attempt) => normalizeStudent(attempt).id)).size,
+    topicRows: aggregateAttemptTopics(attempts),
+    validation: validateAssessment(),
+    ilpAttempts: latestAttempts.filter((attempt) => attempt.ilp)
+  };
+  const meta = getAdminPageMeta(activePage);
+
+  document.querySelector(".admin-main").innerHTML = `
+    <header class="admin-header">
+      <div>
+        <p class="eyebrow">${escapeHtml(meta.eyebrow)}</p>
+        <h1>${escapeHtml(meta.title)}</h1>
+      </div>
+      <div class="admin-actions">
+        ${renderAdminHeaderActions(activePage)}
+      </div>
+    </header>
+    ${renderAdminPage(activePage, context)}
+  `;
+
+  setAdminActiveNav(activePage);
+
+  document.querySelector("[data-action='export-attempts-json']")?.addEventListener("click", () => {
+    downloadText("assessment-attempts.json", JSON.stringify(attempts, null, 2), "application/json");
+  });
+
+  document.querySelector("[data-action='export-attempts-csv']")?.addEventListener("click", () => {
+    downloadText("assessment-attempts.csv", buildAttemptsCsv(attempts), "text/csv");
+  });
+
+  document.querySelectorAll("[data-action='export-ilp']").forEach((button) => {
+    button.addEventListener("click", () => {
+      const attempt = attempts.find((item) => (item.attemptId || item.id) === button.dataset.attemptId);
+      if (!attempt) return;
+      const student = normalizeStudent(attempt);
+      downloadText(`${fileSafe(student.id)}-ilp.json`, JSON.stringify(attempt.ilp || {}, null, 2), "application/json");
+    });
+  });
+
+  bindAssignmentControls();
+}
+
+function getAdminPageMeta(page) {
+  const pages = {
+    overview: { eyebrow: "Admin Overview", title: "Dashboard" },
+    assessments: { eyebrow: "Assessment Setup", title: "Pre-Test Settings" },
+    assignments: { eyebrow: "Student Assignments", title: "Assignments" },
+    questions: { eyebrow: "Question Bank", title: "Questions" },
+    import: { eyebrow: "Import Workflow", title: "JSON Intake" },
+    results: { eyebrow: "Performance", title: "Results" },
+    ilp: { eyebrow: "Personalized Learning", title: "ILP Review" },
+    database: { eyebrow: "Data Layer", title: "PostgreSQL Connection" }
+  };
+  return pages[page] || pages.overview;
+}
+
+function renderAdminHeaderActions(page) {
+  if (page === "results") {
+    return `
+      <button class="secondary-action" data-action="export-attempts-json">Export Attempts JSON</button>
+      <button class="secondary-action" data-action="export-attempts-csv">Export Attempts CSV</button>
+    `;
+  }
+  if (page === "questions") {
+    return `<a class="secondary-action admin-link-button" href="./" target="_blank">Preview Student View</a>`;
+  }
+  return `<a class="secondary-action admin-link-button" href="./">Open Student Test</a>`;
+}
+
+function renderAdminPage(page, context) {
+  if (page === "assessments") return renderAdminAssessmentPage(context.validation);
+  if (page === "assignments") return renderAdminAssignmentsPage(context);
+  if (page === "questions") return renderAdminQuestionsPage();
+  if (page === "import") return renderAdminImportPage();
+  if (page === "results") return renderAdminResultsPage(context);
+  if (page === "ilp") return renderAdminIlpPage(context);
+  if (page === "database") return renderAdminDatabasePage();
+  return renderAdminOverviewPage(context);
+}
+
+function renderAdminOverviewPage(context) {
+  return `
+    <section class="admin-page-shell">
+      <div class="admin-kpis">
+        <article><span>Questions</span><strong>${questions.length}</strong></article>
+        <article><span>Submitted</span><strong>${context.attempts.length}</strong></article>
+        <article><span>Students Tested</span><strong>${context.completedStudents}</strong></article>
+        <article><span>Average Score</span><strong>${context.scoreAverage}%</strong></article>
+      </div>
+      <div class="admin-split">
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <p class="eyebrow">Current Assessment</p>
+              <h2>${escapeHtml(assessment.title)}</h2>
+            </div>
+          </div>
+          <div class="assessment-config">
+            <span>${questions.length} questions</span>
+            <span>${assessment.durationMinutes} minutes</span>
+            <span>Provider: ${escapeHtml(DATA_PROVIDER)}</span>
+          </div>
+          <div class="settings-grid">
+            ${renderSetting("Calculator", assessment.tools?.calculator)}
+            ${renderSetting("Scratch pad", assessment.tools?.scratchpad !== false)}
+            ${renderSetting("Image zoom", assessment.tools?.imageZoom !== false)}
+            ${renderSetting("Answer eliminator", assessment.tools?.eliminator)}
+          </div>
+        </article>
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <p class="eyebrow">Recent Activity</p>
+              <h2>Latest Submissions</h2>
+            </div>
+          </div>
+          ${renderRecentAttempts(context.latestAttempts)}
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function renderAdminAssessmentPage(validation) {
+  return `
+    <section class="admin-page-shell">
+      <div class="admin-split">
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <p class="eyebrow">Assessment Settings</p>
+              <h2>${escapeHtml(assessment.title)}</h2>
+            </div>
+          </div>
+          <div class="assessment-config">
+            <span>${questions.length} questions</span>
+            <span>${assessment.durationMinutes} minutes</span>
+            <span>Input: ${escapeHtml(assessment.inputFormatVersion || "mvp-1")}</span>
+            <span>Source: ${escapeHtml(assessment.sourceDocument || "JSON")}</span>
+          </div>
+          <div class="settings-grid">
+            ${renderSetting("Calculator", assessment.tools?.calculator)}
+            ${renderSetting("Scratch pad", assessment.tools?.scratchpad !== false)}
+            ${renderSetting("Image zoom", assessment.tools?.imageZoom !== false)}
+            ${renderSetting("Answer eliminator", assessment.tools?.eliminator)}
+          </div>
+          <div class="admin-note">Student identity is now read from your PostgreSQL registration data by username/email.</div>
+        </article>
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <p class="eyebrow">Quality Gate</p>
+              <h2>Validation</h2>
+            </div>
+          </div>
+          <div class="validation-score ${validation.errors.length ? "has-errors" : "clean"}">
+            <strong>${validation.errors.length ? "Needs Review" : "Ready"}</strong>
+            <span>${validation.errors.length} errors / ${validation.warnings.length} warnings</span>
+          </div>
+          ${renderValidationList("Errors", validation.errors, "No blocking errors.")}
+          ${renderValidationList("Warnings", validation.warnings, "No warnings.")}
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function renderAdminAssignmentsPage(context) {
+  const gradeOptions = context.studentFilters?.grades || [];
+  const schoolOptions = context.studentFilters?.schools || [];
+  const availableTests = [getCurrentAssessmentPayload()];
+  const totalStudents = context.studentFilters?.totalStudents || 0;
+
+  return `
+    <section class="admin-page-shell">
+      <article class="admin-card assignment-card">
+        <div class="admin-card-head">
+          <div>
+            <p class="eyebrow">Assignment Builder</p>
+            <h2>Select students and test</h2>
+          </div>
+          <span class="assignment-count">${totalStudents} registered students</span>
+        </div>
+
+        ${context.dataErrors?.students ? `<div class="admin-error">Student lookup failed: ${escapeHtml(context.dataErrors.students)}. Check that the API server has the correct DATABASE_URL and STUDENT_VIEW.</div>` : ""}
+        ${context.dataErrors?.assignments ? `<div class="admin-error">Assignment lookup failed: ${escapeHtml(context.dataErrors.assignments)}.</div>` : ""}
+
+        <div class="assignment-toolbar">
+          <label>
+            School
+            <select data-assignment-filter="school">
+              <option value="">All schools</option>
+              ${schoolOptions.map((school) => `<option value="${escapeAttribute(school)}">${escapeHtml(school)}</option>`).join("")}
+            </select>
+          </label>
+          <label>
+            Grade
+            <select data-assignment-filter="grade">
+              <option value="">All grades</option>
+              ${gradeOptions.map((grade) => `<option value="${escapeAttribute(grade)}">${escapeHtml(grade)}</option>`).join("")}
+            </select>
+          </label>
+          <label>
+            Search
+            <input data-assignment-filter="search" type="search" placeholder="Name, email, or ID" />
+          </label>
+          <label>
+            Test
+            <select data-assignment-test>
+              ${availableTests.map((test) => `<option value="${escapeAttribute(test.key)}">${escapeHtml(test.title)}</option>`).join("")}
+            </select>
+          </label>
+          <label>
+            Attempts
+            <input data-assignment-attempt-limit type="number" min="1" max="5" value="1" />
+          </label>
+        </div>
+
+        <div class="assignment-actions">
+          <button class="primary-action" data-action="view-filtered-students">View Students</button>
+          <button class="secondary-action" data-action="select-visible-students">Select Visible</button>
+          <button class="secondary-action" data-action="clear-student-selection">Clear</button>
+          <button class="primary-action" data-action="assign-selected-students">Assign Selected</button>
+          <span data-assignment-status>Choose filters, then view students.</span>
+        </div>
+
+        <div class="student-assignment-results" data-assignment-results>
+          <p class="empty-review">Choose filters and click View Students. Results are loaded in pages, not all at once.</p>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function renderAdminQuestionsPage() {
+  return `
+    <section class="admin-page-shell">
+      <article class="admin-card">
+        <div class="admin-card-head">
+          <div>
+            <p class="eyebrow">MVP JSON Source</p>
+            <h2>${questions.length} Questions</h2>
+          </div>
+        </div>
+        <div class="question-admin-list roomy">
+          ${questions.map((question, index) => `
+            <div>
+              <strong>Q${question.number || index + 1}</strong>
+              <span>${escapeHtml(question.topic || "General")}</span>
+              <p>${escapeHtml(question.question)}</p>
+              <small>${question.options.length} options / Answer ${escapeHtml(String(question.answer || "").toUpperCase())} / ${question.image ? "Has image" : "No image"}</small>
+            </div>
+          `).join("")}
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function renderAdminImportPage() {
+  return `
+    <section class="admin-page-shell">
+      <article class="admin-card">
+        <div class="admin-card-head">
+          <div>
+            <p class="eyebrow">Import Pipeline</p>
+            <h2>Word / JSON Intake</h2>
+          </div>
+        </div>
+        <div class="pipeline-list">
+          <div><strong>1</strong><span>Place DOCX or converted source in the input folder.</span></div>
+          <div><strong>2</strong><span>Convert to assessment JSON with image assets.</span></div>
+          <div><strong>3</strong><span>Validate questions, options, answer keys, and image paths.</span></div>
+          <div><strong>4</strong><span>Preview the student experience before publishing.</span></div>
+        </div>
+        <div class="admin-note">Current MVP source: <strong>input/pre-test-for-demo.json</strong>.</div>
+      </article>
+    </section>
+  `;
+}
+
+function renderAdminResultsPage(context) {
+  return `
+    <section class="admin-page-shell">
+      <div class="admin-split results-layout">
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <p class="eyebrow">Topic Analysis</p>
+              <h2>Performance By Skill</h2>
+            </div>
+          </div>
+          <div class="topic-report admin-topic-report">
+            ${context.topicRows.length ? context.topicRows.map((topic) => `
+              <div class="topic-row">
+                <span>${escapeHtml(topic.topic)}</span>
+                <strong>${topic.correct}/${topic.total}</strong>
+                <div class="topic-bar"><i style="width:${topic.percentage}%"></i></div>
+                <em>${topic.percentage}%</em>
+              </div>
+            `).join("") : `<p class="empty-review">No attempt data yet.</p>`}
+          </div>
+        </article>
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <p class="eyebrow">Attempts</p>
+              <h2>Submitted Results</h2>
+            </div>
+          </div>
+          ${renderAttemptsTable(context.latestAttempts)}
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function renderAdminIlpPage(context) {
+  return `
+    <section class="admin-page-shell">
+      <article class="admin-card">
+        <div class="admin-card-head">
+          <div>
+            <p class="eyebrow">Personalized Learning</p>
+            <h2>Automatic ILP Review</h2>
+          </div>
+        </div>
+        <div class="ilp-admin-list">
+          ${context.ilpAttempts.length
+            ? context.ilpAttempts.map((attempt) => renderAdminILPCard(attempt)).join("")
+            : `<p class="empty-review">No ILPs yet. Submit a student attempt to generate one automatically.</p>`}
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function renderAdminDatabasePage() {
+  return `
+    <section class="admin-page-shell">
+      <div class="database-plan">
+        <article>
+          <h3>Connected Now</h3>
+          <p>Active provider: ${escapeHtml(DATA_PROVIDER)}. Students are looked up from PostgreSQL by username/email.</p>
+        </article>
+        <article>
+          <h3>Needed For MVP</h3>
+          <p>Student lookup, pre-test assignments, submitted attempts, responses, and ILPs. Questions can stay in JSON for now.</p>
+        </article>
+        <article>
+          <h3>Later</h3>
+          <p>Move assessments, reusable questions, assignments, and assets into PostgreSQL when the library is ready.</p>
+        </article>
+      </div>
+      <article class="admin-card">
+        <div class="admin-card-head">
+          <div>
+            <p class="eyebrow">Current Data Contract</p>
+            <h2>Tables In Use</h2>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Table/View</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td>public."Student"</td><td>Existing registration source. Students enter username/email.</td></tr>
+              <tr><td>test_engine_registered_students</td><td>Read-only mapping view used by the API.</td></tr>
+              <tr><td>test_engine_assignments</td><td>Which students are allowed to take the current pre-test.</td></tr>
+              <tr><td>test_engine_attempts</td><td>Attempt summary, timing, score, and raw JSON payload.</td></tr>
+              <tr><td>test_engine_responses</td><td>Each selected answer and correctness result.</td></tr>
+              <tr><td>test_engine_ilp_plans</td><td>Generated individualized learning plans.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function renderRecentAttempts(attempts) {
+  if (!attempts.length) return `<p class="empty-review">No submissions yet.</p>`;
+  return `
+    <div class="recent-attempts">
+      ${attempts.slice(0, 6).map((attempt) => {
+        const student = normalizeStudent(attempt);
+        const score = normalizeScore(attempt);
+        return `<div><strong>${escapeHtml(student.name)}</strong><span>${score.percentage}% / ${formatDateTime(attempt.submittedAt)}</span></div>`;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderAttemptsTable(attempts) {
+  return `
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Student</th><th>ID</th><th>Score</th><th>Answered</th><th>Time Used</th><th>Submitted</th></tr></thead>
+        <tbody>
+          ${attempts.length ? attempts.map((attempt) => {
+            const student = normalizeStudent(attempt);
+            const score = normalizeScore(attempt);
+            const timing = normalizeTiming(attempt);
+            return `<tr>
+              <td>${escapeHtml(student.name)}</td>
+              <td>${escapeHtml(student.id)}</td>
+              <td>${score.correct}/${score.total} (${score.percentage}%)</td>
+              <td>${score.answered}</td>
+              <td>${formatDuration(timing.timeUsedSeconds)}</td>
+              <td>${formatDateTime(attempt.submittedAt)}</td>
+            </tr>`;
+          }).join("") : `<tr><td colspan="6">No submissions yet.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function bindAssignmentControls() {
+  const results = document.querySelector("[data-assignment-results]");
+  if (!results) return;
+
+  let offset = 0;
+  const limit = 25;
+  let lastTotal = 0;
+
+  const getFilters = () => {
+    const search = document.querySelector("[data-assignment-filter='search']")?.value.trim().toLowerCase() || "";
+    const grade = document.querySelector("[data-assignment-filter='grade']")?.value || "";
+    const school = document.querySelector("[data-assignment-filter='school']")?.value || "";
+    return { search, grade, school };
+  };
+
+  const loadStudents = async (nextOffset = 0) => {
+    offset = nextOffset;
+    const status = document.querySelector("[data-assignment-status]");
+    status.textContent = "Loading matching students...";
+    results.innerHTML = `<p class="empty-review">Loading students...</p>`;
+
+    try {
+      const [payload, assignments] = await Promise.all([
+        getDataAdapter().searchStudents({
+          ...getFilters(),
+          limit,
+          offset
+        }),
+        getDataAdapter().listAssignments()
+      ]);
+      const assessmentKey = getAssignmentAssessmentPayload().key;
+      const assignedIds = new Set(
+        assignments
+          .filter((item) => item.assessmentKey === assessmentKey && item.status !== "cancelled")
+          .map((item) => String(item.studentId))
+      );
+      const students = (payload.items || []).map((student) => ({
+        ...student,
+        isAssigned: assignedIds.has(String(student.id))
+      }));
+      lastTotal = payload.total || 0;
+      results.innerHTML = renderAssignmentResults(students, payload);
+      status.textContent = lastTotal
+        ? `Showing ${offset + 1}-${Math.min(offset + limit, lastTotal)} of ${lastTotal} matching student(s).`
+        : "No students match the selected filters.";
+      bindAssignmentPaging(loadStudents);
+    } catch (error) {
+      status.textContent = "Could not load students. Check the API connection.";
+      results.innerHTML = `<div class="admin-error">${escapeHtml(error.message || "Student search failed.")}</div>`;
+    }
+  };
+
+  document.querySelector("[data-action='view-filtered-students']")?.addEventListener("click", () => {
+    loadStudents(0);
+  });
+
+  document.querySelector("[data-action='select-visible-students']")?.addEventListener("click", () => {
+    document.querySelectorAll("[data-student-assignment-id]").forEach((input) => {
+      input.checked = true;
+    });
+  });
+
+  document.querySelector("[data-action='clear-student-selection']")?.addEventListener("click", () => {
+    document.querySelectorAll("[data-student-assignment-id]").forEach((input) => {
+      input.checked = false;
+    });
+  });
+
+  document.querySelector("[data-action='assign-selected-students']")?.addEventListener("click", async () => {
+    const status = document.querySelector("[data-assignment-status]");
+    const selected = Array.from(document.querySelectorAll("[data-student-assignment-id]:checked"))
+      .map((input) => input.dataset.studentAssignmentId);
+    if (!selected.length) {
+      status.textContent = "Select at least one student.";
+      return;
+    }
+
+    status.textContent = "Assigning pre-test...";
+    const attemptLimit = Number(document.querySelector("[data-assignment-attempt-limit]")?.value || 1);
+    try {
+      const result = await getDataAdapter().saveAssignments({
+        assessment: getAssignmentAssessmentPayload(),
+        studentIds: selected,
+        attemptLimit,
+        assignedBy: "admin"
+      });
+      status.textContent = `Assigned pre-test to ${result.assigned || selected.length} student(s).`;
+      loadStudents(offset);
+    } catch {
+      status.textContent = "Could not save assignments. Check that the API is running and the assignment tables exist.";
+    }
+  });
+}
+
+function renderAssignmentResults(students, payload) {
+  if (!students.length) return `<p class="empty-review">No students match the selected filters.</p>`;
+  return `
+    <div class="student-assignment-list">
+      ${students.map((student) => {
+        const assigned = Boolean(student.isAssigned);
+        return `
+          <label class="student-assignment-row">
+            <input type="checkbox" data-student-assignment-id="${escapeAttribute(student.id)}" ${assigned ? "checked" : ""} />
+            <span>
+              <strong>${escapeHtml(student.name || "Unnamed Student")}</strong>
+              <small>${escapeHtml(student.email || student.username || student.id)}${student.gradeLevel ? ` / ${escapeHtml(student.gradeLevel)}` : ""}${student.schoolName ? ` / ${escapeHtml(student.schoolName)}` : ""}</small>
+            </span>
+            <em>${assigned ? "Assigned" : "Ready"}</em>
+          </label>
+        `;
+      }).join("")}
+    </div>
+    <div class="assignment-pager">
+      <button class="secondary-action" data-action="assignment-page" data-offset="${Math.max(0, payload.offset - payload.limit)}" ${payload.offset <= 0 ? "disabled" : ""}>Previous</button>
+      <span>${payload.offset + 1}-${Math.min(payload.offset + payload.limit, payload.total)} of ${payload.total}</span>
+      <button class="secondary-action" data-action="assignment-page" data-offset="${payload.offset + payload.limit}" ${payload.offset + payload.limit >= payload.total ? "disabled" : ""}>Next</button>
+    </div>
+  `;
+}
+
+function bindAssignmentPaging(loadStudents) {
+  document.querySelectorAll("[data-action='assignment-page']").forEach((button) => {
+    button.addEventListener("click", () => {
+      loadStudents(Number(button.dataset.offset || 0));
+    });
+  });
+}
+
+function uniqueValues(values) {
+  return [...new Set(values.filter(Boolean).map(String))].sort((a, b) => a.localeCompare(b));
+}
+
+function getCurrentAssessmentKey() {
+  return String(assessment.sourceDocument || assessment.title || "pre-test-for-demo")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "pre-test-for-demo";
+}
+
+function getCurrentAssessmentPayload() {
+  return {
+    key: getCurrentAssessmentKey(),
+    title: assessment.title,
+    sourceDocument: assessment.sourceDocument || QUESTION_SOURCE,
+    durationMinutes: assessment.durationMinutes,
+    inputFormatVersion: assessment.inputFormatVersion || "mvp-1",
+    tools: assessment.tools || {},
+    instructions: assessment.instructions || []
+  };
+}
+
+function getAssignmentAssessmentPayload() {
+  const selectedKey = document.querySelector("[data-assignment-test]")?.value || getCurrentAssessmentKey();
+  return {
+    ...getCurrentAssessmentPayload(),
+    key: selectedKey
+  };
+}
+
 function getAdminPage() {
-  const allowed = ["overview", "assessments", "questions", "import", "results", "ilp", "database"];
+  const allowed = ["overview", "assessments", "assignments", "questions", "import", "results", "ilp", "database"];
   const page = window.location.hash.replace("#", "") || "overview";
   return allowed.includes(page) ? page : "overview";
 }
@@ -715,40 +1327,85 @@ function renderStartScreen() {
 
         <form class="student-form">
           <div>
-            <p class="eyebrow">Student details</p>
-            <h2>Confirm your information</h2>
+            <p class="eyebrow">Student sign in</p>
+            <h2>Enter your username</h2>
           </div>
           <label>
-            Student name
-            <input name="studentName" value="${escapeAttribute(state.student?.name || "")}" autocomplete="name" required />
+            Student username
+            <input name="studentUsername" value="${escapeAttribute(state.student?.username || state.student?.email || "")}" autocomplete="username" placeholder="Student email or ID" required />
           </label>
-          <label>
-            Student ID
-            <input name="studentId" value="${escapeAttribute(state.student?.id || "")}" autocomplete="off" required />
-          </label>
-          <label>
-            Access code
-            <input name="accessCode" value="${escapeAttribute(state.student?.accessCode || "")}" autocomplete="off" placeholder="For demo, any code works" />
-          </label>
+          <p class="lookup-message" data-lookup-message>${state.studentLookupError ? escapeHtml(state.studentLookupError) : "Use the username from your student registration."}</p>
           <button class="primary-action" type="submit">Begin Assessment ${icons.next}</button>
         </form>
       </section>
     </main>
   `;
 
-  document.querySelector(".student-form").addEventListener("submit", (event) => {
+  document.querySelector(".student-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const username = String(form.get("studentUsername") || "").trim();
+    const submitButton = event.currentTarget.querySelector("button[type='submit']");
+    const message = event.currentTarget.querySelector("[data-lookup-message]");
+    submitButton.disabled = true;
+    message.textContent = "Checking student registration...";
+
+    const student = await findRegisteredStudent(username);
+    if (!student) {
+      submitButton.disabled = false;
+      message.textContent = "Student username was not found. Please check the username and try again.";
+      return;
+    }
+
+    const assigned = await hasCurrentAssessmentAssignment(student.id);
+    if (!assigned) {
+      submitButton.disabled = false;
+      message.textContent = "This pre-test is not assigned to this student yet. Please contact the administrator.";
+      return;
+    }
+
     setState({
       started: true,
       startedAt: new Date().toISOString(),
+      studentLookupError: "",
       student: {
-        name: String(form.get("studentName") || "").trim(),
-        id: String(form.get("studentId") || "").trim(),
-        accessCode: String(form.get("accessCode") || "").trim()
+        name: student.name,
+        id: student.id,
+        username: student.username || username,
+        email: student.email || "",
+        gradeLevel: student.gradeLevel || "",
+        section: student.section || ""
       }
     });
   });
+}
+
+async function findRegisteredStudent(username) {
+  const normalized = username.toLowerCase();
+  try {
+    const students = await getDataAdapter().listStudents(username);
+    return students.find((student) => {
+      return [student.username, student.email, student.id, student.name]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase() === normalized);
+    }) || null;
+  } catch {
+    return null;
+  }
+}
+
+async function hasCurrentAssessmentAssignment(studentId) {
+  try {
+    const assignments = await getDataAdapter().listAssignments();
+    const assessmentKey = getCurrentAssessmentKey();
+    return assignments.some((assignment) => {
+      return String(assignment.studentId) === String(studentId)
+        && assignment.assessmentKey === assessmentKey
+        && assignment.status !== "cancelled";
+    });
+  } catch {
+    return false;
+  }
 }
 
 function renderSubmitReview() {
@@ -1359,11 +2016,14 @@ function buildTopicBreakdown(responses) {
 }
 
 function saveAttempt(evaluation) {
-  getDataAdapter().saveAttempt(evaluation);
+  getDataAdapter().saveAttempt(evaluation).catch(() => {
+    saveAttemptLocally(evaluation);
+  });
 }
 
 function getDataAdapter() {
   if (DATA_PROVIDER === "local") return localDataAdapter;
+  if (DATA_PROVIDER === "api" && API_BASE_URL) return apiDataAdapter;
   return localDataAdapter;
 }
 
@@ -1428,8 +2088,40 @@ const localDataAdapter = {
     });
   },
 
-  async listStudents() {
-    return JSON.parse(localStorage.getItem(STUDENTS_STORAGE_KEY) || "[]");
+  async listStudents(search = "") {
+    const students = JSON.parse(localStorage.getItem(STUDENTS_STORAGE_KEY) || "[]");
+    if (!search) return students;
+    const normalized = search.toLowerCase();
+    return students.filter((student) => {
+      return [student.username, student.email, student.id, student.name]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalized));
+    });
+  },
+
+  async listStudentFilters() {
+    const students = await this.listStudents();
+    return {
+      schools: uniqueValues(students.map((student) => student.schoolName)),
+      grades: uniqueValues(students.map((student) => student.gradeLevel)),
+      totalStudents: students.length
+    };
+  },
+
+  async searchStudents(params = {}) {
+    const students = await this.listStudents(params.search || "");
+    const filtered = students.filter((student) => {
+      return (!params.school || student.schoolName === params.school)
+        && (!params.grade || student.gradeLevel === params.grade);
+    });
+    const limit = Number(params.limit || 25);
+    const offset = Number(params.offset || 0);
+    return {
+      items: filtered.slice(offset, offset + limit),
+      total: filtered.length,
+      limit,
+      offset
+    };
   },
 
   async saveStudent(student) {
@@ -1440,6 +2132,105 @@ const localDataAdapter = {
     ];
     localStorage.setItem(STUDENTS_STORAGE_KEY, JSON.stringify(next));
     return student;
+  },
+
+  async listAssignments() {
+    return JSON.parse(localStorage.getItem(ASSIGNMENTS_STORAGE_KEY) || "[]");
+  },
+
+  async saveAssignments(payload) {
+    const previous = await this.listAssignments();
+    const assessmentKey = payload.assessment?.key || getCurrentAssessmentKey();
+    const now = new Date().toISOString();
+    const incoming = (payload.studentIds || []).map((studentId) => ({
+      id: `${assessmentKey}-${studentId}`,
+      studentId,
+      assessmentKey,
+      assessmentTitle: payload.assessment?.title || assessment.title,
+      assignedAt: now,
+      dueAt: payload.dueAt || null,
+      attemptLimit: Number(payload.attemptLimit || 1),
+      status: "assigned",
+      metadata: payload.metadata || {}
+    }));
+    const incomingKeys = new Set(incoming.map((item) => item.id));
+    const next = [
+      ...incoming,
+      ...previous.filter((item) => !incomingKeys.has(item.id))
+    ];
+    localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(next));
+    return { ok: true, assigned: incoming.length };
+  }
+};
+
+const apiDataAdapter = {
+  async saveAttempt(evaluation) {
+    const response = await fetch(`${API_BASE_URL}/api/attempts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(evaluation)
+    });
+    if (!response.ok) throw new Error("Could not save attempt");
+    return response.json();
+  },
+
+  async listAttempts() {
+    const response = await fetch(`${API_BASE_URL}/api/attempts`);
+    if (!response.ok) throw new Error("Could not load attempts");
+    return response.json();
+  },
+
+  async listStudents(search = "") {
+    const url = new URL(`${API_BASE_URL}/api/students`);
+    if (search) url.searchParams.set("search", search);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Could not load students");
+    return response.json();
+  },
+
+  async listStudentFilters() {
+    const response = await fetch(`${API_BASE_URL}/api/student-filters`);
+    if (!response.ok) throw new Error("Could not load student filters");
+    return response.json();
+  },
+
+  async searchStudents(params = {}) {
+    const url = new URL(`${API_BASE_URL}/api/students`);
+    url.searchParams.set("paged", "1");
+    url.searchParams.set("limit", String(params.limit || 25));
+    url.searchParams.set("offset", String(params.offset || 0));
+    if (params.search) url.searchParams.set("search", params.search);
+    if (params.school) url.searchParams.set("school", params.school);
+    if (params.grade) url.searchParams.set("grade", params.grade);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Could not search students");
+    return response.json();
+  },
+
+  async saveStudent(student) {
+    const response = await fetch(`${API_BASE_URL}/api/students`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(student)
+    });
+    if (!response.ok) throw new Error("Could not save student");
+    return response.json();
+  },
+
+  async listAssignments() {
+    const response = await fetch(`${API_BASE_URL}/api/assignments`);
+    if (!response.ok) throw new Error("Could not load assignments");
+    return response.json();
+  },
+
+  async saveAssignments(payload) {
+    const response = await fetch(`${API_BASE_URL}/api/assignments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error("Could not save assignments");
+    return response.json();
   }
 };
 

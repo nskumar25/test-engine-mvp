@@ -1,22 +1,37 @@
 # Question Source Notes
 
-For this MVP, assessments are loaded from the input folder:
+For this MVP, assessments are loaded from:
 
-`input/pre-test-for-demo.json`
+```text
+input/pre-test-for-demo.json
+```
 
-That is the right approach for the first version because it is simple, reviewable, and easy to replace later. The student app fetches one JSON file and renders MCQ questions from it. Extracted document images are stored beside the JSON under `input/assets/`.
+That is still the right short-term approach because it is easy to review, edit, and replace. Extracted document images live beside the JSON under `input/assets/`.
 
-Recommended next step for a production library:
+## Production Direction
 
-1. Store questions in a database through an admin/library module.
-2. Keep images in controlled asset storage, such as a private uploads folder or cloud object storage.
-3. Generate the same JSON shape from an API endpoint when a student starts an assessment.
-4. Do not expose answer keys to the student browser in production. The current JSON includes `answer` only for MVP/demo convenience.
+Questions should eventually move into PostgreSQL through the admin dashboard/library module:
+
+1. Store assessment metadata in `test_engine_assessments`.
+2. Store reusable questions in `test_engine_questions`.
+3. Store ordering in `test_engine_assessment_questions`.
+4. Store image metadata in `test_engine_question_assets`.
+5. Store actual image files in object storage or a controlled asset folder.
+6. Generate a student-safe assessment payload from the API when the student starts a test.
+
+## Important Security Change Before Real Use
+
+The MVP JSON includes answer keys so the browser can evaluate locally. Production should not send answer keys to the browser. The API should:
+
+- send only question text, options, and image URLs to the student UI;
+- receive selected answers on submit;
+- score the attempt server-side;
+- store results in PostgreSQL.
 
 The current JSON structure already supports:
 
-- Assessment metadata: title, duration, candidate, instructions
-- MCQ questions only
+- Assessment metadata
+- MCQ questions
 - Question images
 - Option images
-- Topics and question IDs
+- Topics and question IDs for admin/ILP use

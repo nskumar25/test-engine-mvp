@@ -1,55 +1,63 @@
-# Result Storage Notes
+# Results Architecture
 
-For this MVP, submitted attempts are stored in browser IndexedDB under:
+The MVP currently supports two data modes:
 
-- Database: `assessment-engine-results`
-- Store: `attempts`
-- Student key: `studentId`
+- `local`: browser IndexedDB/localStorage for demo use.
+- `api`: browser calls to a backend API, which writes to PostgreSQL.
 
-The admin dashboard reads data through a small local adapter in `src/app.js`:
+The app still defaults to `local` so GitHub Pages remains usable without backend hosting.
 
-- `localDataAdapter.listAttempts()`
-- `localDataAdapter.listStudents()`
-- `localDataAdapter.saveStudent(student)`
+## Production Shape
 
-When moving to Supabase, Firebase, Neon, or another backend, replace this adapter with API calls while keeping the dashboard UI and attempt shape mostly unchanged.
+```text
+GitHub Pages student/admin frontend
+        ->
+Hosted Node API
+        ->
+PostgreSQL
+        ->
+Existing student registration table/view
+```
 
-This is suitable for demo-scale local testing because it avoids localStorage limits and can hold many more attempt records in a browser profile.
+The browser must never connect directly to PostgreSQL. The Node API stores attempts and reads student registration data through a safe mapped view.
 
-For a production system, replace this with an API-backed model:
+## PostgreSQL Tables
 
-- `students`
-- `assessments`
-- `assessment_attempts`
-- `assessment_responses`
-- `question_bank`
-- `question_assets`
+- `test_engine_assessments`
+- `test_engine_questions`
+- `test_engine_assessment_questions`
+- `test_engine_assignments`
+- `test_engine_attempts`
+- `test_engine_responses`
+- `test_engine_ilp_plans`
+- `test_engine_question_assets`
 
-The current attempt shape already maps cleanly to that backend:
+Student registration stays outside these tables. The API reads a view such as `test_engine_registered_students` that maps your existing student table into:
 
-- `schemaVersion`
-- `attemptId`
-- Student identity
-- Assessment title/source/duration
-- Submitted timestamp
-- Started timestamp
-- Timing summary
-- Score, percentage, answered/unanswered counts, flagged count
-- Topic breakdown
-- Strengths and review areas
-- Per-question response, correct answer, explanation, and distractor feedback
+- `student_external_id`
+- `display_name`
+- `grade_level`
+- `section`
 
-The result page can export:
+## Attempt Storage
 
-- Full JSON attempt record
-- CSV response rows
+Each submitted attempt is stored in:
 
-For 1,000 to 10,000 students, use a hosted database such as PostgreSQL or managed serverless storage. Keep browser IndexedDB only as an offline cache or emergency sync queue.
+- `test_engine_attempts`: summary, score, timing, student id/name, raw JSON payload.
+- `test_engine_responses`: one row per question response.
+- `test_engine_ilp_plans`: generated ILP/practice plan.
 
-Suggested backend tables:
+The raw JSON is intentionally also stored so the UI can evolve without losing historical detail.
 
-- `students(id, name, section, metadata)`
-- `assessments(id, title, duration_minutes, version, source_document)`
-- `attempts(id, student_id, assessment_id, started_at, submitted_at, score, percentage, time_used_seconds)`
-- `responses(id, attempt_id, question_id, selected_answer, correct_answer, is_correct, topic)`
-- `question_bank(id, topic, standard, difficulty, body, answer_key, metadata)`
+## Migration Order
+
+1. Keep questions in `input/pre-test-for-demo.json`.
+2. Save submitted attempts to PostgreSQL through `api/postgres-api.js`.
+3. Connect student lookup to your existing registration table/view.
+4. Add assessment assignment rules.
+5. Move questions and assets into PostgreSQL/object storage.
+6. Remove answer keys from frontend-delivered JSON before real testing.
+
+## Scale Notes
+
+This design is comfortable for 1,000 to 10,000 students if the API is hosted properly and indexes are present. IndexedDB should become only an offline retry cache, not the system of record.

@@ -1,0 +1,2 @@
+window.ASSESSMENT_DATA_PROVIDER = "api";
+window.ASSESSMENT_API_BASE_URL = "http://127.0.0.1:9000";

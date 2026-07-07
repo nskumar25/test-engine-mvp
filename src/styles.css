@@ -1,8 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 
 :root {
   color-scheme: light;
-  font-family: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #f3f5f2;
   color: #17212b;
   font-synthesis: none;
@@ -285,6 +285,13 @@ img {
   border-color: #365f9f;
 }
 
+.lookup-message {
+  margin: 0;
+  color: #596a68;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .shell {
   min-height: 100vh;
   display: grid;
@@ -352,7 +359,7 @@ img {
   overflow: auto;
   display: grid;
   align-content: start;
-  gap: 18px;
+  gap: 16px;
   padding: 24px;
 }
 
@@ -387,6 +394,23 @@ img {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
+}
+
+.admin-page-shell {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.admin-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.admin-split.results-layout {
+  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
 }
 
 .admin-kpis article,
@@ -485,10 +509,14 @@ img {
 }
 
 .question-admin-list {
-  max-height: 420px;
+  max-height: calc(100vh - 230px);
   overflow: auto;
   display: grid;
   gap: 10px;
+}
+
+.question-admin-list.roomy {
+  max-height: calc(100vh - 190px);
 }
 
 .question-admin-list div {
@@ -541,6 +569,122 @@ img {
   gap: 10px;
 }
 
+.assignment-card {
+  gap: 14px;
+}
+
+.assignment-count {
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #eef3fb;
+  color: #263c63;
+  font-weight: 900;
+}
+
+.assignment-toolbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(130px, 0.7fr) minmax(220px, 1.1fr) minmax(180px, 1fr) minmax(90px, 0.45fr);
+  gap: 10px;
+}
+
+.assignment-toolbar label {
+  display: grid;
+  gap: 6px;
+  color: #52606b;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.assignment-toolbar input,
+.assignment-toolbar select {
+  min-height: 40px;
+  border: 1px solid #d5dfdb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #ffffff;
+  color: #17212b;
+  font: inherit;
+}
+
+.assignment-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #fbfbf8;
+}
+
+.assignment-actions span {
+  color: #52606b;
+  font-weight: 800;
+}
+
+.student-assignment-results {
+  display: grid;
+  gap: 10px;
+}
+
+.student-assignment-list {
+  max-height: calc(100vh - 330px);
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.student-assignment-row {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #fbfbf8;
+}
+
+.student-assignment-row:hover {
+  border-color: #b7c7e0;
+  background: #f5f8fc;
+}
+
+.student-assignment-row input {
+  width: 18px;
+  height: 18px;
+}
+
+.student-assignment-row span {
+  display: grid;
+  gap: 3px;
+}
+
+.student-assignment-row small {
+  color: #52606b;
+  font-weight: 800;
+}
+
+.student-assignment-row em {
+  font-style: normal;
+  color: #365f9f;
+  font-weight: 900;
+}
+
+.assignment-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.assignment-pager span {
+  color: #52606b;
+  font-weight: 900;
+}
+
 .setting-pill {
   display: grid;
   gap: 4px;
@@ -571,6 +715,16 @@ img {
   border: 1px solid #e4c36f;
   color: #5f4b19;
   line-height: 1.45;
+}
+
+.admin-error {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #e7a69c;
+  background: #fff2ef;
+  color: #74342d;
+  font-weight: 800;
+  line-height: 1.4;
 }
 
 .validation-score {
@@ -649,6 +803,30 @@ img {
 .ilp-admin-list {
   display: grid;
   gap: 14px;
+  max-height: calc(100vh - 190px);
+  overflow: auto;
+}
+
+.recent-attempts {
+  display: grid;
+  gap: 10px;
+}
+
+.recent-attempts div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #fbfbf8;
+}
+
+.recent-attempts span {
+  color: #52606b;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .ilp-card {
@@ -1745,6 +1923,9 @@ img {
 
   .admin-kpis,
   .admin-grid,
+  .admin-split,
+  .admin-split.results-layout,
+  .assignment-toolbar,
   .database-plan,
   .admin-form,
   .settings-grid {
