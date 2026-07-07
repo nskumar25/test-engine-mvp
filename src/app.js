@@ -3,6 +3,7 @@ const STUDENTS_STORAGE_KEY = "assessment-engine-students";
 const RESULTS_DB_NAME = "assessment-engine-results";
 const RESULTS_STORE = "attempts";
 const ATTEMPT_SCHEMA_VERSION = "attempt-v1";
+const DATA_PROVIDER = "local";
 const QUESTION_SOURCE = "input/pre-test-for-demo.json";
 
 const icons = {
@@ -327,6 +328,10 @@ function isAdminMode() {
 }
 
 function renderAdminDashboard() {
+  window.onhashchange = () => {
+    if (isAdminMode()) renderAdminDashboard();
+  };
+
   root.innerHTML = `
     <main class="admin-shell">
       <aside class="admin-sidebar">
@@ -344,6 +349,7 @@ function renderAdminDashboard() {
           <a href="#import">Import</a>
           <a href="#results">Results</a>
           <a href="#ilp">ILP</a>
+          <a href="#database">Database</a>
         </nav>
         <a class="admin-student-link" href="./">Open student test</a>
       </aside>
@@ -377,6 +383,7 @@ async function loadAdminData() {
 }
 
 function paintAdminDashboard(attempts, students) {
+  const activePage = getAdminPage();
   const scoreAverage = attempts.length
     ? Math.round(attempts.reduce((sum, attempt) => sum + normalizeScore(attempt).percentage, 0) / attempts.length)
     : 0;
@@ -398,14 +405,14 @@ function paintAdminDashboard(attempts, students) {
       </div>
     </header>
 
-    <section class="admin-kpis" id="overview">
+    <section ${adminPageAttrs("overview", activePage)} id="overview">
       <article><span>Questions</span><strong>${questions.length}</strong></article>
       <article><span>Submitted</span><strong>${attempts.length}</strong></article>
       <article><span>Completed Students</span><strong>${completedStudents}</strong></article>
       <article><span>Average Score</span><strong>${scoreAverage}%</strong></article>
     </section>
 
-    <section class="admin-grid">
+    <section ${adminPageAttrs("assessments", activePage)}>
       <article class="admin-card" id="assessments">
         <div class="admin-card-head">
           <div>
@@ -446,7 +453,7 @@ function paintAdminDashboard(attempts, students) {
       </article>
     </section>
 
-    <section class="admin-grid">
+    <section ${adminPageAttrs("questions", activePage)}>
       <article class="admin-card" id="questions">
         <div class="admin-card-head">
           <div>
@@ -466,7 +473,9 @@ function paintAdminDashboard(attempts, students) {
           `).join("")}
         </div>
       </article>
+    </section>
 
+    <section ${adminPageAttrs("import", activePage)}>
       <article class="admin-card" id="import">
         <div class="admin-card-head">
           <div>
@@ -486,7 +495,7 @@ function paintAdminDashboard(attempts, students) {
       </article>
     </section>
 
-    <section class="admin-card" id="results">
+    <section ${adminPageAttrs("results", activePage)} id="results">
       <div class="admin-card-head">
         <div>
           <p class="eyebrow">Performance</p>
@@ -536,7 +545,7 @@ function paintAdminDashboard(attempts, students) {
       </div>
     </section>
 
-    <section class="admin-card" id="ilp">
+    <section ${adminPageAttrs("ilp", activePage)} id="ilp">
       <div class="admin-card-head">
         <div>
           <p class="eyebrow">Personalized Learning</p>
@@ -551,7 +560,47 @@ function paintAdminDashboard(attempts, students) {
         }
       </div>
     </section>
+
+    <section ${adminPageAttrs("database", activePage)} id="database">
+      <div class="admin-card-head">
+        <div>
+          <p class="eyebrow">Data Layer</p>
+          <h2>Database Migration Plan</h2>
+        </div>
+      </div>
+      <div class="database-plan">
+        <article>
+          <h3>Current MVP</h3>
+          <p>Active provider: ${escapeHtml(DATA_PROVIDER)}. Student attempts are stored locally in IndexedDB and admin helper data is stored in localStorage through a data adapter.</p>
+        </article>
+        <article>
+          <h3>Recommended Production Database</h3>
+          <p>Supabase Postgres for assessments, questions, attempts, responses, ILPs, and external student mapping.</p>
+        </article>
+        <article>
+          <h3>Migration Strategy</h3>
+          <p>Replace adapter functions with Supabase calls. Keep the dashboard UI and attempt schema mostly unchanged.</p>
+        </article>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Table</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>external_students</td><td>Maps this engine to your existing registered student system.</td></tr>
+            <tr><td>assessments</td><td>Stores test metadata, duration, status, and tool settings.</td></tr>
+            <tr><td>questions</td><td>Stores reusable question content and answer keys.</td></tr>
+            <tr><td>assessment_questions</td><td>Controls question order and assessment membership.</td></tr>
+            <tr><td>attempts</td><td>Stores student attempt summary, score, timing, and status.</td></tr>
+            <tr><td>responses</td><td>Stores every student answer choice and correctness result.</td></tr>
+            <tr><td>ilp_plans</td><td>Stores generated individualized learning plans.</td></tr>
+            <tr><td>question_assets</td><td>Stores image/file metadata for question assets.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   `;
+
+  setAdminActiveNav(activePage);
 
   document.querySelector("[data-action='export-attempts-json']").addEventListener("click", () => {
     downloadText("assessment-attempts.json", JSON.stringify(attempts, null, 2), "application/json");
@@ -571,6 +620,30 @@ function paintAdminDashboard(attempts, students) {
         JSON.stringify(attempt.ilp || {}, null, 2),
         "application/json"
       );
+    });
+  });
+}
+
+function getAdminPage() {
+  const allowed = ["overview", "assessments", "questions", "import", "results", "ilp", "database"];
+  const page = window.location.hash.replace("#", "") || "overview";
+  return allowed.includes(page) ? page : "overview";
+}
+
+function adminPageAttrs(page, activePage) {
+  const baseClass = page === "overview"
+    ? "admin-page admin-kpis"
+    : page === "assessments" || page === "questions"
+    ? "admin-page admin-grid"
+    : "admin-page admin-card";
+  return `class="${baseClass} ${page === activePage ? "active" : ""}" data-admin-page="${page}" ${page === activePage ? "" : "hidden"}`;
+}
+
+function setAdminActiveNav(activePage) {
+  document.querySelectorAll(".admin-nav a").forEach((link) => {
+    link.classList.toggle("active", link.getAttribute("href") === `#${activePage}`);
+    link.addEventListener("click", () => {
+      window.setTimeout(renderAdminDashboard, 0);
     });
   });
 }
@@ -1207,6 +1280,15 @@ function buildTopicBreakdown(responses) {
 }
 
 function saveAttempt(evaluation) {
+  getDataAdapter().saveAttempt(evaluation);
+}
+
+function getDataAdapter() {
+  if (DATA_PROVIDER === "local") return localDataAdapter;
+  return localDataAdapter;
+}
+
+function saveAttemptLocally(evaluation) {
   if (!("indexedDB" in window)) {
     const key = "assessment-engine-results-fallback";
     const previous = JSON.parse(localStorage.getItem(key) || "[]");
@@ -1231,6 +1313,11 @@ function saveAttempt(evaluation) {
 }
 
 const localDataAdapter = {
+  async saveAttempt(evaluation) {
+    saveAttemptLocally(evaluation);
+    return evaluation;
+  },
+
   async listAttempts() {
     if (!("indexedDB" in window)) {
       return JSON.parse(localStorage.getItem("assessment-engine-results-fallback") || "[]");

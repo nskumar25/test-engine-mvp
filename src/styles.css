@@ -330,8 +330,14 @@ img {
 }
 
 .admin-nav a:hover,
+.admin-nav a.active,
 .admin-student-link:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-nav a.active {
+  color: #ffffff;
+  box-shadow: inset 3px 0 0 #d9b861;
 }
 
 .admin-student-link {
@@ -501,6 +507,31 @@ img {
 
 .admin-topic-report {
   margin-bottom: 0;
+}
+
+.database-plan {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.database-plan article {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #fbfbf8;
+}
+
+.database-plan h3,
+.database-plan p {
+  margin: 0;
+}
+
+.database-plan p {
+  color: #52606b;
+  line-height: 1.45;
 }
 
 .settings-grid {
@@ -1553,6 +1584,7 @@ img {
 
   .admin-kpis,
   .admin-grid,
+  .database-plan,
   .admin-form,
   .settings-grid {
     grid-template-columns: 1fr;
