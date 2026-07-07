@@ -4,21 +4,24 @@ const ASSIGNMENTS_STORAGE_KEY = "assessment-engine-assignments";
 const RESULTS_DB_NAME = "assessment-engine-results";
 const RESULTS_STORE = "attempts";
 const ATTEMPT_SCHEMA_VERSION = "attempt-v1";
-const IS_GITHUB_PAGES = window.location.hostname.endsWith("github.io");
-const CONFIGURED_DATA_PROVIDER = window.ASSESSMENT_DATA_PROVIDER || "local";
-const CONFIGURED_API_BASE_URL = window.ASSESSMENT_API_BASE_URL || "";
-const HAS_PUBLIC_API_URL = /^https?:\/\//.test(CONFIGURED_API_BASE_URL)
-  && !/\/\/(localhost|127\.0\.0\.1|\[::1\])(?::|\/|$)/.test(CONFIGURED_API_BASE_URL);
-const DATA_PROVIDER = IS_GITHUB_PAGES && !HAS_PUBLIC_API_URL ? "local" : CONFIGURED_DATA_PROVIDER;
-const API_BASE_URL = DATA_PROVIDER === "api" ? CONFIGURED_API_BASE_URL : "";
+const CONFIGURED_DATA_PROVIDER =
+  window.ASSESSMENT_DATA_PROVIDER || "local";
+
+const CONFIGURED_API_BASE_URL =
+  String(window.ASSESSMENT_API_BASE_URL || "")
+    .trim()
+    .replace(/\/+$/, "");
+
+const DATA_PROVIDER =
+  CONFIGURED_DATA_PROVIDER;
+
+const API_BASE_URL =
+  DATA_PROVIDER === "api"
+    ? CONFIGURED_API_BASE_URL
+    : "";
 const QUESTION_SOURCE = "input/pre-test-for-demo.json";
 const ASSESSMENT_CATALOG_SOURCE = "input/assessment-catalog.json";
 const DEMO_STUDENTS = [];
-
-if (IS_GITHUB_PAGES && DATA_PROVIDER !== "api") {
-  localStorage.removeItem("assessment-engine-students");
-  localStorage.removeItem("assessment-engine-students-v2");
-}
 
 const icons = {
   book: "&#9670;",
@@ -1640,15 +1643,19 @@ function renderStartScreen() {
 
 async function findRegisteredStudent(username) {
   const normalized = normalizeIdentity(username);
+  if (!normalized) throw new Error("Enter your username or email.");
+
   const students = await getDataAdapter().listStudents(username);
-  if (!students.length) {
-    throw new Error(`No registered student matched "${username}". Confirm this email exists in Neon and was synced.`);
+
+  if (!Array.isArray(students) || !students.length) {
+    throw new Error(`No registered student matched "${username}".`);
   }
-  return students.find((student) => {
-    return [student.username, student.email, student.id, student.name]
+
+  return students.find((student) =>
+    [student.username, student.email, student.id]
       .filter(Boolean)
-      .some((value) => normalizeIdentity(value) === normalized);
-  }) || null;
+      .some((value) => normalizeIdentity(value) === normalized)
+  ) || null;
 }
 
 function normalizeIdentity(value) {
