@@ -74,7 +74,8 @@ function getInitialState(total) {
           scratchWork: parsed.scratchWork || {},
           eliminated: parsed.eliminated || {},
           flagged: parsed.flagged || {},
-          answers: parsed.answers || {}
+          answers: parsed.answers || {},
+          reviewing: Boolean(parsed.reviewing)
         };
       }
     } catch {
@@ -96,6 +97,7 @@ function getInitialState(total) {
       name: assessment.candidate || "",
       accessCode: ""
     },
+    reviewing: false,
     submitted: false,
     evaluation: null,
     remainingSeconds: assessment.durationMinutes * 60,
@@ -194,6 +196,11 @@ function render() {
 
   if (!state.started) {
     renderStartScreen();
+    return;
+  }
+
+  if (state.reviewing) {
+    renderSubmitReview();
     return;
   }
 
@@ -373,6 +380,100 @@ function renderStartScreen() {
   });
 }
 
+function renderSubmitReview() {
+  const answeredCount = getAnsweredCount();
+  const unanswered = questions.filter((question) => !state.answers[question.id]);
+  const flagged = questions.filter((question) => state.flagged[question.id]);
+
+  root.innerHTML = `
+    <main class="review-shell">
+      <section class="submit-review-panel">
+        <header class="review-header">
+          <div>
+            <p class="eyebrow">Before you submit</p>
+            <h1>Review your assessment</h1>
+          </div>
+          <div class="timer" data-timer aria-label="Time remaining">${icons.clock} ${minutesAndSeconds()}</div>
+        </header>
+
+        <div class="review-summary">
+          <span><strong>${answeredCount}</strong> answered</span>
+          <span><strong>${unanswered.length}</strong> unanswered</span>
+          <span><strong>${flagged.length}</strong> flagged</span>
+        </div>
+
+        <div class="review-grid-panel">
+          ${questions.map((question, index) => renderReviewCell(question, index)).join("")}
+        </div>
+
+        <div class="review-sections">
+          <section>
+            <h2>Unanswered</h2>
+            ${renderReviewList(unanswered, "No unanswered questions.")}
+          </section>
+          <section>
+            <h2>Flagged</h2>
+            ${renderReviewList(flagged, "No flagged questions.")}
+          </section>
+        </div>
+
+        <footer class="review-actions">
+          <button class="secondary-action" data-action="return-to-test">Return to test</button>
+          <button class="primary-action" data-action="confirm-submit">${icons.submit} Submit final</button>
+        </footer>
+      </section>
+    </main>
+  `;
+
+  document.querySelectorAll("[data-review-index]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setState({
+        reviewing: false,
+        currentIndex: Number(button.dataset.reviewIndex)
+      });
+    });
+  });
+
+  document.querySelector("[data-action='return-to-test']").addEventListener("click", () => {
+    setState({ reviewing: false });
+  });
+
+  document.querySelector("[data-action='confirm-submit']").addEventListener("click", () => {
+    submitAssessment();
+  });
+}
+
+function renderReviewCell(question, index) {
+  const answered = Boolean(state.answers[question.id]);
+  const flagged = Boolean(state.flagged[question.id]);
+  const classes = [
+    "review-cell",
+    answered ? "answered" : "unanswered",
+    flagged ? "flagged" : ""
+  ].join(" ");
+
+  return `
+    <button class="${classes}" data-review-index="${index}">
+      <strong>${index + 1}</strong>
+      <span>${answered ? "Answered" : "Unanswered"}${flagged ? " / Flagged" : ""}</span>
+    </button>
+  `;
+}
+
+function renderReviewList(items, emptyText) {
+  if (!items.length) return `<p class="empty-review">${emptyText}</p>`;
+
+  return `
+    <div class="review-list">
+      ${items.map((question) => `
+        <button data-review-index="${questions.indexOf(question)}">
+          Question ${question.number || questions.indexOf(question) + 1}
+        </button>
+      `).join("")}
+    </div>
+  `;
+}
+
 function renderGridCell(question, index) {
   const classes = [
     "grid-cell",
@@ -540,7 +641,7 @@ function bindActions() {
   });
 
   document.querySelector("[data-action='submit']")?.addEventListener("click", () => {
-    submitAssessment();
+    setState({ reviewing: true });
   });
 }
 
