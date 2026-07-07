@@ -232,6 +232,13 @@ function render() {
   const skippedCount = getSkippedCount();
   const progress = Math.round((answeredCount / questions.length) * 100);
   const toolsBody = `
+    <div class="worksheet-top">
+      <div>
+        <p class="eyebrow">Tools</p>
+        <h3>Calculator & Scratch Pad</h3>
+      </div>
+      <button class="icon-button" data-action="close-tools" title="Close tools">${icons.clear}</button>
+    </div>
     ${assessment.tools?.calculator ? renderCalculator() : ""}
     ${assessment.tools?.scratchpad !== false ? `
     <div class="worksheet-head">
@@ -240,7 +247,6 @@ function render() {
         <h3>Scratch Pad</h3>
       </div>
       <div class="tool-head-actions">
-        <button class="icon-button" data-action="toggle-tools" title="Collapse tools">${icons.next}</button>
         <button class="icon-button" data-action="toggle-scratch" title="Toggle scratch pad">${state.scratchOpen ? "-" : "+"}</button>
         <button class="icon-button" data-action="clear-scratch" title="Clear scratch pad">${icons.clear}</button>
       </div>
@@ -332,8 +338,8 @@ function render() {
               state.toolsOpen
                 ? toolsBody
                 : `<div class="tools-rail" aria-label="Assessment tools">
-                    ${assessment.tools?.calculator ? `<button data-action="toggle-tools" title="Calculator">${icons.calc}</button>` : ""}
-                    ${assessment.tools?.scratchpad !== false ? `<button data-action="toggle-tools" title="Scratch pad">${icons.pencil}</button>` : ""}
+                    ${assessment.tools?.calculator ? `<button data-action="open-tool" data-tool-panel="calculator" title="Calculator">${icons.calc}</button>` : ""}
+                    ${assessment.tools?.scratchpad !== false ? `<button data-action="open-tool" data-tool-panel="scratch" title="Scratch pad">${icons.pencil}</button>` : ""}
                   </div>`
             }
           </aside>
@@ -1058,8 +1064,25 @@ function bindActions() {
     setState({ calculatorOpen: !state.calculatorOpen });
   });
 
-  document.querySelector("[data-action='toggle-tools']")?.addEventListener("click", () => {
-    setState({ toolsOpen: !state.toolsOpen });
+  document.querySelectorAll("[data-action='open-tool']").forEach((button) => {
+    button.addEventListener("click", () => {
+      const panel = button.dataset.toolPanel;
+      setState({
+        toolsOpen: true,
+        calculatorOpen: panel === "calculator" ? true : state.calculatorOpen,
+        scratchOpen: panel === "scratch" ? true : state.scratchOpen
+      });
+    });
+  });
+
+  document.querySelectorAll("[data-action='toggle-tools']").forEach((button) => {
+    button.addEventListener("click", () => {
+      setState({ toolsOpen: !state.toolsOpen });
+    });
+  });
+
+  document.querySelector("[data-action='close-tools']")?.addEventListener("click", () => {
+    setState({ toolsOpen: false });
   });
 
   document.querySelector("[data-action='toggle-scratch']")?.addEventListener("click", () => {

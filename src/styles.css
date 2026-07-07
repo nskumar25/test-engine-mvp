@@ -1219,8 +1219,17 @@ img {
   background: #eef3fb;
 }
 
+.worksheet-top,
 .worksheet-head {
   justify-content: space-between;
+}
+
+.worksheet-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5ece8;
 }
 
 .worksheet h3 {
