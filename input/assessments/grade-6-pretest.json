@@ -1,0 +1,815 @@
+{
+  "assessment": {
+    "key": "grade-6-pretest",
+    "title": "Grade 6 Pretest",
+    "sourceDocument": "Grade 6 Pretest.docx",
+    "durationMinutes": 30,
+    "tools": {
+      "calculator": true,
+      "scratchpad": true,
+      "imageZoom": true,
+      "eliminator": true
+    },
+    "inputFormatVersion": "mvp-1",
+    "questionSource": "Converted from Word document for MVP input folder",
+    "instructions": [
+      "Choose one answer for every question.",
+      "Use the question grid to move between questions.",
+      "Submit when you have answered all questions."
+    ]
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "type": "mcq",
+      "number": 1,
+      "level": "Applying",
+      "topic": "6.RP.A.1",
+      "standard": "6.RP.A.1",
+      "question": "A pet shelter has 8 cats and 12 dogs. The shelter wants to create smaller groups with the same ratio of cats to dogs. Which group has the same ratio of cats to dogs?",
+      "image": "/input/assets/grade-6-pretest/image1.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image1.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "2 cats and 3 dogs",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "3 cats and 2 dogs",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "4 cats and 5 dogs",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "6 cats and 10 dogs",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "The ratio of cats to dogs is 8:12, which simplifies to 2:3. Therefore, a group of 2 cats and 3 dogs has the same ratio.",
+      "distractors": {},
+      "correctAnswerText": "2 cats and 3 dogs"
+    },
+    {
+      "id": "q2",
+      "type": "mcq",
+      "number": 2,
+      "level": "Applying",
+      "topic": "6.RP.A.2",
+      "standard": "6.RP.A.2",
+      "question": "A cyclist travels 24 miles in 3 hours at a constant rate. Which statement correctly describes the unit rate?",
+      "image": "/input/assets/grade-6-pretest/image2.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image2.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "The cyclist travels 3 miles per hour.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "The cyclist travels 8 miles per hour.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "The cyclist travels 21 miles per hour.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "The cyclist travels 72 miles per hour.",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Divide 24 miles by 3 hours: 24 ÷ 3 = 8. The unit rate is 8 miles per hour, meaning the cyclist travels 8 miles for each 1 hour.",
+      "distractors": {},
+      "correctAnswerText": "The cyclist travels 8 miles per hour."
+    },
+    {
+      "id": "q3",
+      "type": "mcq",
+      "number": 3,
+      "level": "Applying",
+      "topic": "6.RP.A.3a",
+      "standard": "6.RP.A.3a",
+      "question": "A bakery uses 2 cups of flour to make 3 loaves of bread. The table shows equivalent ratios of cups of flour to loaves of bread.\n\nCups of Flour | 2 | 4 | 6 | ?\nLoaves of Bread | 3 | 6 | 9 | 12\nHow many cups of flour are needed to make 12 loaves of bread?",
+      "image": "/input/assets/grade-6-pretest/image3.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image3.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "7 cups",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "8 cups",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "10 cups",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "18 cups",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "The ratios in the table are equivalent. Since 12 loaves is 4 times 3 loaves, multiply 2 cups by 4: 2 × 4 = 8. Therefore, 8 cups of flour are needed to make 12 loaves of bread.",
+      "distractors": {},
+      "correctAnswerText": "8 cups"
+    },
+    {
+      "id": "q4",
+      "type": "mcq",
+      "number": 4,
+      "level": "Applying",
+      "topic": "6.RP.A.3b",
+      "standard": "6.RP.A.3b",
+      "question": "A store sells a pack of 6 notebooks for $15. What is the price of one notebook?",
+      "image": "/input/assets/grade-6-pretest/image4.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image4.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "$2.00",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "$2.50",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "$9.00",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "$21.00",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Divide the total cost by the number of notebooks: $15 ÷ 6 = $2.50. Therefore, each notebook costs $2.50.",
+      "distractors": {},
+      "correctAnswerText": "$2.50"
+    },
+    {
+      "id": "q5",
+      "type": "mcq",
+      "number": 5,
+      "level": "Applying",
+      "topic": "6.RP.A.3c",
+      "standard": "6.RP.A.3c",
+      "question": "A school has 240 students. Of the students, 35% participate in after-school clubs. How many students participate in after-school clubs?",
+      "image": "/input/assets/grade-6-pretest/image5.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image5.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "72 students",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "84 students",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "105 students",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "205 students",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Find 35% of 240 by multiplying 240 by 35/100: 240 × 35/100 = 84. Therefore, 84 students participate in after-school clubs.",
+      "distractors": {},
+      "correctAnswerText": "84 students"
+    },
+    {
+      "id": "q6",
+      "type": "mcq",
+      "number": 6,
+      "level": "Applying",
+      "topic": "6.RP.A.3d",
+      "standard": "6.RP.A.3d",
+      "question": "A hiking trail is 3 miles long. One mile is equal to 1,760 yards. How many yards long is the trail?",
+      "image": "/input/assets/grade-6-pretest/image6.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image6.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "1,763 yards",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "3,520 yards",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "5,280 yards",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "5,760 yards",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "Multiply the number of miles by the number of yards in each mile: 3 × 1,760 = 5,280. Therefore, the trail is 5,280 yards long.",
+      "distractors": {},
+      "correctAnswerText": "5,280 yards"
+    },
+    {
+      "id": "q7",
+      "type": "mcq",
+      "number": 7,
+      "level": "Applying",
+      "topic": "6.NS.A.1",
+      "standard": "6.NS.A.1",
+      "question": "Maya has 3/4 gallon of juice. She pours the juice equally into containers that each hold 1/8 gallon. How many containers can she fill?",
+      "image": "/input/assets/grade-6-pretest/image7.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image7.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "3 containers",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "6 containers",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "8 containers",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "12 containers",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Divide the total amount of juice by the amount each container holds: 3/4 ÷ 1/8 = 3/4 × 8/1 = 6. Therefore, Maya can fill 6 containers.",
+      "distractors": {},
+      "correctAnswerText": "6 containers"
+    },
+    {
+      "id": "q8",
+      "type": "mcq",
+      "number": 8,
+      "level": "Applying",
+      "topic": "6.NS.C.5",
+      "standard": "6.NS.C.5",
+      "question": "At noon, the temperature was 4°C above zero. By midnight, the temperature was 7°C below zero. Which pair of integers correctly represents the two temperatures?",
+      "image": "/input/assets/grade-6-pretest/image8.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image8.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "+4 and +7",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "-4 and -7",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "+4 and -7",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "-4 and +7",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "A temperature 4°C above zero is represented by +4, and a temperature 7°C below zero is represented by -7. In this situation, 0°C represents the temperature that separates temperatures above zero from temperatures below zero.",
+      "distractors": {},
+      "correctAnswerText": "+4 and -7"
+    },
+    {
+      "id": "q9",
+      "type": "mcq",
+      "number": 9,
+      "level": "Applying",
+      "topic": "6.NS.C.6a",
+      "standard": "6.NS.C.6a",
+      "question": "A point is located at -8 on a number line. What is the location of the opposite of the opposite of -8?",
+      "image": "/input/assets/grade-6-pretest/image9.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image9.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "-8",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "0",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "8",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "16",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "The opposite of -8 is 8, and the opposite of 8 is -8. Therefore, the opposite of the opposite of -8 is -8.",
+      "distractors": {},
+      "correctAnswerText": "-8"
+    },
+    {
+      "id": "q10",
+      "type": "mcq",
+      "number": 10,
+      "level": "Applying",
+      "topic": "6.NS.C.6b",
+      "standard": "6.NS.C.6b",
+      "question": "Point P is located at (4, -3) on a coordinate plane. Point Q is the reflection of Point P across the y-axis. What are the coordinates of Point Q?",
+      "image": null,
+      "images": [],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "(-4, -3)",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "(4, 3)",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "(-4, 3)",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "(3, -4)",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "Reflecting a point across the y-axis changes the sign of the x-coordinate but keeps the y-coordinate the same. Therefore, (4, -3) becomes (-4, -3).",
+      "distractors": {},
+      "correctAnswerText": "(-4, -3)"
+    },
+    {
+      "id": "q11",
+      "type": "mcq",
+      "number": 11,
+      "level": "Applying",
+      "topic": "6.NS.C.6c",
+      "standard": "6.NS.C.6c",
+      "question": "Point M is located 3 units left of the y-axis and 4 units above the x-axis. Which ordered pair represents the location of Point M?",
+      "image": null,
+      "images": [],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "(3, 4)",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "(-3, 4)",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "(3, -4)",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "(-4, 3)",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Moving 3 units left of the y-axis gives an x-coordinate of -3. Moving 4 units above the x-axis gives a y-coordinate of 4. Therefore, Point M is located at (-3, 4).",
+      "distractors": {},
+      "correctAnswerText": "(-3, 4)"
+    },
+    {
+      "id": "q12",
+      "type": "mcq",
+      "number": 12,
+      "level": "Applying",
+      "topic": "6.NS.C.8",
+      "standard": "6.NS.C.8",
+      "question": "On a coordinate map, a library is located at (-3, 5), and a park is located at (-3, -2). What is the distance between the library and the park?",
+      "image": null,
+      "images": [],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "3 units",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "5 units",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "7 units",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "8 units",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "The points have the same x-coordinate, so find the distance between their y-coordinates: |5 - (-2)| = |7| = 7. Therefore, the library and the park are 7 units apart.",
+      "distractors": {},
+      "correctAnswerText": "7 units"
+    },
+    {
+      "id": "q13",
+      "type": "mcq",
+      "number": 13,
+      "level": "Applying",
+      "topic": "6.EE.A.2a",
+      "standard": "6.EE.A.2a",
+      "question": "A movie theater charges $9 for each ticket. Maya buys t tickets and pays an additional $4 service fee. Which expression represents the total cost?",
+      "image": "/input/assets/grade-6-pretest/image10.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image10.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "9 + t + 4",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "9t + 4",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "13t",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "4t + 9",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "The cost of t tickets is represented by 9t because each ticket costs $9. Adding the $4 service fee gives the expression 9t + 4.",
+      "distractors": {},
+      "correctAnswerText": "9t + 4"
+    },
+    {
+      "id": "q14",
+      "type": "mcq",
+      "number": 14,
+      "level": "Applying",
+      "topic": "6.EE.A.2b",
+      "standard": "6.EE.A.2b",
+      "question": "Consider the expression 5(3x + 2). Which statement correctly identifies parts of the expression?",
+      "image": "/input/assets/grade-6-pretest/image11.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image11.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "5 is a coefficient of x, and 3x + 2 is a factor.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "3 is the coefficient of x, and 3x + 2 is a factor multiplied by 5.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "2 is the coefficient of x, and 5 + 3x is a sum.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "3x and 2 are factors of 5.",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "In 3x, the number 3 is the coefficient of x. In the expression 5(3x + 2), the entire quantity 3x + 2 is treated as a single factor multiplied by 5.",
+      "distractors": {},
+      "correctAnswerText": "3 is the coefficient of x, and 3x + 2 is a factor multiplied by 5."
+    },
+    {
+      "id": "q15",
+      "type": "mcq",
+      "number": 15,
+      "level": "Applying",
+      "topic": "6.EE.A.2c",
+      "standard": "6.EE.A.2c",
+      "question": "The area of a square is given by the expression s², where s is the side length. What is the area of a square with a side length of 7 centimeters?",
+      "image": "/input/assets/grade-6-pretest/image12.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image12.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "14 cm²",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "28 cm²",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "49 cm²",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "77 cm²",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "Substitute 7 for s in the expression s²: 7² = 7 × 7 = 49. Therefore, the area of the square is 49 cm².",
+      "distractors": {},
+      "correctAnswerText": "49 cm²"
+    },
+    {
+      "id": "q16",
+      "type": "mcq",
+      "number": 16,
+      "level": "Applying",
+      "topic": "6.EE.A.3",
+      "standard": "6.EE.A.3",
+      "question": "Which expression is equivalent to 4(3x + 5)?",
+      "image": "/input/assets/grade-6-pretest/image13.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image13.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "12x + 5",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "7x + 9",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "12x + 20",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "4x + 20",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "Apply the distributive property by multiplying 4 by each term inside the parentheses: 4 × 3x = 12x and 4 × 5 = 20. Therefore, 4(3x + 5) is equivalent to 12x + 20.",
+      "distractors": {},
+      "correctAnswerText": "12x + 20"
+    },
+    {
+      "id": "q17",
+      "type": "mcq",
+      "number": 17,
+      "level": "Applying",
+      "topic": "6.EE.A.4",
+      "standard": "6.EE.A.4",
+      "question": "Which pair of expressions is equivalent for every value of x?",
+      "image": null,
+      "images": [],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "x + x + x + x and 4x",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "x + 4 and 4x",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "2x + 3 and 5x",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "x + x and x²",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "Adding x four times is the same as multiplying x by 4. Therefore, x + x + x + x and 4x have the same value for every value of x.",
+      "distractors": {},
+      "correctAnswerText": "x + x + x + x and 4x"
+    },
+    {
+      "id": "q18",
+      "type": "mcq",
+      "number": 18,
+      "level": "Applying",
+      "topic": "6.EE.B.5",
+      "standard": "6.EE.B.5",
+      "question": "Which value of x makes the equation 3x + 4 = 19 true?",
+      "image": "/input/assets/grade-6-pretest/image14.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image14.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "3",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "5",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "7",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "15",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Substitute 5 for x: 3(5) + 4 = 15 + 4 = 19. Therefore, x = 5 makes the equation true.",
+      "distractors": {},
+      "correctAnswerText": "5"
+    },
+    {
+      "id": "q19",
+      "type": "mcq",
+      "number": 19,
+      "level": "Applying",
+      "topic": "6.EE.B.6",
+      "standard": "6.EE.B.6",
+      "question": "A school bus can carry 48 students. There are already 31 students on the bus. Let s represent the number of additional students who can get on the bus. Which expression represents the total number of students on the bus after s more students get on?",
+      "image": "/input/assets/grade-6-pretest/image15.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image15.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "31 - s",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "31 + s",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "48 - s",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "48 + s",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "The variable s represents the unknown number of additional students who get on the bus. Adding s to the 31 students already on the bus gives the expression 31 + s.",
+      "distractors": {},
+      "correctAnswerText": "31 + s"
+    },
+    {
+      "id": "q20",
+      "type": "mcq",
+      "number": 20,
+      "level": "Applying",
+      "topic": "6.EE.B.6",
+      "standard": "6.EE.B.6",
+      "question": "Maya bought 4 identical notebooks for a total of $18. Let n represent the cost of one notebook. Which equation can be used to find n, and what is the value of n?",
+      "image": "/input/assets/grade-6-pretest/image16.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image16.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "4 + n = 18; n = 14",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "4n = 18; n = 4.5",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "n ÷ 4 = 18; n = 72",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "n - 4 = 18; n = 22",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Since 4 notebooks cost $18 in total, the equation is 4n = 18. Divide both sides by 4: n = 18 ÷ 4 = 4.5. Therefore, each notebook costs $4.50.",
+      "distractors": {},
+      "correctAnswerText": "4n = 18; n = 4.5"
+    }
+  ]
+}

@@ -39,6 +39,12 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/assessments") {
+      const assessments = await listAssessments();
+      sendJson(response, 200, assessments);
+      return;
+    }
+
     if (request.method === "POST" && url.pathname === "/api/attempts") {
       const payload = await readJson(request);
       const saved = await saveAttempt(payload);
@@ -142,6 +148,39 @@ async function listAttempts() {
     limit 1000
   `);
   return rows.map((row) => row.raw_attempt).filter(Boolean);
+}
+
+async function listAssessments() {
+  const { rows } = await pool.query(`
+    select
+      a.external_assessment_key,
+      a.title,
+      a.source_document,
+      a.duration_minutes,
+      a.status,
+      a.input_format_version,
+      a.tools,
+      a.instructions,
+      count(aq.question_id)::int as question_count
+    from test_engine_assessments a
+    left join test_engine_assessment_questions aq
+      on aq.assessment_id = a.id
+    where a.status <> 'archived'
+    group by a.id
+    order by a.title
+  `);
+
+  return rows.map((row) => ({
+    key: row.external_assessment_key,
+    title: row.title,
+    sourceDocument: row.source_document,
+    durationMinutes: row.duration_minutes,
+    status: row.status,
+    inputFormatVersion: row.input_format_version,
+    tools: row.tools || {},
+    instructions: row.instructions || [],
+    questionCount: row.question_count
+  }));
 }
 
 async function listAssignments() {
@@ -438,8 +477,10 @@ async function listStudents(options = {}) {
     username: row.email || row.student_external_id,
     email: row.email,
     status: row.status,
+    gradeId: row.grade_external_id,
     gradeLevel: row.grade_level,
     section: row.section,
+    schoolId: row.school_external_id,
     schoolName: row.school_name
   }));
 

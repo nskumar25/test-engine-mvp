@@ -62,10 +62,34 @@ npm run sync:students
 
 The script creates/updates:
 
+- `test_engine_school_seed`
+- `test_engine_grade_seed`
 - `test_engine_student_seed`
 - `test_engine_registered_students`
 
-It upserts students by `student_external_id`. It does not delete Neon rows when local rows disappear.
+It upserts schools by `school_external_id`, grades by `grade_external_id`, and students by `student_external_id`. The API reads the `test_engine_registered_students` view, so assignment filters come from the linked school and grade records. It does not delete Neon rows when local rows disappear.
+
+## Pre-Test Import
+
+The pre-test table is `test_engine_assessments`. Questions are stored in `test_engine_questions`, and the order of questions inside each pre-test is stored in `test_engine_assessment_questions`.
+
+Converted Word pretests live in:
+
+```text
+input/assessments/
+input/assessment-catalog.json
+input/assets/<assessment-key>/
+```
+
+Seed the converted pretests into PostgreSQL/Neon with:
+
+```powershell
+cd "E:\Python\Test Engine"
+$env:DATABASE_URL="postgresql://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require"
+npm run seed:pretests
+```
+
+The admin assignment page reads the catalog in local mode and `/api/assessments` in API mode.
 
 ## Migration Path
 

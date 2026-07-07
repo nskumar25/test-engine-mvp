@@ -1,0 +1,36 @@
+{
+  "assessments": [
+    {
+      "key": "pre-test-for-demo",
+      "title": "Pre-Test - For Demo",
+      "sourceDocument": "Pre-Test - For Demo (1).docx",
+      "questionCount": 16,
+      "durationMinutes": 30,
+      "path": "input/assessments/pre-test-for-demo.json"
+    },
+    {
+      "key": "grade-6-pretest",
+      "title": "Grade 6 Pretest",
+      "sourceDocument": "Grade 6 Pretest.docx",
+      "questionCount": 20,
+      "durationMinutes": 30,
+      "path": "input/assessments/grade-6-pretest.json"
+    },
+    {
+      "key": "grade-7-pretest",
+      "title": "Grade 7 Pretest",
+      "sourceDocument": "Grade 7 Pretest.docx",
+      "questionCount": 20,
+      "durationMinutes": 30,
+      "path": "input/assessments/grade-7-pretest.json"
+    },
+    {
+      "key": "grade-8-pretest",
+      "title": "Grade 8 Pretest",
+      "sourceDocument": "Grade 8 Pretest.docx",
+      "questionCount": 20,
+      "durationMinutes": 30,
+      "path": "input/assessments/grade-8-pretest.json"
+    }
+  ]
+}

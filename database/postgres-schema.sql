@@ -3,6 +3,50 @@ set search_path to public;
 
 create extension if not exists pgcrypto with schema public;
 
+create table if not exists test_engine_school_seed (
+  school_external_id text primary key,
+  school_name text not null,
+  synced_at timestamptz not null default now()
+);
+
+create table if not exists test_engine_grade_seed (
+  grade_external_id text primary key,
+  grade_level text not null,
+  synced_at timestamptz not null default now()
+);
+
+create table if not exists test_engine_student_seed (
+  student_external_id text primary key,
+  display_name text not null,
+  email text,
+  status text,
+  grade_external_id text references test_engine_grade_seed(grade_external_id) on update cascade on delete set null,
+  grade_level text,
+  section text,
+  school_external_id text references test_engine_school_seed(school_external_id) on update cascade on delete set null,
+  school_name text,
+  synced_at timestamptz not null default now()
+);
+
+drop view if exists test_engine_registered_students;
+
+create view test_engine_registered_students as
+select
+  st.student_external_id,
+  st.display_name,
+  st.email,
+  st.status,
+  coalesce(gr.grade_level, st.grade_level) as grade_level,
+  st.section,
+  coalesce(sc.school_name, st.school_name) as school_name,
+  st.grade_external_id,
+  st.school_external_id
+from test_engine_student_seed st
+left join test_engine_grade_seed gr
+  on gr.grade_external_id = st.grade_external_id
+left join test_engine_school_seed sc
+  on sc.school_external_id = st.school_external_id;
+
 create table if not exists test_engine_assessments (
   id uuid primary key default gen_random_uuid(),
   external_assessment_key text unique,
@@ -123,6 +167,8 @@ create table if not exists test_engine_question_assets (
 );
 
 create index if not exists test_engine_assignments_student_idx on test_engine_assignments(student_external_id);
+create index if not exists test_engine_student_seed_school_idx on test_engine_student_seed(school_external_id);
+create index if not exists test_engine_student_seed_grade_idx on test_engine_student_seed(grade_external_id);
 create index if not exists test_engine_attempts_student_idx on test_engine_attempts(student_external_id);
 create index if not exists test_engine_attempts_assessment_idx on test_engine_attempts(assessment_id);
 create index if not exists test_engine_attempts_submitted_idx on test_engine_attempts(submitted_at desc);

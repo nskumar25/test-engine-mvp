@@ -5,9 +5,14 @@ const RESULTS_DB_NAME = "assessment-engine-results";
 const RESULTS_STORE = "attempts";
 const ATTEMPT_SCHEMA_VERSION = "attempt-v1";
 const IS_GITHUB_PAGES = window.location.hostname.endsWith("github.io");
-const DATA_PROVIDER = IS_GITHUB_PAGES ? "local" : window.ASSESSMENT_DATA_PROVIDER || "local";
-const API_BASE_URL = IS_GITHUB_PAGES ? "" : window.ASSESSMENT_API_BASE_URL || "";
+const CONFIGURED_DATA_PROVIDER = window.ASSESSMENT_DATA_PROVIDER || "local";
+const CONFIGURED_API_BASE_URL = window.ASSESSMENT_API_BASE_URL || "";
+const HAS_PUBLIC_API_URL = /^https?:\/\//.test(CONFIGURED_API_BASE_URL)
+  && !/\/\/(localhost|127\.0\.0\.1|\[::1\])(?::|\/|$)/.test(CONFIGURED_API_BASE_URL);
+const DATA_PROVIDER = IS_GITHUB_PAGES && !HAS_PUBLIC_API_URL ? "local" : CONFIGURED_DATA_PROVIDER;
+const API_BASE_URL = DATA_PROVIDER === "api" ? CONFIGURED_API_BASE_URL : "";
 const QUESTION_SOURCE = "input/pre-test-for-demo.json";
+const ASSESSMENT_CATALOG_SOURCE = "input/assessment-catalog.json";
 const DEMO_STUDENTS = [
   { id: "student01", username: "student01", email: "student01@astute-demo.local", name: "Aarav Sharma", gradeLevel: "Grade 6", schoolName: "Astute Demo Middle School" },
   { id: "student02", username: "student02", email: "student02@astute-demo.local", name: "Maya Patel", gradeLevel: "Grade 6", schoolName: "Astute Demo Middle School" },
@@ -433,27 +438,30 @@ function renderAdminDashboard() {
     </main>
   `;
 
-  loadAdminData().then(({ attempts, students, assignments, dataErrors, studentFilters }) => {
-    paintAdminDashboard(attempts, students, assignments, dataErrors, studentFilters);
+  loadAdminData().then(({ attempts, students, assignments, dataErrors, studentFilters, assessments }) => {
+    paintAdminDashboard(attempts, students, assignments, dataErrors, studentFilters, assessments);
   });
 }
 
 async function loadAdminData() {
   const adapter = getDataAdapter();
-  const [attempts, studentFilters, assignments] = await Promise.all([
+  const [attempts, studentFilters, assignments, assessments] = await Promise.all([
     loadAdminDataset(() => adapter.listAttempts()),
     loadAdminDataset(() => adapter.listStudentFilters()),
-    loadAdminDataset(() => adapter.listAssignments())
+    loadAdminDataset(() => adapter.listAssignments()),
+    loadAdminDataset(() => adapter.listAssessments())
   ]);
   return {
     attempts: attempts.data,
     students: [],
     studentFilters: studentFilters.data,
     assignments: assignments.data,
+    assessments: assessments.data?.length ? assessments.data : [getCurrentAssessmentPayload()],
     dataErrors: {
       attempts: attempts.error,
       students: studentFilters.error,
-      assignments: assignments.error
+      assignments: assignments.error,
+      assessments: assessments.error
     }
   };
 }
@@ -706,7 +714,7 @@ function paintAdminDashboardLegacy(attempts, students) {
   });
 }
 
-function paintAdminDashboard(attempts, students, assignments = [], dataErrors = {}, studentFilters = {}) {
+function paintAdminDashboard(attempts, students, assignments = [], dataErrors = {}, studentFilters = {}, assessments = []) {
   const activePage = getAdminPage();
   const latestAttempts = [...attempts].sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
   const context = {
@@ -714,6 +722,7 @@ function paintAdminDashboard(attempts, students, assignments = [], dataErrors = 
     students,
     studentFilters,
     assignments,
+    assessments,
     dataErrors,
     latestAttempts,
     scoreAverage: attempts.length
@@ -889,7 +898,7 @@ function renderAdminAssessmentPage(validation) {
 function renderAdminAssignmentsPage(context) {
   const gradeOptions = context.studentFilters?.grades || [];
   const schoolOptions = context.studentFilters?.schools || [];
-  const availableTests = [getCurrentAssessmentPayload()];
+  const availableTests = context.assessments?.length ? context.assessments : [getCurrentAssessmentPayload()];
   const totalStudents = context.studentFilters?.totalStudents || 0;
 
   return `
@@ -905,6 +914,7 @@ function renderAdminAssignmentsPage(context) {
 
         ${context.dataErrors?.students ? `<div class="admin-error">Student lookup failed: ${escapeHtml(context.dataErrors.students)}. Check that the API server has the correct DATABASE_URL and STUDENT_VIEW.</div>` : ""}
         ${context.dataErrors?.assignments ? `<div class="admin-error">Assignment lookup failed: ${escapeHtml(context.dataErrors.assignments)}.</div>` : ""}
+        ${context.dataErrors?.assessments ? `<div class="admin-error">Assessment lookup failed: ${escapeHtml(context.dataErrors.assessments)}.</div>` : ""}
 
         <div class="assignment-toolbar">
           <label>
@@ -928,7 +938,15 @@ function renderAdminAssignmentsPage(context) {
           <label>
             Test
             <select data-assignment-test>
-              ${availableTests.map((test) => `<option value="${escapeAttribute(test.key)}">${escapeHtml(test.title)}</option>`).join("")}
+              ${availableTests.map((test) => `
+                <option
+                  value="${escapeAttribute(test.key)}"
+                  data-title="${escapeAttribute(test.title)}"
+                  data-source-document="${escapeAttribute(test.sourceDocument || test.path || "")}"
+                  data-duration-minutes="${escapeAttribute(test.durationMinutes || 30)}"
+                  data-input-format-version="${escapeAttribute(test.inputFormatVersion || "mvp-1")}"
+                >${escapeHtml(test.title)}</option>
+              `).join("")}
             </select>
           </label>
           <label>
@@ -1288,10 +1306,16 @@ function getCurrentAssessmentPayload() {
 }
 
 function getAssignmentAssessmentPayload() {
-  const selectedKey = document.querySelector("[data-assignment-test]")?.value || getCurrentAssessmentKey();
+  const select = document.querySelector("[data-assignment-test]");
+  const selectedOption = select?.selectedOptions?.[0];
+  const selectedKey = select?.value || getCurrentAssessmentKey();
   return {
     ...getCurrentAssessmentPayload(),
-    key: selectedKey
+    key: selectedKey,
+    title: selectedOption?.dataset.title || assessment.title,
+    sourceDocument: selectedOption?.dataset.sourceDocument || assessment.sourceDocument || QUESTION_SOURCE,
+    durationMinutes: Number(selectedOption?.dataset.durationMinutes || assessment.durationMinutes || 30),
+    inputFormatVersion: selectedOption?.dataset.inputFormatVersion || assessment.inputFormatVersion || "mvp-1"
   };
 }
 
@@ -2073,6 +2097,17 @@ function saveAttemptLocally(evaluation) {
 }
 
 const localDataAdapter = {
+  async listAssessments() {
+    try {
+      const response = await fetch(ASSESSMENT_CATALOG_SOURCE);
+      if (!response.ok) throw new Error("Assessment catalog was not found");
+      const payload = await response.json();
+      return payload.assessments || [];
+    } catch (error) {
+      return [getCurrentAssessmentPayload()];
+    }
+  },
+
   async saveAttempt(evaluation) {
     saveAttemptLocally(evaluation);
     return evaluation;
@@ -2186,6 +2221,12 @@ const localDataAdapter = {
 };
 
 const apiDataAdapter = {
+  async listAssessments() {
+    const response = await fetch(`${API_BASE_URL}/api/assessments`);
+    if (!response.ok) throw new Error("Could not load assessments");
+    return response.json();
+  },
+
   async saveAttempt(evaluation) {
     const response = await fetch(`${API_BASE_URL}/api/attempts`, {
       method: "POST",

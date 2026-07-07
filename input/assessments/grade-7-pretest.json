@@ -1,0 +1,823 @@
+{
+  "assessment": {
+    "key": "grade-7-pretest",
+    "title": "Grade 7 Pretest",
+    "sourceDocument": "Grade 7 Pretest.docx",
+    "durationMinutes": 30,
+    "tools": {
+      "calculator": true,
+      "scratchpad": true,
+      "imageZoom": true,
+      "eliminator": true
+    },
+    "inputFormatVersion": "mvp-1",
+    "questionSource": "Converted from Word document for MVP input folder",
+    "instructions": [
+      "Choose one answer for every question.",
+      "Use the question grid to move between questions.",
+      "Submit when you have answered all questions."
+    ]
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "type": "mcq",
+      "number": 1,
+      "level": "Applying",
+      "topic": "7.RP.A.2a",
+      "standard": "7.RP.A.2a",
+      "question": "The table shows the relationship between the number of movie tickets purchased and the total cost.\nWhich statement correctly describes the relationship?",
+      "image": "/input/assets/grade-7-pretest/image1.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image1.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "The relationship is proportional because the ratio of cost to tickets is always 7.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "The relationship is proportional because the cost increases by $14 each time.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "The relationship is not proportional because the values are different.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "The relationship is not proportional because the table does not include (0, 0).",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "Dividing each cost by the corresponding number of tickets gives the same ratio: 14 ÷ 2 = 28 ÷ 4 = 42 ÷ 6 = 56 ÷ 8 = 7. Therefore, the relationship is proportional.",
+      "distractors": {},
+      "correctAnswerText": "The relationship is proportional because the ratio of cost to tickets is always 7."
+    },
+    {
+      "id": "q2",
+      "type": "mcq",
+      "number": 2,
+      "level": "Applying",
+      "topic": "7.RP.A.2b",
+      "standard": "7.RP.A.2b",
+      "question": "The table shows the number of hours a machine operates and the number of parts it produces.\nWhat is the constant of proportionality?",
+      "image": "/input/assets/grade-7-pretest/image2.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image2.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "7",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "15",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "30",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "60",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Divide the number of parts by the number of hours: 30 ÷ 2 = 15. The machine produces 15 parts per hour, so the constant of proportionality is 15.",
+      "distractors": {},
+      "correctAnswerText": "15"
+    },
+    {
+      "id": "q3",
+      "type": "mcq",
+      "number": 3,
+      "level": "Applying",
+      "topic": "7.RP.A.2c",
+      "standard": "7.RP.A.2c",
+      "question": "A music service charges $8 per month. Let m represent the number of months and c represent the total cost. Which equation represents the proportional relationship?",
+      "image": "/input/assets/grade-7-pretest/image3.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image3.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "c = m + 8",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "c = 8m",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "m = 8c",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "c = m ÷ 8",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "The total cost equals the monthly cost multiplied by the number of months. Therefore, the relationship is represented by c = 8m.",
+      "distractors": {},
+      "correctAnswerText": "c = 8m"
+    },
+    {
+      "id": "q4",
+      "type": "mcq",
+      "number": 4,
+      "level": "Applying",
+      "topic": "7.RP.A.2d",
+      "standard": "7.RP.A.2d",
+      "question": "A runner travels at a constant rate of 6 miles per hour. On a graph, x represents time in hours and y represents distance in miles. What does the point (1, 6) represent?",
+      "image": "/input/assets/grade-7-pretest/image4.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image4.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "The runner travels 1 mile in 6 hours.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "The runner travels 6 miles in 1 hour.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "The runner travels 6 miles in 6 hours.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "The runner begins 6 miles from the starting point.",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "The point (1, 6) means that after 1 hour, the runner has traveled 6 miles. This point also shows that the unit rate is 6 miles per hour.",
+      "distractors": {},
+      "correctAnswerText": "The runner travels 6 miles in 1 hour."
+    },
+    {
+      "id": "q5",
+      "type": "mcq",
+      "number": 5,
+      "level": "Applying",
+      "topic": "7.RP.A.3",
+      "standard": "7.RP.A.3",
+      "question": "A jacket originally costs $80. It is discounted by 25%, and then an 8% sales tax is applied to the discounted price. What is the final price?",
+      "image": "/input/assets/grade-7-pretest/image5.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image5.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "$60.00",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "$64.80",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "$66.40",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "$69.12",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "The discount is 25% of $80, which is $20. The discounted price is $60. The tax is 8% of $60, which is $4.80. Therefore, the final price is $60 + $4.80 = $64.80.",
+      "distractors": {},
+      "correctAnswerText": "$64.80"
+    },
+    {
+      "id": "q6",
+      "type": "mcq",
+      "number": 6,
+      "level": "Applying",
+      "topic": "7.NS.A.1a",
+      "standard": "7.NS.A.1a",
+      "question": "Which situation results in a net change of 0?",
+      "image": "/input/assets/grade-7-pretest/image6.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image6.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "An elevator rises 6 floors and then rises 6 more floors.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "An elevator falls 6 floors and then falls 6 more floors.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "An elevator rises 6 floors and then falls 6 floors.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "An elevator rises 6 floors and then falls 3 floors.",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "A rise of 6 floors can be represented by +6, and a fall of 6 floors can be represented by -6. Since +6 + (-6) = 0, the changes are opposites and combine to make 0.",
+      "distractors": {},
+      "correctAnswerText": "An elevator rises 6 floors and then falls 6 floors."
+    },
+    {
+      "id": "q7",
+      "type": "mcq",
+      "number": 7,
+      "level": "Applying",
+      "topic": "7.NS.A.1b",
+      "standard": "7.NS.A.1b",
+      "question": "A submarine is at an elevation of -3.5 kilometers relative to sea level. It rises 2.25 kilometers. What is its new elevation?",
+      "image": "/input/assets/grade-7-pretest/image7.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image7.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "-5.75 kilometers",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "-1.25 kilometers",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "1.25 kilometers",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "5.75 kilometers",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Add the upward movement to the starting elevation: -3.5 + 2.25 = -1.25. Therefore, the submarine is 1.25 kilometers below sea level.",
+      "distractors": {},
+      "correctAnswerText": "-1.25 kilometers"
+    },
+    {
+      "id": "q8",
+      "type": "mcq",
+      "number": 8,
+      "level": "Applying",
+      "topic": "7.NS.A.1c",
+      "standard": "7.NS.A.1c",
+      "question": "At sunrise, the temperature was -2.5°C. By afternoon, the temperature was 4.5°C. What is the distance between these temperatures on a number line?",
+      "image": "/input/assets/grade-7-pretest/image8.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image8.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "2°C",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "6°C",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "7°C",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "7.5°C",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "Find the absolute value of the difference: |4.5 - (-2.5)| = |7| = 7. Therefore, the temperatures are 7°C apart.",
+      "distractors": {},
+      "correctAnswerText": "7°C"
+    },
+    {
+      "id": "q9",
+      "type": "mcq",
+      "number": 9,
+      "level": "Applying",
+      "topic": "7.NS.A.1d",
+      "standard": "7.NS.A.1d",
+      "question": "Which is the value of -3.5 + 7.2 + 3.5?",
+      "image": "/input/assets/grade-7-pretest/image9.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image9.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "0",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "3.7",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "7.2",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "14.2",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "Use the commutative and associative properties to group -3.5 and 3.5. Their sum is 0, so the expression becomes 0 + 7.2 = 7.2.",
+      "distractors": {},
+      "correctAnswerText": "7.2"
+    },
+    {
+      "id": "q10",
+      "type": "mcq",
+      "number": 10,
+      "level": "Applying",
+      "topic": "7.NS.A.2a",
+      "standard": "7.NS.A.2a",
+      "question": "The temperature changes by -2.5°C each hour for 4 hours. What is the total change in temperature?",
+      "image": "/input/assets/grade-7-pretest/image10.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image10.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "-10°C",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "-6.5°C",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "6.5°C",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "10°C",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "Multiply the hourly change by the number of hours: (-2.5)(4) = -10. Therefore, the total temperature change is -10°C.",
+      "distractors": {},
+      "correctAnswerText": "-10°C"
+    },
+    {
+      "id": "q11",
+      "type": "mcq",
+      "number": 11,
+      "level": "Applying",
+      "topic": "7.NS.A.2b",
+      "standard": "7.NS.A.2b",
+      "question": "A submarine changes its depth by -18 meters over 6 equal time intervals. What is the average change in depth during each interval?",
+      "image": "/input/assets/grade-7-pretest/image11.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image11.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "-108 meters",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "-12 meters",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "-3 meters",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "3 meters",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "Divide the total change by the number of intervals: -18 ÷ 6 = -3. Therefore, the submarine changes depth by -3 meters per interval.",
+      "distractors": {},
+      "correctAnswerText": "-3 meters"
+    },
+    {
+      "id": "q12",
+      "type": "mcq",
+      "number": 12,
+      "level": "Applying",
+      "topic": "7.NS.A.2c",
+      "standard": "7.NS.A.2c",
+      "question": "What is the value of (-3/4) × 8 × (-2)?",
+      "image": "/input/assets/grade-7-pretest/image12.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image12.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "-12",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "-6",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "6",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "12",
+          "image": null
+        }
+      ],
+      "answer": "d",
+      "explanation": "Use the associative property to multiply efficiently: (-3/4 × 8) × (-2) = (-6)(-2) = 12.",
+      "distractors": {},
+      "correctAnswerText": "12"
+    },
+    {
+      "id": "q13",
+      "type": "mcq",
+      "number": 13,
+      "level": "Applying",
+      "topic": "7.NS.A.2d",
+      "standard": "7.NS.A.2d",
+      "question": "Which decimal represents 5/12?",
+      "image": "/input/assets/grade-7-pretest/image13.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image13.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "0.4125",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "0.41666...",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "0.51212...",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "0.58333...",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Dividing 5 by 12 gives 0.41666..., where the digit 6 repeats. Therefore, 5/12 has a repeating decimal representation.",
+      "distractors": {},
+      "correctAnswerText": "0.41666..."
+    },
+    {
+      "id": "q14",
+      "type": "mcq",
+      "number": 14,
+      "level": "Applying",
+      "topic": "7.NS.A.3",
+      "standard": "7.NS.A.3",
+      "question": "A bank account has a balance of -$12.50. A deposit of $30.25 is made, followed by a withdrawal of $5.75. What is the new balance?",
+      "image": "/input/assets/grade-7-pretest/image14.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image14.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "$6.00",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "$12.00",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "$17.75",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "$24.50",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Calculate -12.50 + 30.25 - 5.75. First, -12.50 + 30.25 = 17.75. Then, 17.75 - 5.75 = 12.00. The new balance is $12.00.",
+      "distractors": {},
+      "correctAnswerText": "$12.00"
+    },
+    {
+      "id": "q15",
+      "type": "mcq",
+      "number": 15,
+      "level": "Applying",
+      "topic": "7.EE.A.1",
+      "standard": "7.EE.A.1",
+      "question": "Which expression is equivalent to 1/2(6x - 8) + 2x?",
+      "image": "/input/assets/grade-7-pretest/image15.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image15.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "3x - 6",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "5x - 4",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "5x - 8",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "8x - 4",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Distribute 1/2: 1/2(6x - 8) = 3x - 4. Then combine like terms: 3x - 4 + 2x = 5x - 4.",
+      "distractors": {},
+      "correctAnswerText": "5x - 4"
+    },
+    {
+      "id": "q16",
+      "type": "mcq",
+      "number": 16,
+      "level": "Applying",
+      "topic": "7.EE.A.2",
+      "standard": "7.EE.A.2",
+      "question": "A store increases the price of an item by 15%. If the original price is p dollars, which expression is equivalent to p + 0.15p?",
+      "image": "/input/assets/grade-7-pretest/image16.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image16.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "0.15p",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "0.85p",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "1.15p",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "1.50p",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "Combine like terms: p + 0.15p = 1p + 0.15p = 1.15p. This means increasing a price by 15% is equivalent to multiplying the original price by 1.15.",
+      "distractors": {},
+      "correctAnswerText": "1.15p"
+    },
+    {
+      "id": "q17",
+      "type": "mcq",
+      "number": 17,
+      "level": "Applying",
+      "topic": "7.EE.B.3",
+      "standard": "7.EE.B.3",
+      "question": "A bank account has a balance of -$25.50. The account owner deposits $80.75 and then withdraws $12.25. What is the final balance?",
+      "image": "/input/assets/grade-7-pretest/image17.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image17.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "$43.00",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "$55.25",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "$68.50",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "$93.00",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "Calculate -25.50 + 80.75 - 12.25. The balance after the deposit is $55.25. After the withdrawal, $55.25 - $12.25 = $43.00.",
+      "distractors": {},
+      "correctAnswerText": "$43.00"
+    },
+    {
+      "id": "q18",
+      "type": "mcq",
+      "number": 18,
+      "level": "Applying",
+      "topic": "7.EE.B.4a",
+      "standard": "7.EE.B.4a",
+      "question": "Three friends share the cost of a trip equally. Each friend pays $2 for a snack in addition to an equal share of the travel cost. Each friend pays $27 in total. If x represents one friend's share of the travel cost, which equation can be used to find x, and what is the solution?",
+      "image": "/input/assets/grade-7-pretest/image18.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image18.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "3x + 2 = 27; x = 25",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "3(x + 2) = 27; x = 7",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "x + 6 = 27; x = 21",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "3(x - 2) = 27; x = 11",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Each of the 3 friends pays x dollars for travel plus $2 for a snack, so the total is represented by 3(x + 2) = 27. Divide by 3 to get x + 2 = 9, then subtract 2. Therefore, x = 7.",
+      "distractors": {},
+      "correctAnswerText": "3(x + 2) = 27; x = 7"
+    },
+    {
+      "id": "q19",
+      "type": "mcq",
+      "number": 19,
+      "level": "Applying",
+      "topic": "7.EE.B.4b",
+      "standard": "7.EE.B.4b",
+      "question": "A recreation center charges a $10 registration fee and $5 for each class. Maya can spend less than $35. If x represents the number of classes she takes, which inequality and solution correctly represent the situation?",
+      "image": "/input/assets/grade-7-pretest/image19.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image19.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "5x + 10 < 35; x < 5, shown by an open circle at 5 and shading to the left",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "5x + 10 > 35; x > 5, shown by an open circle at 5 and shading to the right",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "10x + 5 < 35; x < 3, shown by an open circle at 3 and shading to the left",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "5x - 10 < 35; x < 9, shown by an open circle at 9 and shading to the left",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "The total cost is represented by 5x + 10, and it must be less than $35. Solving 5x + 10 < 35 gives 5x < 25 and x < 5. Since x represents a whole number of classes, Maya can take at most 4 classes.",
+      "distractors": {},
+      "correctAnswerText": "5x + 10 < 35; x < 5, shown by an open circle at 5 and shading to the left"
+    },
+    {
+      "id": "q20",
+      "type": "mcq",
+      "number": 20,
+      "level": "Applying",
+      "topic": "7.EE.B.4b",
+      "standard": "7.EE.B.4b",
+      "question": "A school club has $48 to spend on supplies. It pays a $12 delivery fee and $6 for each package of markers. If p represents the number of packages the club can buy, which inequality and solution correctly represent the situation?",
+      "image": "/input/assets/grade-7-pretest/image20.png",
+      "images": [
+        "/input/assets/grade-7-pretest/image20.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "6p + 12 < 48; p < 6",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "6p + 12 > 48; p > 6",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "12p + 6 < 48; p < 3.5",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "6p - 12 < 48; p < 10",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "The total cost is represented by 6p + 12, and it must be less than $48. Solving 6p + 12 < 48 gives 6p < 36, so p < 6. Since p represents a whole number of packages, the club can buy at most 5 packages.",
+      "distractors": {},
+      "correctAnswerText": "6p + 12 < 48; p < 6"
+    }
+  ]
+}
