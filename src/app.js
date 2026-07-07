@@ -15,6 +15,11 @@ const QUESTION_SOURCE = "input/pre-test-for-demo.json";
 const ASSESSMENT_CATALOG_SOURCE = "input/assessment-catalog.json";
 const DEMO_STUDENTS = [];
 
+if (IS_GITHUB_PAGES) {
+  localStorage.removeItem("assessment-engine-students");
+  localStorage.removeItem("assessment-engine-students-v2");
+}
+
 const icons = {
   book: "&#9670;",
   grid: "&#9638;",
