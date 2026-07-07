@@ -583,7 +583,7 @@ img {
 
 .assignment-toolbar {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(130px, 0.7fr) minmax(220px, 1.1fr) minmax(180px, 1fr) minmax(90px, 0.45fr);
+  grid-template-columns: minmax(170px, 1fr) minmax(120px, 0.7fr) minmax(210px, 1.1fr) minmax(180px, 1fr) minmax(80px, 0.45fr) minmax(90px, 0.45fr);
   gap: 10px;
 }
 
@@ -625,6 +625,136 @@ img {
 .student-assignment-results {
   display: grid;
   gap: 10px;
+}
+
+.assignment-table-wrap {
+  max-height: calc(100vh - 340px);
+}
+
+.assignment-table {
+  min-width: 760px;
+}
+
+.assignment-table .select-col {
+  width: 74px;
+}
+
+.select-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tiny-menu-button {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #d5dfdb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #17212b;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.selection-menu {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  z-index: 4;
+  display: grid;
+  min-width: 210px;
+  padding: 6px;
+  border: 1px solid #d5dfdb;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 28px rgba(16, 28, 38, 0.14);
+}
+
+.selection-menu button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  padding: 8px 9px;
+  text-align: left;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.selection-menu button:hover {
+  background: #f3f6f5;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: #263c63;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.assignment-confirmation {
+  display: grid;
+  gap: 12px;
+}
+
+.confirm-head,
+.bulk-settings {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #fbfbf8;
+}
+
+.confirm-head {
+  justify-content: space-between;
+}
+
+.confirm-head h2,
+.confirm-head p {
+  margin: 0;
+}
+
+.confirm-head span {
+  color: #263c63;
+  font-weight: 900;
+}
+
+.bulk-settings label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #52606b;
+  font-weight: 900;
+}
+
+.bulk-settings input[type="number"],
+.assignment-confirm-table input[type="number"] {
+  width: 78px;
+  min-height: 34px;
+  border: 1px solid #d5dfdb;
+  border-radius: 7px;
+  padding: 6px 8px;
+  font: inherit;
+}
+
+.assignment-confirm-table {
+  min-width: 1080px;
+}
+
+.assignment-confirm-table small,
+.assignment-table small {
+  display: block;
+  margin-top: 2px;
+  color: #52606b;
+  font-weight: 800;
 }
 
 .student-assignment-list {

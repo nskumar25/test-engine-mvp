@@ -48,6 +48,8 @@ let calculatorValue = "";
 let pendingQuestionScroll = null;
 let zoomScale = 1;
 let zoomImageSrc = "";
+let assignmentSelectionMode = "visible";
+let assignmentSelectionFilters = {};
 
 const root = document.getElementById("root");
 
@@ -929,6 +931,7 @@ function renderAdminAssignmentsPage(context) {
                   value="${escapeAttribute(test.key)}"
                   data-title="${escapeAttribute(test.title)}"
                   data-source-document="${escapeAttribute(test.sourceDocument || test.path || "")}"
+                  data-path="${escapeAttribute(test.path || getAssessmentPathFromKey(test.key))}"
                   data-duration-minutes="${escapeAttribute(test.durationMinutes || 30)}"
                   data-input-format-version="${escapeAttribute(test.inputFormatVersion || "mvp-1")}"
                 >${escapeHtml(test.title)}</option>
@@ -939,13 +942,20 @@ function renderAdminAssignmentsPage(context) {
             Attempts
             <input data-assignment-attempt-limit type="number" min="1" max="5" value="1" />
           </label>
+          <label>
+            Per page
+            <select data-assignment-page-size>
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </label>
         </div>
 
         <div class="assignment-actions">
           <button class="primary-action" data-action="view-filtered-students">View Students</button>
-          <button class="secondary-action" data-action="select-visible-students">Select Visible</button>
-          <button class="secondary-action" data-action="clear-student-selection">Clear</button>
-          <button class="primary-action" data-action="assign-selected-students">Assign Selected</button>
+          <button class="primary-action" data-action="prepare-assignment">Assign Selected</button>
           <span data-assignment-status>Choose filters, then view students.</span>
         </div>
 
@@ -1145,8 +1155,9 @@ function bindAssignmentControls() {
   if (!results) return;
 
   let offset = 0;
-  const limit = 25;
+  let limit = Number(document.querySelector("[data-assignment-page-size]")?.value || 10);
   let lastTotal = 0;
+  let visibleStudents = [];
 
   const getFilters = () => {
     const search = document.querySelector("[data-assignment-filter='search']")?.value.trim().toLowerCase() || "";
@@ -1180,12 +1191,16 @@ function bindAssignmentControls() {
         ...student,
         isAssigned: assignedIds.has(String(student.id))
       }));
+      visibleStudents = students;
+      assignmentSelectionMode = "visible";
+      assignmentSelectionFilters = getFilters();
       lastTotal = payload.total || 0;
       results.innerHTML = renderAssignmentResults(students, payload);
       status.textContent = lastTotal
         ? `Showing ${offset + 1}-${Math.min(offset + limit, lastTotal)} of ${lastTotal} matching student(s).`
         : "No students match the selected filters.";
       bindAssignmentPaging(loadStudents);
+      bindAssignmentSelectionMenu(loadStudents);
     } catch (error) {
       status.textContent = "Could not load students. Check the API connection.";
       results.innerHTML = `<div class="admin-error">${escapeHtml(error.message || "Student search failed.")}</div>`;
@@ -1196,61 +1211,67 @@ function bindAssignmentControls() {
     loadStudents(0);
   });
 
-  document.querySelector("[data-action='select-visible-students']")?.addEventListener("click", () => {
-    document.querySelectorAll("[data-student-assignment-id]").forEach((input) => {
-      input.checked = true;
-    });
+  document.querySelector("[data-assignment-page-size]")?.addEventListener("change", (event) => {
+    limit = Number(event.currentTarget.value || 10);
+    loadStudents(0);
   });
 
-  document.querySelector("[data-action='clear-student-selection']")?.addEventListener("click", () => {
-    document.querySelectorAll("[data-student-assignment-id]").forEach((input) => {
-      input.checked = false;
-    });
-  });
-
-  document.querySelector("[data-action='assign-selected-students']")?.addEventListener("click", async () => {
+  document.querySelector("[data-action='prepare-assignment']")?.addEventListener("click", async () => {
     const status = document.querySelector("[data-assignment-status]");
-    const selected = Array.from(document.querySelectorAll("[data-student-assignment-id]:checked"))
-      .map((input) => input.dataset.studentAssignmentId);
-    if (!selected.length) {
+    const selectedStudents = await getSelectedAssignmentStudents(visibleStudents, limit);
+    if (!selectedStudents.length) {
       status.textContent = "Select at least one student.";
       return;
     }
 
-    status.textContent = "Assigning pre-test...";
-    const attemptLimit = Number(document.querySelector("[data-assignment-attempt-limit]")?.value || 1);
-    try {
-      const result = await getDataAdapter().saveAssignments({
-        assessment: getAssignmentAssessmentPayload(),
-        studentIds: selected,
-        attemptLimit,
-        assignedBy: "admin"
-      });
-      status.textContent = `Assigned pre-test to ${result.assigned || selected.length} student(s).`;
-      loadStudents(offset);
-    } catch {
-      status.textContent = "Could not save assignments. Check that the API is running and the assignment tables exist.";
-    }
+    status.textContent = `Reviewing ${selectedStudents.length} student assignment(s).`;
+    results.innerHTML = renderAssignmentConfirmation(selectedStudents);
+    bindAssignmentConfirmation(() => loadStudents(offset));
   });
 }
 
 function renderAssignmentResults(students, payload) {
   if (!students.length) return `<p class="empty-review">No students match the selected filters.</p>`;
   return `
-    <div class="student-assignment-list">
-      ${students.map((student) => {
+    <div class="admin-table-wrap assignment-table-wrap">
+      <table class="admin-table assignment-table">
+        <thead>
+          <tr>
+            <th class="select-col">
+              <span class="select-menu">
+                <input type="checkbox" data-action="toggle-visible-students" aria-label="Select visible students" />
+                <button type="button" class="tiny-menu-button" data-action="toggle-selection-menu" aria-label="Selection options">⌄</button>
+                <span class="selection-menu" data-selection-menu hidden>
+                  <button type="button" data-action="select-visible-students">Select visible students</button>
+                  <button type="button" data-action="select-all-matching-students">Select all matching students</button>
+                  <button type="button" data-action="clear-student-selection">Clear selection</button>
+                </span>
+              </span>
+            </th>
+            <th>Student</th>
+            <th>School</th>
+            <th>Grade</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${students.map((student) => {
         const assigned = Boolean(student.isAssigned);
         return `
-          <label class="student-assignment-row">
-            <input type="checkbox" data-student-assignment-id="${escapeAttribute(student.id)}" ${assigned ? "checked" : ""} />
-            <span>
+          <tr>
+            <td><input type="checkbox" data-student-assignment-id="${escapeAttribute(student.id)}" data-student-payload="${escapeAttribute(JSON.stringify(student))}" ${assigned ? "checked" : ""} /></td>
+            <td>
               <strong>${escapeHtml(student.name || "Unnamed Student")}</strong>
-              <small>${escapeHtml(student.email || student.username || student.id)}${student.gradeLevel ? ` / ${escapeHtml(student.gradeLevel)}` : ""}${student.schoolName ? ` / ${escapeHtml(student.schoolName)}` : ""}</small>
-            </span>
-            <em>${assigned ? "Assigned" : "Ready"}</em>
-          </label>
+              <small>${escapeHtml(student.email || student.username || student.id)}</small>
+            </td>
+            <td>${escapeHtml(student.schoolName || "")}</td>
+            <td>${escapeHtml(student.gradeLevel || "")}</td>
+            <td><em class="status-pill">${assigned ? "Assigned" : "Ready"}</em></td>
+          </tr>
         `;
       }).join("")}
+        </tbody>
+      </table>
     </div>
     <div class="assignment-pager">
       <button class="secondary-action" data-action="assignment-page" data-offset="${Math.max(0, payload.offset - payload.limit)}" ${payload.offset <= 0 ? "disabled" : ""}>Previous</button>
@@ -1258,6 +1279,197 @@ function renderAssignmentResults(students, payload) {
       <button class="secondary-action" data-action="assignment-page" data-offset="${payload.offset + payload.limit}" ${payload.offset + payload.limit >= payload.total ? "disabled" : ""}>Next</button>
     </div>
   `;
+}
+
+function bindAssignmentSelectionMenu() {
+  document.querySelector("[data-action='toggle-visible-students']")?.addEventListener("change", (event) => {
+    assignmentSelectionMode = "visible";
+    document.querySelectorAll("[data-student-assignment-id]").forEach((input) => {
+      input.checked = event.currentTarget.checked;
+    });
+  });
+
+  document.querySelector("[data-action='toggle-selection-menu']")?.addEventListener("click", () => {
+    const menu = document.querySelector("[data-selection-menu]");
+    if (menu) menu.hidden = !menu.hidden;
+  });
+
+  document.querySelector("[data-action='select-visible-students']")?.addEventListener("click", () => {
+    assignmentSelectionMode = "visible";
+    document.querySelectorAll("[data-student-assignment-id]").forEach((input) => {
+      input.checked = true;
+    });
+    const menu = document.querySelector("[data-selection-menu]");
+    if (menu) menu.hidden = true;
+  });
+
+  document.querySelector("[data-action='select-all-matching-students']")?.addEventListener("click", () => {
+    assignmentSelectionMode = "allMatching";
+    assignmentSelectionFilters = {
+      search: document.querySelector("[data-assignment-filter='search']")?.value.trim().toLowerCase() || "",
+      grade: document.querySelector("[data-assignment-filter='grade']")?.value || "",
+      school: document.querySelector("[data-assignment-filter='school']")?.value || ""
+    };
+    document.querySelectorAll("[data-student-assignment-id]").forEach((input) => {
+      input.checked = true;
+    });
+    const status = document.querySelector("[data-assignment-status]");
+    if (status) status.textContent = "All matching students selected. Review before assigning.";
+    const menu = document.querySelector("[data-selection-menu]");
+    if (menu) menu.hidden = true;
+  });
+
+  document.querySelector("[data-action='clear-student-selection']")?.addEventListener("click", () => {
+    assignmentSelectionMode = "visible";
+    document.querySelectorAll("[data-student-assignment-id]").forEach((input) => {
+      input.checked = false;
+    });
+    const menu = document.querySelector("[data-selection-menu]");
+    if (menu) menu.hidden = true;
+  });
+}
+
+async function getSelectedAssignmentStudents(visibleStudents, pageLimit) {
+  if (assignmentSelectionMode === "allMatching") {
+    const payload = await getDataAdapter().searchStudents({
+      ...assignmentSelectionFilters,
+      limit: 10000,
+      offset: 0
+    });
+    return payload.items || [];
+  }
+
+  const selectedIds = new Set(
+    Array.from(document.querySelectorAll("[data-student-assignment-id]:checked"))
+      .map((input) => input.dataset.studentAssignmentId)
+  );
+  return visibleStudents.filter((student) => selectedIds.has(String(student.id))).slice(0, pageLimit);
+}
+
+function renderAssignmentConfirmation(students) {
+  const selectedTest = getAssignmentAssessmentPayload();
+  const defaultDuration = selectedTest.durationMinutes || assessment.durationMinutes || 30;
+  return `
+    <div class="assignment-confirmation">
+      <div class="confirm-head">
+        <div>
+          <p class="eyebrow">Confirm Assignment</p>
+          <h2>${escapeHtml(selectedTest.title)}</h2>
+        </div>
+        <span>${students.length} student(s)</span>
+      </div>
+      <div class="bulk-settings">
+        <label>Duration <input data-bulk-duration type="number" min="1" max="240" value="${escapeAttribute(defaultDuration)}" /></label>
+        <button class="secondary-action" data-action="apply-duration-all">Apply to all</button>
+        <label><input data-bulk-setting="calculator" type="checkbox" checked /> Calculator</label>
+        <label><input data-bulk-setting="scratchpad" type="checkbox" checked /> Scratch pad</label>
+        <label><input data-bulk-setting="showResults" type="checkbox" checked /> Show results</label>
+        <label><input data-bulk-setting="showAnswers" type="checkbox" checked /> Show answers</label>
+        <button class="secondary-action" data-action="apply-options-all">Apply options to all</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table assignment-confirm-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>School</th>
+              <th>Grade</th>
+              <th>Test</th>
+              <th>Duration</th>
+              <th>Calculator</th>
+              <th>Scratch</th>
+              <th>Results</th>
+              <th>Answers</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${students.map((student) => `
+              <tr data-confirm-student="${escapeAttribute(student.id)}">
+                <td><strong>${escapeHtml(student.name || "Unnamed Student")}</strong><small>${escapeHtml(student.email || student.username || student.id)}</small></td>
+                <td>${escapeHtml(student.schoolName || "")}</td>
+                <td>${escapeHtml(student.gradeLevel || "")}</td>
+                <td>${escapeHtml(selectedTest.title)}</td>
+                <td><input data-confirm-field="durationMinutes" type="number" min="1" max="240" value="${escapeAttribute(defaultDuration)}" /></td>
+                <td><input data-confirm-field="calculator" type="checkbox" checked /></td>
+                <td><input data-confirm-field="scratchpad" type="checkbox" checked /></td>
+                <td><input data-confirm-field="showResults" type="checkbox" checked /></td>
+                <td><input data-confirm-field="showAnswers" type="checkbox" checked /></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+      <div class="assignment-actions">
+        <button class="secondary-action" data-action="cancel-assignment-review">Back</button>
+        <button class="primary-action" data-action="confirm-save-assignments">Confirm Assignment</button>
+        <span data-confirm-status>Review settings before assigning.</span>
+      </div>
+    </div>
+  `;
+}
+
+function bindAssignmentConfirmation(onBack) {
+  document.querySelector("[data-action='apply-duration-all']")?.addEventListener("click", () => {
+    const duration = document.querySelector("[data-bulk-duration]")?.value || "";
+    document.querySelectorAll("[data-confirm-field='durationMinutes']").forEach((input) => {
+      input.value = duration;
+    });
+  });
+
+  document.querySelector("[data-action='apply-options-all']")?.addEventListener("click", () => {
+    ["calculator", "scratchpad", "showResults", "showAnswers"].forEach((field) => {
+      const checked = Boolean(document.querySelector(`[data-bulk-setting='${field}']`)?.checked);
+      document.querySelectorAll(`[data-confirm-field='${field}']`).forEach((input) => {
+        input.checked = checked;
+      });
+    });
+  });
+
+  document.querySelector("[data-action='cancel-assignment-review']")?.addEventListener("click", () => {
+    onBack();
+  });
+
+  document.querySelector("[data-action='confirm-save-assignments']")?.addEventListener("click", async () => {
+    const status = document.querySelector("[data-confirm-status]");
+    const rows = Array.from(document.querySelectorAll("[data-confirm-student]"));
+    const assessmentPayload = getAssignmentAssessmentPayload();
+    const attemptLimit = Number(document.querySelector("[data-assignment-attempt-limit]")?.value || 1);
+    const studentIds = rows.map((row) => row.dataset.confirmStudent);
+    const perStudentSettings = {};
+
+    rows.forEach((row) => {
+      const studentId = row.dataset.confirmStudent;
+      perStudentSettings[studentId] = {
+        assessmentPath: assessmentPayload.path || getAssessmentPathFromKey(assessmentPayload.key),
+        durationMinutes: Number(row.querySelector("[data-confirm-field='durationMinutes']")?.value || assessmentPayload.durationMinutes || 30),
+        tools: {
+          calculator: Boolean(row.querySelector("[data-confirm-field='calculator']")?.checked),
+          scratchpad: Boolean(row.querySelector("[data-confirm-field='scratchpad']")?.checked),
+          imageZoom: true,
+          eliminator: true
+        },
+        resultOptions: {
+          showResults: Boolean(row.querySelector("[data-confirm-field='showResults']")?.checked),
+          showAnswers: Boolean(row.querySelector("[data-confirm-field='showAnswers']")?.checked)
+        }
+      };
+    });
+
+    status.textContent = "Saving assignments...";
+    try {
+      const result = await getDataAdapter().saveAssignments({
+        assessment: assessmentPayload,
+        studentIds,
+        attemptLimit,
+        assignedBy: "admin",
+        perStudentSettings
+      });
+      status.textContent = `Assigned ${result.assigned || studentIds.length} student(s).`;
+      window.setTimeout(onBack, 700);
+    } catch (error) {
+      status.textContent = error.message || "Could not save assignments.";
+    }
+  });
 }
 
 function bindAssignmentPaging(loadStudents) {
@@ -1284,6 +1496,7 @@ function getCurrentAssessmentPayload() {
     key: getCurrentAssessmentKey(),
     title: assessment.title,
     sourceDocument: assessment.sourceDocument || QUESTION_SOURCE,
+    path: QUESTION_SOURCE,
     durationMinutes: assessment.durationMinutes,
     inputFormatVersion: assessment.inputFormatVersion || "mvp-1",
     tools: assessment.tools || {},
@@ -1300,9 +1513,14 @@ function getAssignmentAssessmentPayload() {
     key: selectedKey,
     title: selectedOption?.dataset.title || assessment.title,
     sourceDocument: selectedOption?.dataset.sourceDocument || assessment.sourceDocument || QUESTION_SOURCE,
+    path: selectedOption?.dataset.path || getAssessmentPathFromKey(selectedKey),
     durationMinutes: Number(selectedOption?.dataset.durationMinutes || assessment.durationMinutes || 30),
     inputFormatVersion: selectedOption?.dataset.inputFormatVersion || assessment.inputFormatVersion || "mvp-1"
   };
+}
+
+function getAssessmentPathFromKey(key) {
+  return `input/assessments/${String(key || "pre-test-for-demo")}.json`;
 }
 
 function getAdminPage() {
@@ -1388,17 +1606,23 @@ function renderStartScreen() {
       return;
     }
 
-    const assigned = await hasCurrentAssessmentAssignment(student.id);
+    const assigned = await findActiveAssignmentForStudent(student.id);
     if (!assigned) {
       submitButton.disabled = false;
       message.textContent = "This pre-test is not assigned to this student yet. Please contact the administrator.";
       return;
     }
 
+    message.textContent = "Loading assigned pre-test...";
+    await applyAssignedAssessment(assigned);
+
     setState({
       started: true,
       startedAt: new Date().toISOString(),
       studentLookupError: "",
+      remainingSeconds: (assessment.durationMinutes || 30) * 60,
+      assignment: assigned,
+      assignmentSettings: assigned.metadata || {},
       student: {
         name: student.name,
         id: student.id,
@@ -1425,18 +1649,64 @@ async function findRegisteredStudent(username) {
   }
 }
 
-async function hasCurrentAssessmentAssignment(studentId) {
+async function findActiveAssignmentForStudent(studentId) {
   try {
     const assignments = await getDataAdapter().listAssignments();
-    const assessmentKey = getCurrentAssessmentKey();
-    return assignments.some((assignment) => {
-      return String(assignment.studentId) === String(studentId)
-        && assignment.assessmentKey === assessmentKey
-        && assignment.status !== "cancelled";
-    });
+    return assignments.find((assignment) =>
+      String(assignment.studentId) === String(studentId)
+        && assignment.status !== "cancelled"
+    ) || null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+async function applyAssignedAssessment(assignment) {
+  const settings = assignment.metadata || {};
+  const assessmentPath = settings.assessmentPath
+    || settings.assessment?.path
+    || getAssessmentPathFromKey(assignment.assessmentKey);
+  try {
+    const payload = await fetchAssessmentPayload(assessmentPath);
+    assessment = {
+      ...payload.assessment,
+      key: assignment.assessmentKey || payload.assessment?.key,
+      title: assignment.assessmentTitle || payload.assessment?.title || assessment.title,
+      durationMinutes: Number(settings.durationMinutes || payload.assessment?.durationMinutes || assessment.durationMinutes || 30),
+      tools: {
+        ...(payload.assessment?.tools || assessment.tools || {}),
+        ...(settings.tools || {})
+      },
+      resultOptions: {
+        showResults: true,
+        showAnswers: true,
+        ...(settings.resultOptions || {})
+      }
+    };
+    questions = payload.questions || questions;
+    localStorage.removeItem(STORAGE_KEY);
+    state = getInitialState(questions.length);
+  } catch {
+    assessment = {
+      ...assessment,
+      durationMinutes: Number(settings.durationMinutes || assessment.durationMinutes || 30),
+      tools: {
+        ...(assessment.tools || {}),
+        ...(settings.tools || {})
+      },
+      resultOptions: {
+        showResults: true,
+        showAnswers: true,
+        ...(settings.resultOptions || {})
+      }
+    };
+  }
+}
+
+async function fetchAssessmentPayload(path) {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error("Assigned assessment JSON was not found");
+  return response.json();
 }
 
 function renderSubmitReview() {
@@ -1907,7 +2177,10 @@ function buildEvaluation() {
       sourceDocument: assessment.sourceDocument || null,
       durationMinutes: assessment.durationMinutes,
       questionCount: total,
-      inputFormatVersion: assessment.inputFormatVersion || "mvp-1"
+      inputFormatVersion: assessment.inputFormatVersion || "mvp-1",
+      assignmentKey: state.assignment?.id || null,
+      resultOptions: assessment.resultOptions || state.assignmentSettings?.resultOptions || {},
+      tools: assessment.tools || {}
     },
     timing: {
       durationSeconds,
@@ -2194,7 +2467,11 @@ const localDataAdapter = {
       dueAt: payload.dueAt || null,
       attemptLimit: Number(payload.attemptLimit || 1),
       status: "assigned",
-      metadata: payload.metadata || {}
+      metadata: {
+        ...(payload.metadata || {}),
+        ...(payload.perStudentSettings?.[studentId] || {}),
+        assessment: payload.assessment || {}
+      }
     }));
     const incomingKeys = new Set(incoming.map((item) => item.id));
     const next = [
@@ -2458,6 +2735,22 @@ function renderSubmitted() {
     topicBreakdown: buildTopicBreakdown(evaluation.responses || [])
   };
   const ilp = evaluation.ilp || generateILP(evaluation.responses || [], summary.topicBreakdown, summary.strengths, summary.needsReview);
+  const resultOptions = assessment.resultOptions || state.assignmentSettings?.resultOptions || { showResults: true, showAnswers: true };
+
+  if (resultOptions.showResults === false) {
+    root.innerHTML = `
+      <main class="shell locked-shell">
+        <section class="result-panel">
+          <div class="result-icon">${icons.shield}</div>
+          <p class="eyebrow">Assessment submitted</p>
+          <h1>${escapeHtml(assessment.title)}</h1>
+          <p>Your assessment has been submitted successfully.</p>
+          <p>Results will be reviewed by your teacher.</p>
+        </section>
+      </main>
+    `;
+    return;
+  }
 
   root.innerHTML = `
     <main class="shell locked-shell">
@@ -2487,7 +2780,9 @@ function renderSubmitted() {
         <div class="result-review">
           <h2>Question Review</h2>
           ${
-            missed.length
+            resultOptions.showAnswers === false
+              ? `<p class="empty-review">Question answers are hidden for this assessment.</p>`
+              : missed.length
               ? missed.map((response) => `
                 <article class="review-item">
                   <strong>Question ${response.number}</strong>

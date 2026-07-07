@@ -277,9 +277,15 @@ async function saveAssignments(payload) {
     const dueAt = payload.dueAt || null;
     const attemptLimit = Number(payload.attemptLimit || 1);
     const assignedBy = payload.assignedBy || "admin";
+    const perStudentSettings = payload.perStudentSettings || {};
     let assigned = 0;
 
     for (const studentId of studentIds) {
+      const metadata = {
+        ...(payload.metadata || {}),
+        ...(perStudentSettings[String(studentId)] || perStudentSettings[studentId] || {}),
+        assessment
+      };
       await client.query(`
         insert into test_engine_assignments (
           assessment_id,
@@ -303,7 +309,7 @@ async function saveAssignments(payload) {
         assignedBy,
         dueAt,
         attemptLimit,
-        JSON.stringify(payload.metadata || {})
+        JSON.stringify(metadata)
       ]);
       assigned += 1;
     }
