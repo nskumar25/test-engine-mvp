@@ -8,6 +8,26 @@ const IS_GITHUB_PAGES = window.location.hostname.endsWith("github.io");
 const DATA_PROVIDER = IS_GITHUB_PAGES ? "local" : window.ASSESSMENT_DATA_PROVIDER || "local";
 const API_BASE_URL = IS_GITHUB_PAGES ? "" : window.ASSESSMENT_API_BASE_URL || "";
 const QUESTION_SOURCE = "input/pre-test-for-demo.json";
+const DEMO_STUDENTS = [
+  { id: "student01", username: "student01", email: "student01@astute-demo.local", name: "Aarav Sharma", gradeLevel: "Grade 6", schoolName: "Astute Demo Middle School" },
+  { id: "student02", username: "student02", email: "student02@astute-demo.local", name: "Maya Patel", gradeLevel: "Grade 6", schoolName: "Astute Demo Middle School" },
+  { id: "student03", username: "student03", email: "student03@astute-demo.local", name: "Noah Williams", gradeLevel: "Grade 6", schoolName: "Astute Demo Middle School" },
+  { id: "student04", username: "student04", email: "student04@astute-demo.local", name: "Sophia Nguyen", gradeLevel: "Grade 6", schoolName: "Astute Demo Middle School" },
+  { id: "student05", username: "student05", email: "student05@astute-demo.local", name: "Liam Johnson", gradeLevel: "Grade 7", schoolName: "Astute Demo Middle School" },
+  { id: "student06", username: "student06", email: "student06@astute-demo.local", name: "Aisha Khan", gradeLevel: "Grade 7", schoolName: "Astute Demo Middle School" },
+  { id: "student07", username: "student07", email: "student07@astute-demo.local", name: "Ethan Brown", gradeLevel: "Grade 7", schoolName: "Astute Demo Middle School" },
+  { id: "student08", username: "student08", email: "student08@astute-demo.local", name: "Chloe Martin", gradeLevel: "Grade 8", schoolName: "Astute Demo Middle School" },
+  { id: "student09", username: "student09", email: "student09@astute-demo.local", name: "Diego Martinez", gradeLevel: "Grade 8", schoolName: "Astute Demo Middle School" },
+  { id: "student10", username: "student10", email: "student10@astute-demo.local", name: "Grace Lee", gradeLevel: "Grade 8", schoolName: "Astute Demo Middle School" },
+  { id: "student11", username: "student11", email: "student11@north-demo.local", name: "Ibrahim Ali", gradeLevel: "Grade 6", schoolName: "North Star Academy" },
+  { id: "student12", username: "student12", email: "student12@north-demo.local", name: "Emma Wilson", gradeLevel: "Grade 6", schoolName: "North Star Academy" },
+  { id: "student13", username: "student13", email: "student13@north-demo.local", name: "Lucas Garcia", gradeLevel: "Grade 7", schoolName: "North Star Academy" },
+  { id: "student14", username: "student14", email: "student14@north-demo.local", name: "Zara Ahmed", gradeLevel: "Grade 7", schoolName: "North Star Academy" },
+  { id: "student15", username: "student15", email: "student15@north-demo.local", name: "Olivia Davis", gradeLevel: "Grade 8", schoolName: "North Star Academy" },
+  { id: "student16", username: "student16", email: "student16@river-demo.local", name: "Benjamin Clark", gradeLevel: "Grade 6", schoolName: "Riverbend Learning Center" },
+  { id: "student17", username: "student17", email: "student17@river-demo.local", name: "Anika Rao", gradeLevel: "Grade 7", schoolName: "Riverbend Learning Center" },
+  { id: "student18", username: "student18", email: "student18@river-demo.local", name: "Mateo Hernandez", gradeLevel: "Grade 8", schoolName: "Riverbend Learning Center" }
+];
 
 const icons = {
   book: "&#9670;",
@@ -2090,7 +2110,8 @@ const localDataAdapter = {
   },
 
   async listStudents(search = "") {
-    const students = JSON.parse(localStorage.getItem(STUDENTS_STORAGE_KEY) || "[]");
+    const savedStudents = JSON.parse(localStorage.getItem(STUDENTS_STORAGE_KEY) || "[]");
+    const students = savedStudents.length ? savedStudents : DEMO_STUDENTS;
     if (!search) return students;
     const normalized = search.toLowerCase();
     return students.filter((student) => {
