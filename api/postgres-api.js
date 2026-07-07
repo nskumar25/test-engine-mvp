@@ -5,7 +5,7 @@ const { Pool } = require("pg");
 const port = Number(process.env.API_PORT || process.env.PORT || 8787);
 const host = process.env.API_HOST || "127.0.0.1";
 const allowedOrigin = process.env.CORS_ORIGIN || "*";
-const studentView = process.env.STUDENT_VIEW || "";
+const studentView = process.env.STUDENT_VIEW || "test_engine_registered_students";
 const safeStudentView = /^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$/.test(studentView)
   ? studentView
   : "";
@@ -27,9 +27,27 @@ const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host}`);
 
+    if (request.method === "GET" && url.pathname === "/") {
+      sendJson(response, 200, {
+        ok: true,
+        service: "Assessment Test Engine API",
+        routes: ["/health", "/api/student-filters", "/api/students", "/api/assessments"]
+      });
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/health") {
       await pool.query("select 1");
-      sendJson(response, 200, { ok: true });
+      sendJson(response, 200, {
+        ok: true,
+        studentView: safeStudentView || null
+      });
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/debug") {
+      const debug = await getDebugSummary();
+      sendJson(response, 200, debug);
       return;
     }
 
@@ -517,4 +535,37 @@ async function listStudentFilters() {
     grades: grades.rows.map((row) => row.grade_level),
     totalStudents: total.rows[0]?.total || 0
   };
+}
+
+async function getDebugSummary() {
+  const result = {
+    ok: true,
+    studentView: safeStudentView || null,
+    registeredStudentViewExists: false,
+    totalStudents: 0,
+    schools: [],
+    assessments: 0
+  };
+
+  const viewCheck = await pool.query(`
+    select to_regclass($1) as view_name
+  `, [safeStudentView || ""]);
+  result.registeredStudentViewExists = Boolean(viewCheck.rows[0]?.view_name);
+
+  if (safeStudentView && result.registeredStudentViewExists) {
+    const filters = await listStudentFilters();
+    result.totalStudents = filters.totalStudents;
+    result.schools = filters.schools;
+    result.grades = filters.grades;
+  }
+
+  const assessmentCheck = await pool.query(`
+    select to_regclass('public.test_engine_assessments') as table_name
+  `);
+  if (assessmentCheck.rows[0]?.table_name) {
+    const assessmentCount = await pool.query("select count(*)::int as total from test_engine_assessments");
+    result.assessments = assessmentCount.rows[0]?.total || 0;
+  }
+
+  return result;
 }
