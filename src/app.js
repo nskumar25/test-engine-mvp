@@ -1,0 +1,686 @@
+const STORAGE_KEY = "assessment-engine-mvp";
+const RESULTS_DB_NAME = "assessment-engine-results";
+const RESULTS_STORE = "attempts";
+const QUESTION_SOURCE = "input/pre-test-for-demo.json";
+
+const icons = {
+  book: "&#9670;",
+  grid: "&#9638;",
+  clock: "&#128337;",
+  flag: "&#9873;",
+  file: "&#128196;",
+  calc: "&#8721;",
+  pencil: "&#9998;",
+  eraser: "&#8998;",
+  clear: "&#10005;",
+  zoom: "&#128269;",
+  shield: "&#128737;",
+  warn: "&#9888;",
+  fullscreen: "&#9974;",
+  previous: "&#8249;",
+  next: "&#8250;",
+  submit: "&#10148;"
+};
+
+let questions = [];
+let assessment = {};
+let state = {};
+let scratchTool = "pencil";
+let scratchColor = "#18212b";
+let drawing = false;
+let calculatorValue = "";
+let pendingQuestionScroll = null;
+
+const root = document.getElementById("root");
+
+fetch(QUESTION_SOURCE)
+  .then((response) => response.json())
+  .then((payload) => {
+    assessment = payload.assessment;
+    questions = payload.questions;
+    state = getInitialState(questions.length);
+    installSecurityGuards();
+    installTimer();
+    render();
+  })
+  .catch(() => {
+    root.innerHTML = `
+      <main class="shell locked-shell">
+        <section class="result-panel">
+          <div class="result-icon">${icons.warn}</div>
+          <p class="eyebrow">Could not load</p>
+          <h1>Question JSON was not found</h1>
+          <p>Start the local web server and open the app from the local address.</p>
+        </section>
+      </main>
+    `;
+  });
+
+function getInitialState(total) {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed.total === total) return parsed;
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+
+  return {
+    currentIndex: 0,
+    answers: {},
+    flagged: {},
+    eliminated: {},
+    scratchWork: {},
+    calculatorOpen: Boolean(assessment.tools?.calculator),
+    submitted: false,
+    evaluation: null,
+    remainingSeconds: assessment.durationMinutes * 60,
+    total
+  };
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function setState(patch, options = {}) {
+  if (options.preserveQuestionScroll) {
+    pendingQuestionScroll = document.querySelector(".question-pane")?.scrollTop ?? null;
+  }
+  captureScratch();
+  state = { ...state, ...patch };
+  saveState();
+  render();
+  if (pendingQuestionScroll !== null) {
+    const pane = document.querySelector(".question-pane");
+    if (pane) pane.scrollTop = pendingQuestionScroll;
+    pendingQuestionScroll = null;
+  }
+}
+
+function installSecurityGuards() {
+  const guard = (event) => {
+    event.preventDefault();
+  };
+
+  document.addEventListener("copy", guard);
+  document.addEventListener("cut", guard);
+  document.addEventListener("paste", guard);
+  document.addEventListener("contextmenu", guard);
+  document.addEventListener("selectstart", guard);
+  document.addEventListener("dragstart", guard);
+
+  document.addEventListener("keydown", (event) => {
+    const key = event.key.toLowerCase();
+    const blocked =
+      (event.ctrlKey || event.metaKey) &&
+      ["a", "c", "p", "s", "u", "x"].includes(key);
+
+    if (blocked || key === "printscreen") {
+      guard(event);
+    }
+  });
+
+  document.addEventListener("fullscreenchange", render);
+}
+
+function installTimer() {
+  window.setInterval(() => {
+    if (state.submitted) return;
+
+    if (state.remainingSeconds <= 1) {
+      submitAssessment();
+      return;
+    }
+
+    state.remainingSeconds -= 1;
+    saveState();
+    updateTimerOnly();
+  }, 1000);
+}
+
+function getAnsweredCount() {
+  return Object.keys(state.answers).length;
+}
+
+function getFlaggedCount() {
+  return Object.values(state.flagged).filter(Boolean).length;
+}
+
+function minutesAndSeconds() {
+  const minutes = String(Math.floor(state.remainingSeconds / 60)).padStart(2, "0");
+  const seconds = String(state.remainingSeconds % 60).padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+function updateTimerOnly() {
+  const timer = document.querySelector("[data-timer]");
+  if (timer) timer.innerHTML = `${icons.clock} ${minutesAndSeconds()}`;
+}
+
+function render() {
+  if (!questions.length) return;
+
+  saveState();
+
+  if (state.submitted) {
+    renderSubmitted();
+    return;
+  }
+
+  const question = questions[state.currentIndex];
+  const answeredCount = getAnsweredCount();
+  const flaggedCount = getFlaggedCount();
+  const progress = Math.round((answeredCount / questions.length) * 100);
+  root.innerHTML = `
+    <main class="shell" aria-label="Assessment workspace">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">${icons.book}</div>
+          <div>
+            <span>Current Test</span>
+            <strong>${escapeHtml(assessment.title)}</strong>
+          </div>
+        </div>
+
+        <div class="candidate-card">
+          <span>Candidate</span>
+          <strong>${escapeHtml(assessment.candidate)}</strong>
+        </div>
+
+        <div class="side-section">
+          <div class="side-title">${icons.grid} Questions</div>
+          <div class="question-grid">
+            ${questions.map(renderGridCell).join("")}
+          </div>
+        </div>
+
+        <div class="legend">
+          <span><i class="dot answered-dot"></i> Answered</span>
+          <span><i class="dot active-dot"></i> Current</span>
+          <span><i class="dot flagged-dot"></i> Flagged</span>
+        </div>
+      </aside>
+
+      <section class="exam-window">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">${escapeHtml(question.topic)}</p>
+            <h1>${escapeHtml(assessment.title)}</h1>
+          </div>
+
+          <div class="top-actions">
+            <div class="timer" data-timer aria-label="Time remaining">${icons.clock} ${minutesAndSeconds()}</div>
+            <button class="icon-button" data-action="fullscreen" title="Enter fullscreen">${icons.fullscreen}</button>
+          </div>
+        </header>
+
+        <div class="status-row">
+          <div class="progress-track"><span style="width:${progress}%"></span></div>
+          <strong>${answeredCount} of ${questions.length} answered</strong>
+        </div>
+
+        <section class="content-area">
+          <article class="question-pane">
+            <div class="question-head">
+              <span>Question ${state.currentIndex + 1} of ${questions.length}</span>
+              <button class="ghost-button" data-action="flag">${icons.flag} ${state.flagged[question.id] ? "Unflag" : "Flag"}</button>
+            </div>
+
+            <h2>${escapeHtml(question.question)}</h2>
+
+            ${renderQuestionMedia(question)}
+
+            <div class="options">
+              ${question.options.map((option) => renderOption(question, option)).join("")}
+            </div>
+          </article>
+
+          <aside class="worksheet">
+            ${assessment.tools?.calculator ? renderCalculator() : ""}
+            ${assessment.tools?.scratchpad !== false ? `
+            <div class="worksheet-head">
+              <div>
+                <p class="eyebrow">Workspace</p>
+                <h3>Scratch Pad</h3>
+              </div>
+              <button class="icon-button" data-action="clear-scratch" title="Clear scratch pad">${icons.clear}</button>
+            </div>
+
+            <div class="scratch-tools" role="toolbar" aria-label="Scratch pad tools">
+              <button class="tool-button ${scratchTool === "pencil" ? "active" : ""}" data-tool="pencil" title="Pencil">${icons.pencil}</button>
+              <button class="tool-button ${scratchTool === "eraser" ? "active" : ""}" data-tool="eraser" title="Eraser">${icons.eraser}</button>
+              <button class="swatch active" data-color="#18212b" style="--swatch:#18212b" title="Black"></button>
+              <button class="swatch" data-color="#365f9f" style="--swatch:#365f9f" title="Blue"></button>
+              <button class="swatch" data-color="#9b4d32" style="--swatch:#9b4d32" title="Brown"></button>
+            </div>
+            <canvas class="scratch-canvas" width="560" height="500" aria-label="Scratch pad"></canvas>
+            ` : ""}
+          </aside>
+        </section>
+
+        <footer class="bottombar">
+          <button class="secondary-action" data-action="previous" ${state.currentIndex === 0 ? "disabled" : ""}>${icons.previous} Previous</button>
+          <div class="footer-center">
+            <span>${answeredCount}/${questions.length} answered</span>
+            <span>${flaggedCount} flagged</span>
+          </div>
+          ${
+            state.currentIndex === questions.length - 1
+              ? `<button class="primary-action" data-action="submit">${icons.submit} Submit</button>`
+              : `<button class="primary-action" data-action="next">Next ${icons.next}</button>`
+          }
+        </footer>
+      </section>
+    </main>
+  `;
+
+  bindActions();
+  initScratchPad();
+}
+
+function renderGridCell(question, index) {
+  const classes = [
+    "grid-cell",
+    index === state.currentIndex ? "active" : "",
+    state.answers[question.id] ? "answered" : "",
+    state.flagged[question.id] ? "flagged" : ""
+  ].join(" ");
+
+  return `<button class="${classes}" data-question-index="${index}" aria-label="Question ${index + 1}">${index + 1}</button>`;
+}
+
+function renderOption(question, option) {
+  const selected = state.answers[question.id] === option.id;
+  const isEliminated = Boolean(state.eliminated?.[question.id]?.[option.id]);
+
+  return `
+    <button class="option ${selected ? "selected" : ""} ${isEliminated ? "eliminated" : ""}" data-option-id="${escapeAttribute(option.id)}">
+      <span class="option-letter">${escapeHtml(option.id.toUpperCase())}</span>
+      <span class="option-body">
+        <span>${escapeHtml(option.label)}</span>
+        ${option.image ? `<img src="${escapeAttribute(assetUrl(option.image))}" alt="" draggable="false" />` : ""}
+      </span>
+      ${assessment.tools?.eliminator ? `<span class="eliminate" data-eliminate-id="${escapeAttribute(option.id)}" title="Eliminate option">-</span>` : ""}
+    </button>
+  `;
+}
+
+function renderQuestionMedia(question) {
+  if (question.image) {
+    return `
+      <figure class="question-image">
+        <img src="${escapeAttribute(assetUrl(question.image))}" alt="${escapeAttribute(question.imageDescription || "")}" draggable="false" />
+        ${assessment.tools?.imageZoom !== false ? `<button class="image-zoom" data-zoom-image="${escapeAttribute(assetUrl(question.image))}" title="Zoom image">${icons.zoom}</button>` : ""}
+      </figure>
+    `;
+  }
+
+  if (question.imageDescription) {
+    return `
+      <div class="diagram-note">
+        <strong>Diagram</strong>
+        <span>${escapeHtml(question.imageDescription)}</span>
+      </div>
+    `;
+  }
+
+  return "";
+}
+
+function assetUrl(src) {
+  return String(src || "").replace(/^\/+/, "");
+}
+
+function renderCalculator() {
+  return `
+    <section class="calculator ${state.calculatorOpen ? "open" : ""}">
+      <div class="calculator-head">
+        <div>
+          <p class="eyebrow">Tool</p>
+          <h3>Calculator</h3>
+        </div>
+        <button class="icon-button" data-action="toggle-calculator" title="Toggle calculator">${icons.calc}</button>
+      </div>
+      <div class="calculator-body">
+        <input class="calculator-display" value="${escapeAttribute(calculatorValue)}" readonly aria-label="Calculator display" />
+        <div class="calculator-grid">
+          ${["7","8","9","/","4","5","6","*","1","2","3","-","0",".","=","+"].map((key) => `<button data-calc-key="${key}">${key}</button>`).join("")}
+          <button data-calc-key="clear" class="wide">Clear</button>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function bindActions() {
+  document.querySelectorAll("[data-question-index]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setState({ currentIndex: Number(button.dataset.questionIndex) });
+    });
+  });
+
+  document.querySelectorAll("[data-option-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const question = questions[state.currentIndex];
+      setState({
+        answers: { ...state.answers, [question.id]: button.dataset.optionId }
+      }, { preserveQuestionScroll: true });
+    });
+  });
+
+  document.querySelectorAll("[data-eliminate-id]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const question = questions[state.currentIndex];
+      const optionId = button.dataset.eliminateId;
+      const allEliminated = state.eliminated || {};
+      const questionEliminated = allEliminated[question.id] || {};
+      setState({
+        eliminated: {
+          ...allEliminated,
+          [question.id]: {
+            ...questionEliminated,
+            [optionId]: !questionEliminated[optionId]
+          }
+        }
+      }, { preserveQuestionScroll: true });
+    });
+  });
+
+  document.querySelector("[data-action='fullscreen']")?.addEventListener("click", () => {
+    document.documentElement.requestFullscreen?.();
+  });
+
+  document.querySelector("[data-action='flag']")?.addEventListener("click", () => {
+    const question = questions[state.currentIndex];
+    setState({
+      flagged: { ...state.flagged, [question.id]: !state.flagged[question.id] }
+    });
+  });
+
+  document.querySelector("[data-action='toggle-calculator']")?.addEventListener("click", () => {
+    setState({ calculatorOpen: !state.calculatorOpen });
+  });
+
+  document.querySelectorAll("[data-calc-key]").forEach((button) => {
+    button.addEventListener("click", () => pressCalculator(button.dataset.calcKey));
+  });
+
+  document.querySelectorAll("[data-tool]").forEach((button) => {
+    button.addEventListener("click", () => {
+      scratchTool = button.dataset.tool;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-color]").forEach((button) => {
+    button.addEventListener("click", () => {
+      scratchColor = button.dataset.color;
+      scratchTool = "pencil";
+      render();
+    });
+  });
+
+  document.querySelector("[data-action='clear-scratch']")?.addEventListener("click", () => {
+    const canvas = document.querySelector(".scratch-canvas");
+    const context = canvas?.getContext("2d");
+    if (!canvas || !context) return;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    const question = questions[state.currentIndex];
+    setState({
+      scratchWork: { ...state.scratchWork, [question.id]: null }
+    });
+  });
+
+  document.querySelectorAll("[data-zoom-image]").forEach((button) => {
+    button.addEventListener("click", () => openImageZoom(button.dataset.zoomImage));
+  });
+
+  document.querySelector("[data-action='previous']")?.addEventListener("click", () => {
+    setState({ currentIndex: Math.max(0, state.currentIndex - 1) });
+  });
+
+  document.querySelector("[data-action='next']")?.addEventListener("click", () => {
+    setState({ currentIndex: Math.min(questions.length - 1, state.currentIndex + 1) });
+  });
+
+  document.querySelector("[data-action='submit']")?.addEventListener("click", () => {
+    submitAssessment();
+  });
+}
+
+function submitAssessment() {
+  const evaluation = buildEvaluation();
+  saveAttempt(evaluation);
+  setState({
+    remainingSeconds: Math.max(0, state.remainingSeconds),
+    submitted: true,
+    evaluation
+  });
+}
+
+function buildEvaluation() {
+  const correct = questions.filter((question) => state.answers[question.id] === question.answer).length;
+  const answered = getAnsweredCount();
+  const total = questions.length;
+  const percentage = Math.round((correct / total) * 100);
+  const submittedAt = new Date().toISOString();
+
+  return {
+    id: `${assessment.studentId || "demo-student"}-${Date.now()}`,
+    studentId: assessment.studentId || "demo-student",
+    studentName: assessment.candidate || "Demo Candidate",
+    assessmentTitle: assessment.title,
+    sourceDocument: assessment.sourceDocument || null,
+    submittedAt,
+    score: correct,
+    total,
+    percentage,
+    answered,
+    unanswered: total - answered,
+    flagged: getFlaggedCount(),
+    timeRemainingSeconds: state.remainingSeconds,
+    responses: questions.map((question) => {
+      const selected = state.answers[question.id] || null;
+      return {
+        questionId: question.id,
+        number: question.number,
+        topic: question.topic,
+        selected,
+        correctAnswer: question.answer,
+        isCorrect: selected === question.answer,
+        explanation: question.explanation || "",
+        selectedLabel: question.options.find((option) => option.id === selected)?.label || "",
+        correctLabel: question.options.find((option) => option.id === question.answer)?.label || ""
+      };
+    })
+  };
+}
+
+function saveAttempt(evaluation) {
+  if (!("indexedDB" in window)) {
+    const key = "assessment-engine-results-fallback";
+    const previous = JSON.parse(localStorage.getItem(key) || "[]");
+    previous.push(evaluation);
+    localStorage.setItem(key, JSON.stringify(previous.slice(-10000)));
+    return;
+  }
+
+  const request = indexedDB.open(RESULTS_DB_NAME, 1);
+  request.onupgradeneeded = () => {
+    const db = request.result;
+    const store = db.createObjectStore(RESULTS_STORE, { keyPath: "id" });
+    store.createIndex("studentId", "studentId", { unique: false });
+    store.createIndex("assessmentTitle", "assessmentTitle", { unique: false });
+    store.createIndex("submittedAt", "submittedAt", { unique: false });
+  };
+  request.onsuccess = () => {
+    const db = request.result;
+    const transaction = db.transaction(RESULTS_STORE, "readwrite");
+    transaction.objectStore(RESULTS_STORE).put(evaluation);
+  };
+}
+
+function pressCalculator(key) {
+  if (key === "clear") {
+    calculatorValue = "";
+  } else if (key === "=") {
+    try {
+      if (/^[0-9+\-*/. ()]+$/.test(calculatorValue)) {
+        calculatorValue = String(Function(`"use strict"; return (${calculatorValue})`)());
+      }
+    } catch {
+      calculatorValue = "Error";
+    }
+  } else {
+    calculatorValue = calculatorValue === "Error" ? key : calculatorValue + key;
+  }
+
+  const display = document.querySelector(".calculator-display");
+  if (display) display.value = calculatorValue;
+}
+
+function initScratchPad() {
+  const canvas = document.querySelector(".scratch-canvas");
+  if (!canvas) return;
+
+  const context = canvas.getContext("2d");
+  context.lineCap = "round";
+  context.lineJoin = "round";
+
+  const question = questions[state.currentIndex];
+  const saved = state.scratchWork?.[question.id];
+  if (saved) {
+    const image = new Image();
+    image.onload = () => context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    image.src = saved;
+  }
+
+  const point = (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const source = event.touches?.[0] || event;
+    return {
+      x: ((source.clientX - rect.left) / rect.width) * canvas.width,
+      y: ((source.clientY - rect.top) / rect.height) * canvas.height
+    };
+  };
+
+  const start = (event) => {
+    event.preventDefault();
+    drawing = true;
+    const p = point(event);
+    context.beginPath();
+    context.moveTo(p.x, p.y);
+  };
+
+  const draw = (event) => {
+    if (!drawing) return;
+    event.preventDefault();
+    const p = point(event);
+    context.globalCompositeOperation = scratchTool === "eraser" ? "destination-out" : "source-over";
+    context.strokeStyle = scratchColor;
+    context.lineWidth = scratchTool === "eraser" ? 22 : 3;
+    context.lineTo(p.x, p.y);
+    context.stroke();
+  };
+
+  const stop = () => {
+    if (!drawing) return;
+    drawing = false;
+    captureScratch();
+    saveState();
+  };
+
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", draw);
+  window.addEventListener("mouseup", stop);
+  canvas.addEventListener("touchstart", start, { passive: false });
+  canvas.addEventListener("touchmove", draw, { passive: false });
+  window.addEventListener("touchend", stop);
+}
+
+function captureScratch() {
+  const canvas = document.querySelector(".scratch-canvas");
+  if (!canvas || !questions[state.currentIndex]) return;
+  const question = questions[state.currentIndex];
+  state.scratchWork = {
+    ...state.scratchWork,
+    [question.id]: canvas.toDataURL("image/png")
+  };
+}
+
+function openImageZoom(src) {
+  const overlay = document.createElement("div");
+  overlay.className = "zoom-overlay";
+  overlay.innerHTML = `
+    <button class="zoom-close" title="Close">Close</button>
+    <img src="${escapeAttribute(src)}" alt="" draggable="false" />
+  `;
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay || event.target.className === "zoom-close") overlay.remove();
+  });
+  document.body.appendChild(overlay);
+}
+
+function renderSubmitted() {
+  const evaluation = state.evaluation || buildEvaluation();
+  const missed = evaluation.responses.filter((response) => !response.isCorrect);
+
+  root.innerHTML = `
+    <main class="shell locked-shell">
+      <section class="result-panel result-panel-wide">
+        <div class="result-icon">${icons.shield}</div>
+        <p class="eyebrow">Assessment submitted</p>
+        <h1>${escapeHtml(assessment.title)}</h1>
+        <div class="score-ring">
+          <strong>${evaluation.percentage}%</strong>
+          <span>${evaluation.score}/${evaluation.total} correct</span>
+        </div>
+        <div class="result-stats">
+          <span>${evaluation.answered} answered</span>
+          <span>${evaluation.unanswered} unanswered</span>
+          <span>${evaluation.flagged} flagged</span>
+          <span>Stored for ${escapeHtml(evaluation.studentName)}</span>
+        </div>
+        <div class="result-review">
+          <h2>Review</h2>
+          ${
+            missed.length
+              ? missed.map((response) => `
+                <article class="review-item">
+                  <strong>Question ${response.number}</strong>
+                  <span>Your answer: ${escapeHtml(response.selected ? response.selected.toUpperCase() : "Not answered")}</span>
+                  <span>Expected answer: ${escapeHtml(response.correctAnswer.toUpperCase())}</span>
+                  <p>${escapeHtml(response.explanation)}</p>
+                </article>
+              `).join("")
+              : `<p class="perfect-score">All questions were answered correctly.</p>`
+          }
+        </div>
+        <button class="primary-action" data-action="restart">Restart demo</button>
+      </section>
+    </main>
+  `;
+
+  document.querySelector("[data-action='restart']").addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    state = getInitialState(questions.length);
+    render();
+  });
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value).replaceAll("`", "&#096;");
+}

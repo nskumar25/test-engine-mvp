@@ -1,0 +1,846 @@
+{
+  "assessment": {
+    "title": "Pre-Test - For Demo",
+    "sourceDocument": "Pre-Test - For Demo.docx",
+    "durationMinutes": 30,
+    "studentId": "demo-student-001",
+    "candidate": "Demo Candidate",
+    "tools": {
+      "calculator": true,
+      "scratchpad": true,
+      "imageZoom": true,
+      "eliminator": true
+    },
+    "inputFormatVersion": "mvp-1",
+    "questionSource": "Converted from Word document for MVP input folder",
+    "instructions": [
+      "Choose one answer for every question.",
+      "Use the question grid to move between questions.",
+      "Submit when you have answered all questions."
+    ]
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "type": "mcq",
+      "number": 1,
+      "level": "Understanding",
+      "topic": "Understanding",
+      "question": "Which number line correctly shows the expression -4 + 6?",
+      "image": "/input/assets/pre-test-for-demo/image4.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image4.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "A number line with a dot at -4 and an arrow moving 6 units to the right, ending at 2.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "A number line with a dot at -4 and an arrow moving 6 units to the left, ending at -10.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "A number line with a dot at 6 and an arrow moving 4 units to the left, ending at 2.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "A number line with a dot at 4 and an arrow moving 6 units to the left, ending at -2.",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "The problem starts at -4. Adding 6 means moving 6 units to the right. -4 + 6 = 2.",
+      "distractors": {
+        "b": {
+          "feedback": "Great effort! This model shows subtracting 6, not adding 6.",
+          "lesson": "7.NS.A.1.C.Representing Addition and Subtraction on a Number Line"
+        },
+        "c": {
+          "feedback": "Nice attempt! This model shows the problem 6 − 4, not -4 + 6.",
+          "lesson": "7.NS.A.1.B.Modeling Rational Number Addition on a Number Line"
+        },
+        "d": {
+          "feedback": "Good thinking! This model starts at positive 4, not negative 4.",
+          "lesson": "6.NS.C.6.C.Plotting Integers and Simple Fractions on a Number Line"
+        }
+      },
+      "correctAnswerText": "A number line with a dot at -4 and an arrow moving 6 units to the right, ending at 2."
+    },
+    {
+      "id": "q2",
+      "type": "mcq",
+      "number": 2,
+      "level": "Applying",
+      "topic": "Applying",
+      "question": "A submarine is at a depth of -8 meters. It rises 5 meters. What is its new depth?",
+      "image": "/input/assets/pre-test-for-demo/image2.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image2.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "-13 meters",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "-3 meters",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "3 meters",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "13 meters",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "The submarine starts at -8. \"Rises 5 meters\" means adding 5. The equation is -8 + 5 = -3. Its new depth is -3 meters.",
+      "distractors": {
+        "a": {
+          "feedback": "Keep trying! This would be the depth if the submarine went down 5 more meters.",
+          "lesson": "7.NS.A.1.D.Applying Properties to Simplify Rational Number Problems"
+        },
+        "c": {
+          "feedback": "Good effort! This would be the answer if the submarine started at -2 and rose 5 meters.",
+          "lesson": "6.NS.C.5.Representing Quantities Above and Below Zero on a Number Line"
+        },
+        "d": {
+          "feedback": "Nice attempt! This answer comes from adding 8 and 5 instead of starting at -8.",
+          "lesson": "7.NS.A.3.Adding and Subtracting Rational Numbers in Context"
+        }
+      },
+      "correctAnswerText": "-3 meters"
+    },
+    {
+      "id": "q3",
+      "type": "mcq",
+      "number": 3,
+      "level": "Analyzing",
+      "topic": "Analyzing",
+      "question": "Chen modeled the problem 5 − (-2). He started at 5 and drew an arrow 2 units to the left, ending at 3. What was his mistake?",
+      "image": "/input/assets/pre-test-for-demo/image11.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image11.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "He should have started at -2.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "He moved in the wrong direction.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "He moved the wrong number of units.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "He did not make a mistake.",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "Subtracting a negative number is the same as adding a positive one (5 − (-2) = 5 + 2). He should have moved 2 units to the right, not the left.",
+      "distractors": {
+        "a": {
+          "feedback": "Great try! The starting point of 5 is correct for this problem.",
+          "lesson": "7.NS.A.1.B.Modeling Rational Number Addition on a Number Line"
+        },
+        "c": {
+          "feedback": "Good thinking! He moved 2 units, which is the correct number of units.",
+          "lesson": "7.NS.A.1.C.Finding Distance Between Rational Numbers Using Absolute Value"
+        },
+        "d": {
+          "feedback": "Keep it up! He made a mistake in the direction of the arrow.",
+          "lesson": "7.NS.A.1.A.Representing Adding a Number and Its Opposite to Show Zero"
+        }
+      },
+      "correctAnswerText": "He moved in the wrong direction."
+    },
+    {
+      "id": "q4",
+      "type": "mcq",
+      "number": 4,
+      "level": "Understanding",
+      "topic": "Understanding",
+      "question": "Which equation matches the number line diagram?",
+      "image": "/input/assets/pre-test-for-demo/image8.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image8.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "1 + 5 = 6",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "5 − 1 = 4",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "1 − 5 = -4",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "-4 − 1 = -5",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "The diagram starts at 1 and moves 5 units to the left (subtracting 5), ending at -4.",
+      "distractors": {
+        "a": {
+          "feedback": "Moving right would show addition, not left.",
+          "lesson": "7.NS.A.1.B.Modeling Rational Number Addition on a Number Line"
+        },
+        "b": {
+          "feedback": "The starting point is 1, not 5.",
+          "lesson": "7.EE.B.4.A.Comparing Arithmetic and Algebraic Solutions"
+        },
+        "d": {
+          "feedback": "The starting point is 1, not -4.",
+          "lesson": "6.NS.C.6.C.Plotting Integers and Simple Fractions on a Number Line"
+        }
+      },
+      "correctAnswerText": "1 − 5 = -4"
+    },
+    {
+      "id": "q5",
+      "type": "mcq",
+      "number": 5,
+      "level": "Applying",
+      "topic": "Applying",
+      "question": "A hiker is at an elevation of -3 feet (below sea level). They climb up 8 feet. What is their new elevation?",
+      "image": "/input/assets/pre-test-for-demo/image10.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image10.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "11 feet",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "5 feet",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "-5 feet",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "-11 feet",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "The hiker starts at -3 and moves up 8 feet (adds 8). The equation is -3 + 8 = 5.",
+      "distractors": {
+        "a": {
+          "feedback": "This would be the answer if they started at 3 feet and climbed 8 feet.",
+          "lesson": "7.NS.A.3.Adding and Subtracting Rational Numbers in Context"
+        },
+        "c": {
+          "feedback": "This would be the answer if they started at 3 feet and went down 8 feet.",
+          "lesson": "6.NS.C.5.Explaining What Zero Represents in a Given Context"
+        },
+        "d": {
+          "feedback": "This would be the answer if they started at -3 and went down another 8 feet.",
+          "lesson": "7.NS.A.1.D.Applying Properties to Simplify Rational Number Problems"
+        }
+      },
+      "correctAnswerText": "5 feet"
+    },
+    {
+      "id": "q6",
+      "type": "mcq",
+      "number": 6,
+      "level": "Analyzing",
+      "topic": "Analyzing",
+      "question": "To solve 2 − 7, Liam started at 2 and drew an arrow to the right, landing at 9. What was Liam's error?",
+      "image": "/input/assets/pre-test-for-demo/image1.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image1.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "He started at the wrong number.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "He should have moved left instead of right.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "He moved the wrong number of spaces.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "He did everything correctly.",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "The problem subtracts positive 7, so he should have moved 7 units to the left, not the right. Moving right shows addition.",
+      "distractors": {
+        "a": {
+          "feedback": "He started at 2, which is the correct starting number for this problem.",
+          "lesson": "7.NS.A.1.B.Modeling Rational Number Addition on a Number Line"
+        },
+        "c": {
+          "feedback": "He moved 7 spaces, which is the correct number of units to move.",
+          "lesson": "7.NS.A.1.C.Finding Distance Between Rational Numbers Using Absolute Value"
+        },
+        "d": {
+          "feedback": "He made an error in the direction of his movement.",
+          "lesson": "7.NS.A.1.A.Explaining Why Adding Opposite Quantities Results in Zero"
+        }
+      },
+      "correctAnswerText": "He should have moved left instead of right."
+    },
+    {
+      "id": "q7",
+      "type": "mcq",
+      "number": 7,
+      "level": "Evaluating",
+      "topic": "Evaluating",
+      "question": "Which model is the most direct way to show the expression -2 − 5?",
+      "image": "/input/assets/pre-test-for-demo/image9.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image9.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Start at 0, move left to -2, then move left 5 more to -7.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "Start at -2, then move 5 units to the left, ending at -7.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "Start at -7, then move 5 units to the right, ending at -2.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "Start at 5, then move 7 units to the left, ending at -2.",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "This is the most direct model. It correctly identifies the starting number (-2) and performs the single operation (subtract 5 by moving left) to find the answer.",
+      "distractors": {
+        "a": {
+          "feedback": "Good effort! This model is not as direct, as it breaks the first number into a movement from 0.",
+          "lesson": "7.NS.A.1.B.Modeling Rational Number Addition on a Number Line"
+        },
+        "c": {
+          "feedback": "Nice try! This model shows the inverse operation, -7 + 5 = -2.",
+          "lesson": "7.NS.A.1.A.Representing Adding a Number and Its Opposite to Show Zero"
+        },
+        "d": {
+          "feedback": "Almost! This model shows a different problem, 5 − 7 = -2.",
+          "lesson": "6.EE.B.7.Checking Solutions by Substitution into the Original Equation"
+        }
+      },
+      "correctAnswerText": "Start at -2, then move 5 units to the left, ending at -7."
+    },
+    {
+      "id": "q8",
+      "type": "mcq",
+      "number": 8,
+      "level": "Evaluating",
+      "topic": "Evaluating",
+      "question": "Two students want to model 3 − (-4) on a horizontal number line.\nAnna's Method: Start at 3 and move 4 units left, ending at -1.\nBen's Method: Rewrite 3 − (-4) as 3 + 4. Start at 3 and move 4 units right, ending at 7.\nWhich method correctly represents 3 − (-4), and why?",
+      "image": "/input/assets/pre-test-for-demo/image3.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image3.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "Anna's method, because subtraction always means moving left.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "Ben's method, because subtracting a negative means adding its opposite.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "Both methods are correct because both arrows move 4 units.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "Neither method is correct because every subtraction model starts at 0.",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "3 − (-4) is the same as 3 + 4. On a number line, adding 4 means moving 4 units to the right from 3 to 7.",
+      "distractors": {
+        "a": {
+          "feedback": "Nice try! Anna moved left as if the problem were 3 − 4, but the problem is 3 − (-4).",
+          "lesson": "7.NS.A.1.C.Representing Addition and Subtraction on a Number Line"
+        },
+        "c": {
+          "feedback": "Good effort! Both models move 4 units, but the direction must match the operation.",
+          "lesson": "7.NS.A.1.C.Representing Addition and Subtraction on a Number Line"
+        },
+        "d": {
+          "feedback": "Keep trying! A number line model starts at the first number in the expression, not always at 0.",
+          "lesson": "7.NS.A.1.B.Modeling Rational Number Addition on a Number Line"
+        }
+      },
+      "correctAnswerText": "Ben's method, because subtracting a negative means adding its opposite."
+    },
+    {
+      "id": "q9",
+      "type": "mcq",
+      "number": 9,
+      "level": "Understanding",
+      "topic": "Understanding",
+      "question": "Which of the following shows the correct way to set up 54.8 + 6.37?",
+      "image": "/input/assets/pre-test-for-demo/image5.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image5.png"
+      ],
+      "imageDescription": "Four different ways to set up the addition of 54.8 and 6.37 are shown, labeled A, B, C, and D.",
+      "options": [
+        {
+          "id": "a",
+          "label": "The numbers are aligned on the right. 54.8 is above 6.37, with the 8 over the 7.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "The numbers are aligned on the left. 54.8 is above 6.37, with the 5 over the 6.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "The decimal points are aligned. 54.8 is above 6.37, with the decimal between 4 and 8 aligned with the decimal between 6 and 3.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "The whole numbers are centered. 54.8 is centered over 6.37.",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "The fundamental rule for adding or subtracting decimals is to align the numbers by their decimal points to ensure place values match.",
+      "distractors": {
+        "a": {
+          "feedback": ". Great effort! This right-alignment works for whole numbers but not for decimals.",
+          "lesson": "CCSS.Math.Content.4.NBT.B.4.Fluently adding and subtracting whole numbers"
+        },
+        "b": {
+          "feedback": ". Good try! This left-alignment mixes up the tens place with the ones place.",
+          "lesson": "CCSS.Math.Content.5.NBT.A.1.Place Value Understanding"
+        },
+        "d": {
+          "feedback": ". Almost! While it might look neat, this doesn't follow any mathematical alignment rule.",
+          "lesson": "CCSS.Math.Content.5.NBT.A.1.Place Value Understanding"
+        }
+      },
+      "correctAnswerText": "The decimal points are aligned. 54.8 is above 6.37, with the decimal between 4 and 8 aligned with the decimal between 6 and 3."
+    },
+    {
+      "id": "q10",
+      "type": "mcq",
+      "number": 10,
+      "level": "Applying",
+      "topic": "Applying",
+      "question": "What is the result of 28.5 − 9.14?",
+      "image": null,
+      "images": [],
+      "imageDescription": "The subtraction problem 28.5 − 9.14 is displayed.",
+      "options": [
+        {
+          "id": "a",
+          "label": "19.36",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "19.46",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "21.36",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "37.64",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "First, set up the problem as 28.50 − 9.14. Then, subtract column by column, regrouping (borrowing) from the tenths place to subtract in the hundredths place (10 − 4 = 6).",
+      "distractors": {
+        "b": {
+          "feedback": ". Nice attempt! This result comes from subtracting without regrouping (5 − 1 and 10 − 4).",
+          "lesson": "CCSS.Math.Content.4.NBT.B.4.Fluently adding and subtracting whole numbers"
+        },
+        "c": {
+          "feedback": ". Good try! This answer comes from a misalignment of the place values.",
+          "lesson": "CCSS.Math.Content.5.NBT.A.1.Place Value Understanding"
+        },
+        "d": {
+          "feedback": ". Careful! This is the result of adding the two numbers instead of subtracting.",
+          "lesson": "CCSS.Math.Content.4.OA.A.3.Solving multistep word problems"
+        }
+      },
+      "correctAnswerText": "19.36"
+    },
+    {
+      "id": "q11",
+      "type": "mcq",
+      "number": 11,
+      "level": "Analyzing",
+      "topic": "Analyzing",
+      "question": "In which step was the first mistake made when solving 45.3 − 1.28?\nStep 1: 45.30 − 1.28\nStep 2: Subtract hundredths: 10 − 8 = 2\nStep 3: Subtract tenths: 3 − 2 = 1\nStep 4: Subtract ones: 5 − 1 = 4",
+      "image": "/input/assets/pre-test-for-demo/image6.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image6.png"
+      ],
+      "imageDescription": "A four-step calculation of 45.3 − 1.28 is shown.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Step 1",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "Step 2",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "Step 3",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "Step 4",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "In Step 2, the student correctly borrowed from the tenths place (changing the 3 to a 2). In Step 3, they forgot they had borrowed and subtracted 3 − 2 instead of the correct 2 − 2.",
+      "distractors": {
+        "a": {
+          "feedback": ". Good thinking! Step 1 is the setup, which is done correctly by adding a placeholder zero.",
+          "lesson": "CCSS.Math.Content.5.NBT.B.7.Add, subtract, multiply, and divide decimals"
+        },
+        "b": {
+          "feedback": ". Almost! Step 2 is also correct. You must regroup from the 3 to make the 0 a 10.",
+          "lesson": "CCSS.Math.Content.4.NBT.B.4.Fluently adding and subtracting whole numbers"
+        },
+        "d": {
+          "feedback": ". Not quite! The mistake happened before Step 4, which would have been correct if the previous steps were right.",
+          "lesson": "CCSS.Math.Content.4.NBT.B.4.Fluently adding and subtracting whole numbers"
+        }
+      },
+      "correctAnswerText": "Step 3"
+    },
+    {
+      "id": "q12",
+      "type": "mcq",
+      "number": 12,
+      "level": "Understanding",
+      "topic": "Understanding",
+      "question": "Which image shows the correct setup for solving 18.5 + 3.42?",
+      "image": "/input/assets/pre-test-for-demo/image7.png",
+      "images": [
+        "/input/assets/pre-test-for-demo/image7.png"
+      ],
+      "imageDescription": "Four images show different setups for the problem 18.5 + 3.42.",
+      "options": [
+        {
+          "id": "a",
+          "label": "18.5 aligned over 3.42 with decimal points aligned.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "18.5 aligned over 3.42 with right sides aligned.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "18.5 aligned over 3.42 with left sides aligned.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "3.42 aligned over 18.5 with decimal points aligned.",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "The only rule that matters for the setup is that the decimal points must be in a straight vertical line.",
+      "distractors": {
+        "b": {
+          "feedback": ". This setup mixes up the tenths place with the hundredths place.",
+          "lesson": "CCSS.Math.Content.5.NBT.A.1.Place Value Understanding"
+        },
+        "c": {
+          "feedback": ". This setup mixes up the tens place with the ones place.",
+          "lesson": "CCSS.Math.Content.5.NBT.A.1.Place Value Understanding"
+        },
+        "d": {
+          "feedback": ". This setup is also correct, but typically the number with more digits is written on top. Option A is the standard representation.",
+          "lesson": "CCSS.Math.Content.5.NBT.B.7.Add, subtract, multiply, and divide decimals"
+        }
+      },
+      "correctAnswerText": "18.5 aligned over 3.42 with decimal points aligned."
+    },
+    {
+      "id": "q13",
+      "type": "mcq",
+      "number": 13,
+      "level": "Applying",
+      "topic": "Applying",
+      "question": "Calculate the sum of 6.78 + 12.4.",
+      "image": null,
+      "images": [],
+      "imageDescription": "The expression 6.78 + 12.4 is written.",
+      "options": [
+        {
+          "id": "a",
+          "label": "19.18",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "8.02",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "18.18",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "69.04",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "Align as 12.40 + 6.78. Adding the columns from right to left gives 19.18.",
+      "distractors": {
+        "b": {
+          "feedback": ". This answer comes from incorrect alignment (lining up 6.78 and 1.24).",
+          "lesson": "CCSS.Math.Content.5.NBT.A.1.Place Value Understanding"
+        },
+        "c": {
+          "feedback": ". This is a simple calculation error in the tenths column (4 + 7 = 11).",
+          "lesson": "CCSS.Math.Content.4.NBT.B.4.Fluently adding and subtracting whole numbers"
+        },
+        "d": {
+          "feedback": ". This answer comes from ignoring the decimal points and adding 678 + 124.",
+          "lesson": "CCSS.Math.Content.5.NBT.A.1.Place Value Understanding"
+        }
+      },
+      "correctAnswerText": "19.18"
+    },
+    {
+      "id": "q14",
+      "type": "mcq",
+      "number": 14,
+      "level": "Analyzing",
+      "topic": "Analyzing",
+      "question": "A student subtracted 8.4 − 2.35 and got 6.15. What was their mistake?",
+      "image": null,
+      "images": [],
+      "imageDescription": "The subtraction problem 8.4 − 2.35 is shown, with the incorrect answer 6.15.",
+      "options": [
+        {
+          "id": "a",
+          "label": "They added instead of subtracted.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "They did not align the decimal points correctly.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "They forgot to regroup (borrow) from the 4.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "They subtracted 5 − 0 instead of 0 − 5.",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "To subtract 5 from 0 in the hundredths place, they needed to borrow from the 4 in the tenths place. They subtracted 4-3 instead of 3-3, getting 1 in the tenths place instead of 0. The correct answer is 6.05.",
+      "distractors": {
+        "a": {
+          "feedback": ". The answer (6.15) is smaller than 8.4, so they did subtract.",
+          "lesson": "CCSS.Math.Content.4.OA.A.3.Solving multistep word problems"
+        },
+        "b": {
+          "feedback": ". The tenths digit (1) suggests alignment was likely correct, but calculation was wrong.",
+          "lesson": "CCSS.Math.Content.5.NBT.A.1.Place Value Understanding"
+        },
+        "d": {
+          "feedback": ". This describes the error in reverse. They likely treated \"blank − 5\" as 5.",
+          "lesson": "CCSS.Math.Content.4.NBT.B.4.Fluently adding and subtracting whole numbers"
+        }
+      },
+      "correctAnswerText": "They forgot to regroup (borrow) from the 4."
+    },
+    {
+      "id": "q15",
+      "type": "mcq",
+      "number": 15,
+      "level": "Evaluating",
+      "topic": "Evaluating",
+      "question": "To solve 204.5 − 38.76, which is the most important first step to ensure a correct answer?",
+      "image": null,
+      "images": [],
+      "imageDescription": "The expression 204.5 − 38.76 is shown.",
+      "options": [
+        {
+          "id": "a",
+          "label": "Adding a placeholder zero to 204.5.",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "Aligning the decimal points of both numbers.",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "Writing the smaller number on top.",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "Making sure to borrow from the 2.",
+          "image": null
+        }
+      ],
+      "answer": "b",
+      "explanation": "While adding a zero is a helpful step, it is useless if the decimal points are not aligned first. Alignment is the foundational step for all decimal addition and subtraction.",
+      "distractors": {
+        "a": {
+          "feedback": ". Great thought! Adding a zero is a critical step, but it comes after alignment.",
+          "lesson": "CCSS.Math.Content.5.NBT.B.7.Add, subtract, multiply, and divide decimals"
+        },
+        "c": {
+          "feedback": ". Good try! In subtraction, the larger number must always be on top.",
+          "lesson": "CCSS.Math.Content.4.NBT.B.4.Fluently adding and subtracting whole numbers"
+        },
+        "d": {
+          "feedback": ". Careful! Borrowing is a calculation step that happens much later in the process.",
+          "lesson": "CCSS.Math.Content.4.NBT.B.4.Fluently adding and subtracting whole numbers"
+        }
+      },
+      "correctAnswerText": "Aligning the decimal points of both numbers."
+    },
+    {
+      "id": "q16",
+      "type": "mcq",
+      "number": 16,
+      "level": "Evaluating",
+      "topic": "Evaluating",
+      "question": "To solve 50 − 12.34, what is the best way to write the number 50 to make the setup easiest?",
+      "image": null,
+      "images": [],
+      "imageDescription": "The expression 50 − 12.34 is shown.",
+      "options": [
+        {
+          "id": "a",
+          "label": "50.0",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "50",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "50.00",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "5000",
+          "image": null
+        }
+      ],
+      "answer": "c",
+      "explanation": "Since 12.34 has two digits after the decimal point (hundredths), writing 50 as 50.00 creates matching place values, making the vertical subtraction setup clear and easy to calculate without missing a column.",
+      "distractors": {
+        "a": {
+          "feedback": ". Good start! This is a correct way to write 50, but you'll still have a blank space.",
+          "lesson": "CCSS.Math.Content.5.NBT.A.3.Read, write, and compare decimals"
+        },
+        "b": {
+          "feedback": ". Nice try! Leaving it as 50 can be confusing when you try to align it with 12.34.",
+          "lesson": "CCSS.Math.Content.5.NBT.B.7.Add, subtract, multiply, and divide decimals"
+        },
+        "d": {
+          "feedback": ". Careful! This changes the value of 50 to five thousand, which is incorrect.",
+          "lesson": "CCSS.Math.Content.5.NBT.A.1.Place Value Understanding"
+        }
+      },
+      "correctAnswerText": "50.00"
+    }
+  ]
+}

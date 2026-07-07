@@ -1,0 +1,114 @@
+{
+  "assessment": {
+    "title": "Quantitative Reasoning Checkpoint",
+    "durationMinutes": 30,
+    "candidate": "Demo Candidate",
+    "instructions": [
+      "Choose one answer for every question.",
+      "Images may appear inside questions and answer choices.",
+      "Your answers are saved locally during this session."
+    ]
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "type": "mcq",
+      "topic": "Algebra",
+      "question": "If 3x + 7 = 22, what is the value of x?",
+      "image": null,
+      "options": [
+        { "id": "a", "label": "3", "image": null },
+        { "id": "b", "label": "5", "image": null },
+        { "id": "c", "label": "7", "image": null },
+        { "id": "d", "label": "9", "image": null }
+      ],
+      "answer": "b"
+    },
+    {
+      "id": "q2",
+      "type": "mcq",
+      "topic": "Visual Reasoning",
+      "question": "Which option continues the pattern shown below?",
+      "image": "https://images.unsplash.com/photo-1518133835878-5a93cc3f89e5?auto=format&fit=crop&w=960&q=80",
+      "options": [
+        {
+          "id": "a",
+          "label": "Option A",
+          "image": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=480&q=80"
+        },
+        {
+          "id": "b",
+          "label": "Option B",
+          "image": "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=480&q=80"
+        },
+        {
+          "id": "c",
+          "label": "Option C",
+          "image": "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=480&q=80"
+        },
+        {
+          "id": "d",
+          "label": "Option D",
+          "image": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=480&q=80"
+        }
+      ],
+      "answer": "c"
+    },
+    {
+      "id": "q3",
+      "type": "mcq",
+      "topic": "Number Sense",
+      "question": "A worksheet has 24 problems. A student completes 75% of it. How many problems are completed?",
+      "image": null,
+      "options": [
+        { "id": "a", "label": "12", "image": null },
+        { "id": "b", "label": "16", "image": null },
+        { "id": "c", "label": "18", "image": null },
+        { "id": "d", "label": "20", "image": null }
+      ],
+      "answer": "c"
+    },
+    {
+      "id": "q4",
+      "type": "mcq",
+      "topic": "Data Interpretation",
+      "question": "The chart image shows monthly study hours. Which month has the highest value?",
+      "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=960&q=80",
+      "options": [
+        { "id": "a", "label": "January", "image": null },
+        { "id": "b", "label": "March", "image": null },
+        { "id": "c", "label": "May", "image": null },
+        { "id": "d", "label": "July", "image": null }
+      ],
+      "answer": "b"
+    },
+    {
+      "id": "q5",
+      "type": "mcq",
+      "topic": "Vocabulary",
+      "question": "Choose the word closest in meaning to precise.",
+      "image": null,
+      "options": [
+        { "id": "a", "label": "Exact", "image": null },
+        { "id": "b", "label": "Brief", "image": null },
+        { "id": "c", "label": "Gentle", "image": null },
+        { "id": "d", "label": "Remote", "image": null }
+      ],
+      "answer": "a"
+    },
+    {
+      "id": "q6",
+      "type": "mcq",
+      "topic": "Geometry",
+      "question": "A square has a side length of 8 cm. What is its area?",
+      "image": null,
+      "options": [
+        { "id": "a", "label": "16 cm2", "image": null },
+        { "id": "b", "label": "32 cm2", "image": null },
+        { "id": "c", "label": "48 cm2", "image": null },
+        { "id": "d", "label": "64 cm2", "image": null }
+      ],
+      "answer": "d"
+    }
+  ]
+}
