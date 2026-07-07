@@ -231,17 +231,51 @@ function render() {
   const answeredCount = getAnsweredCount();
   const skippedCount = getSkippedCount();
   const progress = Math.round((answeredCount / questions.length) * 100);
+  const toolsBody = `
+    ${assessment.tools?.calculator ? renderCalculator() : ""}
+    ${assessment.tools?.scratchpad !== false ? `
+    <div class="worksheet-head">
+      <div>
+        <p class="eyebrow">Workspace</p>
+        <h3>Scratch Pad</h3>
+      </div>
+      <div class="tool-head-actions">
+        <button class="icon-button" data-action="toggle-tools" title="Collapse tools">${icons.next}</button>
+        <button class="icon-button" data-action="toggle-scratch" title="Toggle scratch pad">${state.scratchOpen ? "-" : "+"}</button>
+        <button class="icon-button" data-action="clear-scratch" title="Clear scratch pad">${icons.clear}</button>
+      </div>
+    </div>
+
+    <div class="scratch-body ${state.scratchOpen ? "open" : ""}">
+      <div class="scratch-tools" role="toolbar" aria-label="Scratch pad tools">
+        <button class="tool-button ${scratchTool === "pencil" ? "active" : ""}" data-tool="pencil" title="Pencil">${icons.pencil}</button>
+        <button class="tool-button ${scratchTool === "eraser" ? "active" : ""}" data-tool="eraser" title="Eraser">${icons.eraser}</button>
+        <button class="swatch active" data-color="#18212b" style="--swatch:#18212b" title="Black"></button>
+        <button class="swatch" data-color="#365f9f" style="--swatch:#365f9f" title="Blue"></button>
+        <button class="swatch" data-color="#c43d32" style="--swatch:#c43d32" title="Red"></button>
+        <button class="swatch" data-color="#9b4d32" style="--swatch:#9b4d32" title="Brown"></button>
+      </div>
+      <canvas class="scratch-canvas" width="560" height="500" aria-label="Scratch pad"></canvas>
+    </div>
+    ` : ""}
+  `;
   root.innerHTML = `
     <main class="shell" aria-label="Assessment workspace">
       <aside class="sidebar">
+        <div class="brand candidate-brand">
+          <div class="brand-mark">${icons.book}</div>
+          <div>
+            <span>Name:</span>
+            <strong>${escapeHtml(state.student?.name || assessment.candidate)}</strong>
+            <small>Test: ${escapeHtml(assessment.title)}</small>
+          </div>
+        </div>
+
         <div class="side-section">
-          <div class="brand">
-            <div class="brand-mark">${icons.book}</div>
-            <div>
-              <span>Questions</span>
-              <strong>${answeredCount}/${questions.length} answered</strong>
-              <small>${skippedCount} skipped</small>
-            </div>
+          <div class="side-title-block">
+            <span>Questions</span>
+            <strong>${answeredCount}/${questions.length} answered</strong>
+            <small>${skippedCount} skipped</small>
           </div>
           <div class="question-grid">
             ${questions.map(renderGridCell).join("")}
@@ -257,26 +291,16 @@ function render() {
 
       <section class="exam-window ${state.toolsOpen ? "" : "tools-closed"}">
         <header class="topbar">
-          <div>
-            <p class="eyebrow">Question ${state.currentIndex + 1} of ${questions.length}</p>
-            <h1>${escapeHtml(assessment.title)}</h1>
-          </div>
+          <div></div>
 
           <div class="top-actions">
-            <div class="candidate-top">
-              <span>Candidate</span>
-              <strong>${escapeHtml(state.student?.name || assessment.candidate)}</strong>
-              <small>${escapeHtml(assessment.title)}</small>
-            </div>
             <button class="timer" data-action="toggle-timer" data-timer aria-label="Toggle timer">${renderTimerContent()}</button>
             <button class="icon-button" data-action="fullscreen" title="Enter fullscreen">${icons.fullscreen}</button>
-            <button class="secondary-action compact-action" data-action="toggle-tools">${state.toolsOpen ? "Hide Tools" : "Open Tools"}</button>
           </div>
         </header>
 
         <div class="status-row">
           <div class="progress-track"><span style="width:${progress}%"></span></div>
-          <strong>${answeredCount} of ${questions.length} answered</strong>
         </div>
 
         <section class="content-area">
@@ -294,32 +318,12 @@ function render() {
             </div>
           </article>
 
-          <aside class="worksheet ${state.toolsOpen ? "open" : ""}">
-            ${assessment.tools?.calculator ? renderCalculator() : ""}
-            ${assessment.tools?.scratchpad !== false ? `
-            <div class="worksheet-head">
-              <div>
-                <p class="eyebrow">Workspace</p>
-                <h3>Scratch Pad</h3>
-              </div>
-              <div class="tool-head-actions">
-                <button class="icon-button" data-action="toggle-scratch" title="Toggle scratch pad">${state.scratchOpen ? "-" : "+"}</button>
-                <button class="icon-button" data-action="clear-scratch" title="Clear scratch pad">${icons.clear}</button>
-              </div>
-            </div>
-
-            <div class="scratch-body ${state.scratchOpen ? "open" : ""}">
-              <div class="scratch-tools" role="toolbar" aria-label="Scratch pad tools">
-                <button class="tool-button ${scratchTool === "pencil" ? "active" : ""}" data-tool="pencil" title="Pencil">${icons.pencil}</button>
-                <button class="tool-button ${scratchTool === "eraser" ? "active" : ""}" data-tool="eraser" title="Eraser">${icons.eraser}</button>
-                <button class="swatch active" data-color="#18212b" style="--swatch:#18212b" title="Black"></button>
-                <button class="swatch" data-color="#365f9f" style="--swatch:#365f9f" title="Blue"></button>
-                <button class="swatch" data-color="#c43d32" style="--swatch:#c43d32" title="Red"></button>
-                <button class="swatch" data-color="#9b4d32" style="--swatch:#9b4d32" title="Brown"></button>
-              </div>
-              <canvas class="scratch-canvas" width="560" height="500" aria-label="Scratch pad"></canvas>
-            </div>
-            ` : ""}
+          <aside class="worksheet ${state.toolsOpen ? "open" : "closed"}">
+            ${
+              state.toolsOpen
+                ? toolsBody
+                : `<button class="tools-rail-button" data-action="toggle-tools" title="Tools">${icons.pencil}<span>Tools</span></button>`
+            }
           </aside>
         </section>
 
@@ -1545,7 +1549,7 @@ function openImageZoom(src) {
   overlay.addEventListener("click", (event) => {
     const control = event.target.closest("[data-zoom-control]");
     if (!control) {
-      if (event.target === overlay) overlay.remove();
+      if (!event.target.closest("img") && !event.target.closest(".zoom-toolbar")) overlay.remove();
       return;
     }
 

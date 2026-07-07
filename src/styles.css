@@ -719,6 +719,10 @@ img {
   gap: 14px;
 }
 
+.candidate-brand {
+  align-items: flex-start;
+}
+
 .brand-mark {
   width: 42px;
   height: 42px;
@@ -751,6 +755,29 @@ img {
 .brand small {
   display: block;
   margin-top: 4px;
+  color: #b7c9c7;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.side-title-block {
+  display: grid;
+  gap: 4px;
+}
+
+.side-title-block span {
+  color: #9eb4b3;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.side-title-block strong {
+  color: #ffffff;
+  font-size: 0.98rem;
+}
+
+.side-title-block small {
   color: #b7c9c7;
   font-weight: 800;
 }
@@ -854,12 +881,12 @@ img {
   height: 100vh;
   display: grid;
   grid-template-rows: auto auto 1fr auto;
-  padding: 16px 22px;
-  gap: 10px;
+  padding: 12px 18px 16px;
+  gap: 8px;
 }
 
 .topbar {
-  min-height: 48px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -978,11 +1005,12 @@ img {
 }
 
 .exam-window.tools-closed .content-area {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 58px;
 }
 
 .exam-window.tools-closed .worksheet {
-  display: none;
+  display: flex;
+  padding: 8px;
 }
 
 .question-pane,
@@ -1190,6 +1218,32 @@ img {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.worksheet.closed {
+  align-items: stretch;
+  justify-content: center;
+}
+
+.tools-rail-button {
+  width: 100%;
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  border: 1px solid #dfe6df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #17212b;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.tools-rail-button span {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0;
 }
 
 .worksheet-head {
