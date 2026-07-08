@@ -300,6 +300,106 @@ img {
   line-height: 1.35;
 }
 
+.student-dashboard-shell {
+  min-height: 100vh;
+  overflow: auto;
+  padding: 32px;
+  background:
+    radial-gradient(circle at top left, rgba(215, 228, 240, 0.9), transparent 32rem),
+    linear-gradient(135deg, #f8f7f1 0%, #edf2f0 50%, #f6f8fb 100%);
+}
+
+.student-dashboard {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+.student-dashboard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid #dfe6df;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 22px 60px rgba(43, 56, 63, 0.12);
+}
+
+.student-dashboard-head h1,
+.student-dashboard-head p {
+  margin: 0;
+}
+
+.student-dashboard-head h1 {
+  margin-top: 4px;
+  font-size: 2rem;
+}
+
+.student-dashboard-head p {
+  color: #596a68;
+}
+
+.student-dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.student-dashboard-summary span {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid #dfe6df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #596a68;
+}
+
+.student-dashboard-summary strong {
+  color: #17212b;
+  font-size: 1.35rem;
+}
+
+.student-assessment-list {
+  display: grid;
+  gap: 12px;
+}
+
+.student-assessment-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #dfe6df;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 48px rgba(43, 56, 63, 0.1);
+}
+
+.student-assessment-card h2 {
+  margin: 4px 0 0;
+  font-size: 1.3rem;
+}
+
+.student-assessment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.student-assessment-meta span {
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #f3f6f5;
+  color: #52606b;
+  font-size: 0.88rem;
+}
+
 .shell {
   min-height: 100vh;
   display: grid;

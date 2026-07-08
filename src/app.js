@@ -664,15 +664,20 @@ function normalizeIdentity(value) {
 }
 
 async function findActiveAssignmentForStudent(studentId) {
+  const assignments = await listAvailableAssignmentsForStudent(studentId);
+  return assignments[0] || null;
+}
+
+async function listAvailableAssignmentsForStudent(studentId) {
   const [assignments, attempts] = await Promise.all([
     getDataAdapter().listAssignments(),
     getDataAdapter().listAttempts()
   ]);
-  return assignments.find((assignment) =>
+  return assignments.filter((assignment) =>
     normalizeIdentity(assignment.studentId) === normalizeIdentity(studentId)
       && assignment.status !== "cancelled"
       && !isAssignmentAttemptLimitReached(assignment, attempts)
-  ) || null;
+  );
 }
 
 function isAssignmentAttemptLimitReached(assignment, attempts = []) {

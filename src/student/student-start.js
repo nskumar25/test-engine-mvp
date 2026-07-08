@@ -44,32 +44,21 @@ function renderStartScreen() {
         return;
       }
 
-      const assigned = await findActiveAssignmentForStudent(student.id);
-      if (!assigned) {
+      const assignments = await listAvailableAssignmentsForStudent(student.id);
+      if (!assignments.length) {
         submitButton.disabled = false;
         message.textContent = "No active assessment is available for this student. The assignment may be completed or not assigned yet.";
         return;
       }
 
-      message.textContent = "Loading assigned assessment...";
-      await applyAssignedAssessment(assigned);
-
-      setState({
-        started: true,
-        startedAt: new Date().toISOString(),
-        studentLookupError: "",
-        remainingSeconds: (assessment.durationMinutes || 30) * 60,
-        assignment: assigned,
-        assignmentSettings: assigned.metadata || {},
-        student: {
-          name: student.name,
-          id: student.id,
-          username: student.username || username,
-          email: student.email || "",
-          gradeLevel: student.gradeLevel || "",
-          section: student.section || ""
-        }
-      });
+      renderStudentDashboard({
+        name: student.name,
+        id: student.id,
+        username: student.username || username,
+        email: student.email || "",
+        gradeLevel: student.gradeLevel || "",
+        section: student.section || ""
+      }, assignments);
     } catch (error) {
       submitButton.disabled = false;
       message.textContent = error.message || "Could not begin the assessment. Please contact the administrator.";
