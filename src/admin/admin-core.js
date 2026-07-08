@@ -68,8 +68,8 @@ function paintAdminDashboard(attempts, students, assignments = [], dataErrors = 
 function getAdminPageMeta(page) {
   const pages = {
     overview: { eyebrow: "Admin Overview", title: "Dashboard" },
-    assessments: { eyebrow: "Assessment Setup", title: "Assessment Catalog" },
-    assignments: { eyebrow: "Assessment Access", title: "Assessment Access" },
+    assessments: { eyebrow: "Assignment Setup", title: "Assignment Catalog" },
+    assignments: { eyebrow: "Assignment Access", title: "Assignment Access" },
     questions: { eyebrow: "Question Review", title: "Question Library" },
     import: { eyebrow: "Import Workflow", title: "JSON Intake" },
     results: { eyebrow: "Performance", title: "Results" },

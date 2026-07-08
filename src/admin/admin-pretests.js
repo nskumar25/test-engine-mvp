@@ -8,7 +8,7 @@ function renderAdminPretestCatalogPage(context) {
       <article class="admin-card pretest-catalog-card">
         <div class="admin-card-head">
           <div>
-            <p class="eyebrow">Assessment Catalog</p>
+            <p class="eyebrow">Assignment Catalog</p>
             <h2>${assessments.length} assessments</h2>
           </div>
           <a class="secondary-action admin-link-button" href="#import">Import Assessment</a>

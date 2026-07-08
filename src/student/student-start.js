@@ -45,12 +45,6 @@ function renderStartScreen() {
       }
 
       const dashboardData = await getStudentDashboardData(student.id);
-      if (!dashboardData.availableAssignments.length && !dashboardData.completedAssignments.length && !dashboardData.attempts.length) {
-        submitButton.disabled = false;
-        message.textContent = "No active assessment is available for this student. The assignment may be completed or not assigned yet.";
-        return;
-      }
-
       renderStudentDashboard({
         name: student.name,
         id: student.id,

@@ -1,6 +1,9 @@
 function renderStudentDashboard(student, dashboardData) {
   const availableAssignments = dashboardData.availableAssignments || [];
   const completedAssignments = dashboardData.completedAssignments || [];
+  const unavailableAssignments = (dashboardData.assignments || [])
+    .filter((assignment) => !availableAssignments.some((item) => String(item.id) === String(assignment.id))
+      && !completedAssignments.some((item) => String(item.id) === String(assignment.id)));
   const attempts = dashboardData.attempts || [];
   root.innerHTML = `
     <main class="student-dashboard-shell">
@@ -23,6 +26,7 @@ function renderStudentDashboard(student, dashboardData) {
 
         <nav class="student-dashboard-tabs" aria-label="Student dashboard sections">
           <button class="active" data-student-tab="available" type="button">Assigned</button>
+          <button data-student-tab="unavailable" type="button">Not available</button>
           <button data-student-tab="history" type="button">History</button>
         </nav>
 
@@ -35,6 +39,18 @@ function renderStudentDashboard(student, dashboardData) {
             ${availableAssignments.length
               ? availableAssignments.map((assignment) => renderStudentAssignmentCard(student, assignment, attempts)).join("")
               : `<p class="empty-review">No available assignments right now.</p>`}
+          </div>
+        </section>
+
+        <section class="student-dashboard-section" data-student-tab-panel="unavailable" hidden>
+          <div class="student-section-head">
+            <p class="eyebrow">Not available</p>
+            <h2>Assignments you cannot start right now</h2>
+          </div>
+          <div class="student-assessment-list" aria-label="Unavailable assignments">
+            ${unavailableAssignments.length
+              ? unavailableAssignments.map((assignment) => renderStudentReadOnlyAssignmentCard(assignment, attempts)).join("")
+              : `<p class="empty-review">No unavailable assignments right now.</p>`}
           </div>
         </section>
 
@@ -84,6 +100,30 @@ function renderStudentDashboard(student, dashboardData) {
       }
     });
   });
+}
+
+function renderStudentReadOnlyAssignmentCard(assignment, attempts = []) {
+  const attemptLimit = Number(assignment.attemptLimit || 1);
+  const attemptCount = getAssignmentAttemptUsage(assignment, attempts);
+  const assignmentType = formatAssignmentType(getAssignmentType(assignment));
+  const status = assignment.status === "cancelled"
+    ? "Access removed"
+    : attemptCount >= attemptLimit || assignment.status === "completed"
+    ? "Completed"
+    : "Not available";
+  return `
+    <article class="student-assessment-card">
+      <div>
+        <p class="eyebrow">${escapeHtml(assignmentType)}</p>
+        <h2>${escapeHtml(assignment.assessmentTitle || assignment.assessmentKey || "Assessment")}</h2>
+        <div class="student-assessment-meta">
+          <span>${escapeHtml(status)}</span>
+          ${assignment.dueAt ? `<span>Due ${escapeHtml(formatDateTime(assignment.dueAt))}</span>` : ""}
+        </div>
+      </div>
+      <span class="muted-cell">View only</span>
+    </article>
+  `;
 }
 
 function renderStudentAssignmentCard(student, assignment, attempts = []) {

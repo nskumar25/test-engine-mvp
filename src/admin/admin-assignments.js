@@ -354,10 +354,10 @@ function renderAssignmentResults(students, payload) {
             <th>School</th>
             <th>Grade</th>
             <th>Assignments</th>
+            <th>Selected Assignment</th>
             <th>Status</th>
-            <th>Used</th>
-            <th>Limit</th>
-            <th>Due Date</th>
+            <th>Progress</th>
+            <th>Due</th>
             <th>Result</th>
             <th>History</th>
             <th>Action</th>
@@ -377,9 +377,9 @@ function renderAssignmentResults(students, payload) {
             <td>${escapeHtml(student.schoolName || "")}</td>
             <td>${escapeHtml(student.gradeLevel || "")}</td>
             <td>${renderAssignmentsCount(student)}</td>
+            <td>${escapeHtml(state.selectedAssignmentTitle)}</td>
             <td><em class="status-pill ${escapeAttribute(state.className)}">${escapeHtml(state.label)}</em></td>
-            <td>${escapeHtml(String(state.used))}</td>
-            <td>${escapeHtml(state.limitLabel)}</td>
+            <td>${escapeHtml(state.progressLabel)}</td>
             <td>${state.dueDate ? escapeHtml(formatDateTime(state.dueDate)) : `<span class="muted-cell">-</span>`}</td>
             <td>${state.resultAvailable ? `<button type="button" class="table-action" data-action="view-assignment-result" data-attempt-id="${escapeAttribute(state.resultId)}">View</button>` : `<span class="muted-cell">-</span>`}</td>
             <td>${state.historyAvailable ? `<button type="button" class="table-action" data-action="view-assignment-history" data-student-id="${escapeAttribute(student.id)}">View</button>` : `<span class="muted-cell">-</span>`}</td>
@@ -533,14 +533,18 @@ function getLatestAttemptsByStudent(attempts, assessmentKey) {
 function getSelectedAssignmentState(student) {
   const assignment = student.assignment || null;
   const latestAttempt = student.latestAttempt || null;
+  const selectedAssignment = getAssignmentAssessmentPayload();
+  const selectedAssignmentTitle = assignment?.assessmentTitle || selectedAssignment.title || "Assignment";
   if (!assignment) {
     return {
       assignment: null,
+      selectedAssignmentTitle,
       label: "Not assigned",
       className: "unassigned",
       used: 0,
       limit: 0,
       limitLabel: "-",
+      progressLabel: "Not assigned",
       dueDate: "",
       resultAvailable: Boolean(latestAttempt),
       resultId: getAttemptId(latestAttempt),
@@ -553,9 +557,11 @@ function getSelectedAssignmentState(student) {
   const limit = Number(assignment.attemptLimit || 1);
   const baseState = {
     assignment,
+    selectedAssignmentTitle,
     used,
     limit,
     limitLabel: String(limit),
+    progressLabel: getAssignmentProgressLabel(assignment, used, limit),
     dueDate: assignment.dueAt || "",
     resultAvailable: Boolean(latestAttempt),
     resultId: getAttemptId(latestAttempt),
@@ -586,6 +592,25 @@ function getCurrentAssignmentUsedAttempts(assignment, fallbackAttemptCount = 0) 
     return Number(assignment.attemptCount || 0);
   }
   return Math.max(0, Number(fallbackAttemptCount || 0) - getAssignmentAttemptBaseline(assignment));
+}
+
+function getAssignmentProgressLabel(assignment, used, limit) {
+  const type = getAssignmentType(assignment);
+  if (assignment.status === "cancelled") return "Access removed";
+  if (type === "worksheet") {
+    if (assignment.status === "completed" || used > 0) return "Submitted";
+    return "Not submitted";
+  }
+  if (type === "practice") {
+    if (assignment.status === "completed" || used >= limit) return "Completed";
+    if (used > 0) return "In progress";
+    return "Not started";
+  }
+  if (type === "diagnostic") {
+    if (assignment.status === "completed" || used > 0) return "Submitted";
+    return "Not started";
+  }
+  return `${used} of ${limit} attempts`;
 }
 
 function renderSelectedAssignmentAction(student, state) {
@@ -882,9 +907,9 @@ function getTableWidthCaps(kind) {
     { min: 170, max: 250 },
     { min: 80, max: 110 },
     { min: 95, max: 125 },
+    { min: 170, max: 280 },
     { min: 110, max: 150 },
-    { min: 65, max: 90 },
-    { min: 65, max: 90 },
+    { min: 125, max: 190 },
     { min: 105, max: 155 },
     { min: 80, max: 110 },
     { min: 85, max: 115 },

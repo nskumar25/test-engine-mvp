@@ -496,20 +496,45 @@ img {
 .admin-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 196px minmax(0, 1fr);
   background: #f4f6f4;
   color: #17212b;
   user-select: text;
+}
+
+.admin-shell.sidebar-collapsed {
+  grid-template-columns: 72px minmax(0, 1fr);
 }
 
 .admin-sidebar {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  padding: 22px 20px;
+  gap: 16px;
+  padding: 16px 12px;
   background: #101820;
   color: #f3f7f4;
+}
+
+.sidebar-toggle {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.admin-shell.sidebar-collapsed .brand div:not(.brand-mark),
+.admin-shell.sidebar-collapsed .nav-label {
+  display: none;
+}
+
+.admin-shell.sidebar-collapsed .brand,
+.admin-shell.sidebar-collapsed .admin-nav a,
+.admin-shell.sidebar-collapsed .admin-student-link {
+  justify-content: center;
 }
 
 .admin-nav {
@@ -522,11 +547,26 @@ img {
   min-height: 38px;
   display: flex;
   align-items: center;
-  padding: 9px 12px;
+  gap: 9px;
+  padding: 9px 10px;
   border-radius: 8px;
   color: #dce8e5;
   text-decoration: none;
   font-weight: 800;
+}
+
+.nav-icon {
+  width: 22px;
+  flex: 0 0 22px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.nav-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin-nav a:hover,

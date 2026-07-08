@@ -262,10 +262,12 @@ function renderAdminDashboard() {
   window.onhashchange = () => {
     if (isAdminMode()) renderAdminDashboard();
   };
+  const sidebarCollapsed = localStorage.getItem("assessment-admin-sidebar-collapsed") === "1";
 
   root.innerHTML = `
-    <main class="admin-shell">
+    <main class="admin-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}">
       <aside class="admin-sidebar">
+        <button class="sidebar-toggle" data-action="toggle-admin-sidebar" title="Toggle sidebar" aria-label="Toggle sidebar">${icons.grid}</button>
         <div class="brand">
           <div class="brand-mark">${icons.book}</div>
           <div>
@@ -274,16 +276,16 @@ function renderAdminDashboard() {
           </div>
         </div>
         <nav class="admin-nav">
-          <a href="#overview">Overview</a>
-          <a href="#assessments">Assessment Catalog</a>
-          <a href="#assignments">Assessment Access</a>
-          <a href="#questions">Question Library</a>
-          <a href="#import">Import</a>
-          <a href="#results">Results</a>
-          <a href="#ilp">ILP</a>
-          <a href="#database">Database</a>
+          <a href="#overview" title="Overview"><span class="nav-icon">${icons.grid}</span><span class="nav-label">Overview</span></a>
+          <a href="#assessments" title="Assignment Catalog"><span class="nav-icon">${icons.file}</span><span class="nav-label">Assignment Catalog</span></a>
+          <a href="#assignments" title="Assignment Access"><span class="nav-icon">${icons.shield}</span><span class="nav-label">Assignment Access</span></a>
+          <a href="#questions" title="Question Library"><span class="nav-icon">${icons.book}</span><span class="nav-label">Question Library</span></a>
+          <a href="#import" title="Import"><span class="nav-icon">${icons.submit}</span><span class="nav-label">Import</span></a>
+          <a href="#results" title="Results"><span class="nav-icon">${icons.clock}</span><span class="nav-label">Results</span></a>
+          <a href="#ilp" title="ILP"><span class="nav-icon">${icons.pencil}</span><span class="nav-label">ILP</span></a>
+          <a href="#database" title="Database"><span class="nav-icon">${icons.calc}</span><span class="nav-label">Database</span></a>
         </nav>
-        <a class="admin-student-link" href="./">Open student test</a>
+        <a class="admin-student-link" href="./" title="Open student test"><span class="nav-icon">${icons.next}</span><span class="nav-label">Open student test</span></a>
       </aside>
       <section class="admin-main">
         <header class="admin-header">
@@ -300,6 +302,13 @@ function renderAdminDashboard() {
       </section>
     </main>
   `;
+
+  document.querySelector("[data-action='toggle-admin-sidebar']")?.addEventListener("click", () => {
+    const shell = document.querySelector(".admin-shell");
+    const collapsed = !shell?.classList.contains("sidebar-collapsed");
+    shell?.classList.toggle("sidebar-collapsed", collapsed);
+    localStorage.setItem("assessment-admin-sidebar-collapsed", collapsed ? "1" : "0");
+  });
 
   loadAdminData().then(({ attempts, students, assignments, dataErrors, studentFilters, assessments }) => {
     paintAdminDashboard(attempts, students, assignments, dataErrors, studentFilters, assessments);
