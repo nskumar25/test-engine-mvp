@@ -889,6 +889,76 @@ img {
   min-width: 1100px;
 }
 
+.pretest-catalog-card {
+  gap: 14px;
+}
+
+.pretest-catalog-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pretest-catalog-summary span {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #fbfbf8;
+  color: #52606b;
+}
+
+.pretest-catalog-summary strong {
+  color: #17212b;
+  font-size: 1.4rem;
+}
+
+.pretest-catalog-wrap {
+  max-height: calc(100vh - 270px);
+}
+
+.pretest-catalog-table {
+  min-width: 1180px;
+}
+
+.pretest-catalog-table small,
+.source-cell {
+  display: block;
+  color: #66747a;
+  line-height: 1.35;
+}
+
+.table-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 210px;
+}
+
+.table-action-row .table-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 9px;
+  text-decoration: none;
+}
+
+.status-pill.draft {
+  background: #f2f3f4;
+  color: #52606b;
+}
+
+.status-pill.published {
+  background: #e8f5ed;
+  color: #245d3a;
+}
+
+.status-pill.archived {
+  background: #f6e9e7;
+  color: #7b332c;
+}
+
 .question-prompt-cell {
   max-width: 420px;
   white-space: normal;

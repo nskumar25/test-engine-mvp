@@ -63,6 +63,14 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
+    const assessmentStatusMatch = url.pathname.match(/^\/api\/assessments\/([^/]+)\/status$/);
+    if (request.method === "POST" && assessmentStatusMatch) {
+      const payload = await readJson(request);
+      const saved = await updateAssessmentStatus(decodeURIComponent(assessmentStatusMatch[1]), payload.status);
+      sendJson(response, 200, saved);
+      return;
+    }
+
     if (request.method === "POST" && url.pathname === "/api/attempts") {
       const payload = await readJson(request);
       const saved = await saveAttempt(payload);
@@ -210,6 +218,37 @@ async function listAssessments() {
     instructions: row.instructions || [],
     questionCount: row.question_count
   }));
+}
+
+async function updateAssessmentStatus(key, status) {
+  const allowed = new Set(["draft", "published", "archived"]);
+  const nextStatus = String(status || "").toLowerCase();
+  if (!allowed.has(nextStatus)) {
+    const error = new Error("Invalid assessment status");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await pool.query(`
+    update test_engine_assessments
+    set status = $2,
+        updated_at = now()
+    where external_assessment_key = $1
+    returning external_assessment_key, title, status
+  `, [key, nextStatus]);
+
+  if (!result.rows.length) {
+    const error = new Error("Assessment was not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    ok: true,
+    key: result.rows[0].external_assessment_key,
+    title: result.rows[0].title,
+    status: result.rows[0].status
+  };
 }
 
 async function listAssignments() {

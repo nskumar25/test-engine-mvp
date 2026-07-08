@@ -1,8 +1,10 @@
 function renderAdminAssignmentsPage(context) {
   const gradeOptions = context.studentFilters?.grades || [];
   const schoolOptions = context.studentFilters?.schools || [];
-  const availableTests = context.assessments?.length ? context.assessments : [getCurrentAssessmentPayload()];
+  const availableTests = (context.assessments?.length ? context.assessments : [getCurrentAssessmentPayload()])
+    .filter((test) => test.status !== "archived");
   const totalStudents = context.studentFilters?.totalStudents || 0;
+  const selectedPretest = sessionStorage.getItem("assessment-engine-selected-pretest") || "";
 
   return `
     <section class="admin-page-shell">
@@ -49,6 +51,7 @@ function renderAdminAssignmentsPage(context) {
                   data-path="${escapeAttribute(test.path || getAssessmentPathFromKey(test.key))}"
                   data-duration-minutes="${escapeAttribute(test.durationMinutes || 30)}"
                   data-input-format-version="${escapeAttribute(test.inputFormatVersion || "mvp-1")}"
+                  ${selectedPretest === test.key ? "selected" : ""}
                 >${escapeHtml(test.title)}</option>
               `).join("")}
             </select>

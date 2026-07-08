@@ -1,6 +1,7 @@
 const STORAGE_KEY = "assessment-engine-mvp";
 const STUDENTS_STORAGE_KEY = "assessment-engine-students-v2";
 const ASSIGNMENTS_STORAGE_KEY = "assessment-engine-assignments";
+const ASSESSMENT_STATUS_STORAGE_KEY = "assessment-engine-assessment-status";
 const RESULTS_DB_NAME = "assessment-engine-results";
 const RESULTS_STORE = "attempts";
 const ATTEMPT_SCHEMA_VERSION = "attempt-v1";
@@ -273,7 +274,7 @@ function renderAdminDashboard() {
         </div>
         <nav class="admin-nav">
           <a href="#overview">Overview</a>
-          <a href="#assessments">Settings</a>
+          <a href="#assessments">Pretest Catalog</a>
           <a href="#assignments">Pre-Test Access</a>
           <a href="#questions">Question Library</a>
           <a href="#import">Import</a>
@@ -616,6 +617,10 @@ function getAssignmentAssessmentPayload() {
 
 function getAssessmentPathFromKey(key) {
   return `input/assessments/${String(key || "pre-test-for-demo")}.json`;
+}
+
+function getAssessmentStatusOverrides() {
+  return JSON.parse(localStorage.getItem(ASSESSMENT_STATUS_STORAGE_KEY) || "{}");
 }
 
 function getAdminPage() {
@@ -1405,10 +1410,21 @@ const localDataAdapter = {
       const response = await fetch(ASSESSMENT_CATALOG_SOURCE);
       if (!response.ok) throw new Error("Assessment catalog was not found");
       const payload = await response.json();
-      return payload.assessments || [];
+      const statusOverrides = getAssessmentStatusOverrides();
+      return (payload.assessments || []).map((item) => ({
+        ...item,
+        status: statusOverrides[item.key] || item.status || "published"
+      }));
     } catch (error) {
       return [getCurrentAssessmentPayload()];
     }
+  },
+
+  async updateAssessmentStatus(key, status) {
+    const overrides = getAssessmentStatusOverrides();
+    overrides[key] = status;
+    localStorage.setItem(ASSESSMENT_STATUS_STORAGE_KEY, JSON.stringify(overrides));
+    return { ok: true, key, status };
   },
 
   async saveAttempt(evaluation) {
@@ -1557,6 +1573,16 @@ const apiDataAdapter = {
   async listAssessments() {
     const response = await fetch(`${API_BASE_URL}/api/assessments`);
     if (!response.ok) throw new Error("Could not load assessments");
+    return response.json();
+  },
+
+  async updateAssessmentStatus(key, status) {
+    const response = await fetch(`${API_BASE_URL}/api/assessments/${encodeURIComponent(key)}/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status })
+    });
+    if (!response.ok) throw new Error("Could not update pretest status");
     return response.json();
   },
 

@@ -52,12 +52,13 @@ function paintAdminDashboard(attempts, students, assignments = [], dataErrors = 
   });
 
   bindAssignmentControls();
+  bindPretestCatalogControls();
 }
 
 function getAdminPageMeta(page) {
   const pages = {
     overview: { eyebrow: "Admin Overview", title: "Dashboard" },
-    assessments: { eyebrow: "Assessment Setup", title: "Pre-Test Settings" },
+    assessments: { eyebrow: "Assessment Setup", title: "Pretest Catalog" },
     assignments: { eyebrow: "Pre-Test Access", title: "Pre-Test Access" },
     questions: { eyebrow: "Question Review", title: "Question Library" },
     import: { eyebrow: "Import Workflow", title: "JSON Intake" },
@@ -82,7 +83,7 @@ function renderAdminHeaderActions(page) {
 }
 
 function renderAdminPage(page, context) {
-  if (page === "assessments") return renderAdminAssessmentPage(context.validation);
+  if (page === "assessments") return renderAdminPretestCatalogPage(context);
   if (page === "assignments") return renderAdminAssignmentsPage(context);
   if (page === "questions") return renderAdminQuestionsPage();
   if (page === "import") return renderAdminImportPage();
