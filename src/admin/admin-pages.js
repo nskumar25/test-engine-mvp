@@ -157,42 +157,6 @@ function renderAdminImportPage() {
   `;
 }
 
-function renderAdminResultsPage(context) {
-  return `
-    <section class="admin-page-shell">
-      <div class="admin-split results-layout">
-        <article class="admin-card">
-          <div class="admin-card-head">
-            <div>
-              <p class="eyebrow">Topic Analysis</p>
-              <h2>Performance By Skill</h2>
-            </div>
-          </div>
-          <div class="topic-report admin-topic-report">
-            ${context.topicRows.length ? context.topicRows.map((topic) => `
-              <div class="topic-row">
-                <span>${escapeHtml(topic.topic)}</span>
-                <strong>${topic.correct}/${topic.total}</strong>
-                <div class="topic-bar"><i style="width:${topic.percentage}%"></i></div>
-                <em>${topic.percentage}%</em>
-              </div>
-            `).join("") : `<p class="empty-review">No attempt data yet.</p>`}
-          </div>
-        </article>
-        <article class="admin-card">
-          <div class="admin-card-head">
-            <div>
-              <p class="eyebrow">Attempts</p>
-              <h2>Submitted Results</h2>
-            </div>
-          </div>
-          ${renderAttemptsTable(context.latestAttempts)}
-        </article>
-      </div>
-    </section>
-  `;
-}
-
 function renderAdminIlpPage(context) {
   return `
     <section class="admin-page-shell">

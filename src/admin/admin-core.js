@@ -35,11 +35,17 @@ function paintAdminDashboard(attempts, students, assignments = [], dataErrors = 
   setAdminActiveNav(activePage);
 
   document.querySelector("[data-action='export-attempts-json']")?.addEventListener("click", () => {
-    downloadText("assessment-attempts.json", JSON.stringify(attempts, null, 2), "application/json");
+    const exportAttempts = activePage === "results" && typeof getFilteredResultAttempts === "function"
+      ? getFilteredResultAttempts(context)
+      : attempts;
+    downloadText("assessment-attempts.json", JSON.stringify(exportAttempts, null, 2), "application/json");
   });
 
   document.querySelector("[data-action='export-attempts-csv']")?.addEventListener("click", () => {
-    downloadText("assessment-attempts.csv", buildAttemptsCsv(attempts), "text/csv");
+    const exportAttempts = activePage === "results" && typeof getFilteredResultAttempts === "function"
+      ? getFilteredResultAttempts(context)
+      : attempts;
+    downloadText("assessment-attempts.csv", buildAttemptsCsv(exportAttempts), "text/csv");
   });
 
   document.querySelectorAll("[data-action='export-ilp']").forEach((button) => {
@@ -53,6 +59,7 @@ function paintAdminDashboard(attempts, students, assignments = [], dataErrors = 
 
   bindAssignmentControls();
   bindPretestCatalogControls();
+  bindResultsDashboardControls();
 }
 
 function getAdminPageMeta(page) {
