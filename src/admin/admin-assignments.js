@@ -210,6 +210,7 @@ function renderAssignmentResults(students, payload) {
             <th>Assessment Assigned</th>
             <th>Attempts</th>
             <th>Status</th>
+            <th>History</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -231,6 +232,7 @@ function renderAssignmentResults(students, payload) {
             <td>${escapeHtml(assignedPreTests)}</td>
             <td>${assignment ? `${Number(assignment.attemptCount || student.completedAttempts || 0)}/${Number(assignment.attemptLimit || 1)}` : "-"}</td>
             <td><em class="status-pill ${escapeAttribute(status.className)}">${escapeHtml(status.label)}</em></td>
+            <td>${assignment ? getAssignmentHistoryLabel(assignment) : "-"}</td>
             <td>
               ${assignment && assignment.status !== "completed"
                 ? `<button type="button" class="table-action" data-action="unassign-pretest" data-assignment-id="${escapeAttribute(assignment.id)}">Unassign</button>`
@@ -256,6 +258,11 @@ function renderAssignmentResults(students, payload) {
       <button class="secondary-action" data-action="assignment-page" data-offset="${payload.offset + payload.limit}" ${payload.offset + payload.limit >= payload.total ? "disabled" : ""}>Next</button>
     </div>
   `;
+}
+
+function getAssignmentHistoryLabel(assignment) {
+  const history = assignment.metadata?.assignmentHistory || [];
+  return history.length ? `${history.length} reassignment${history.length === 1 ? "" : "s"}` : "First assignment";
 }
 
 function getAssignedPreTestText(student) {

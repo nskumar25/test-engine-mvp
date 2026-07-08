@@ -44,8 +44,8 @@ function renderStartScreen() {
         return;
       }
 
-      const assignments = await listAvailableAssignmentsForStudent(student.id);
-      if (!assignments.length) {
+      const dashboardData = await getStudentDashboardData(student.id);
+      if (!dashboardData.availableAssignments.length && !dashboardData.completedAssignments.length && !dashboardData.attempts.length) {
         submitButton.disabled = false;
         message.textContent = "No active assessment is available for this student. The assignment may be completed or not assigned yet.";
         return;
@@ -58,7 +58,7 @@ function renderStartScreen() {
         email: student.email || "",
         gradeLevel: student.gradeLevel || "",
         section: student.section || ""
-      }, assignments);
+      }, dashboardData);
     } catch (error) {
       submitButton.disabled = false;
       message.textContent = error.message || "Could not begin the assessment. Please contact the administrator.";

@@ -352,6 +352,66 @@ async function saveAssignments(payload) {
         ...(perStudentSettings[String(studentId)] || perStudentSettings[studentId] || {}),
         assessment
       };
+      const existingResult = await client.query(`
+        select
+          a.id,
+          a.assigned_at,
+          a.attempt_limit,
+          a.status,
+          a.metadata,
+          count(t.id)::int as attempt_count
+        from test_engine_assignments a
+        left join test_engine_attempts t
+          on t.assessment_id = a.assessment_id
+          and t.student_external_id = a.student_external_id
+          and t.status in ('submitted', 'scored')
+        where a.assessment_id = $1
+          and a.student_external_id = $2
+        group by a.id
+      `, [assessmentId, String(studentId)]);
+
+      const existing = existingResult.rows[0];
+      if (existing) {
+        const previousMetadata = existing.metadata || {};
+        const previousHistory = Array.isArray(previousMetadata.assignmentHistory)
+          ? previousMetadata.assignmentHistory
+          : [];
+        const nextAttemptLimit = Number(existing.attempt_count || 0) + attemptLimit;
+        const nextMetadata = {
+          ...previousMetadata,
+          ...metadata,
+          assignmentHistory: [
+            ...previousHistory,
+            {
+              assignedAt: existing.assigned_at,
+              attemptLimit: existing.attempt_limit,
+              status: existing.status,
+              attemptCount: existing.attempt_count || 0,
+              replacedAt: new Date().toISOString()
+            }
+          ]
+        };
+
+        await client.query(`
+          update test_engine_assignments
+          set assigned_by = $1,
+              assigned_at = now(),
+              due_at = $2,
+              attempt_limit = $3,
+              status = 'assigned',
+              metadata = $4
+          where id = $5
+        `, [
+          assignedBy,
+          dueAt,
+          nextAttemptLimit,
+          JSON.stringify(nextMetadata),
+          existing.id
+        ]);
+        assigned += 1;
+        continue;
+      }
+
       await client.query(`
         insert into test_engine_assignments (
           assessment_id,

@@ -674,15 +674,29 @@ async function findActiveAssignmentForStudent(studentId) {
 }
 
 async function listAvailableAssignmentsForStudent(studentId) {
+  const data = await getStudentDashboardData(studentId);
+  return data.availableAssignments;
+}
+
+async function getStudentDashboardData(studentId) {
   const [assignments, attempts] = await Promise.all([
     getDataAdapter().listAssignments(),
     getDataAdapter().listAttempts()
   ]);
-  return assignments.filter((assignment) =>
+  const studentAssignments = assignments.filter((assignment) =>
     normalizeIdentity(assignment.studentId) === normalizeIdentity(studentId)
       && assignment.status !== "cancelled"
-      && !isAssignmentAttemptLimitReached(assignment, attempts)
   );
+  const studentAttempts = attempts.filter((attempt) => {
+    const student = normalizeStudent(attempt);
+    return normalizeIdentity(student.id || attempt.studentId) === normalizeIdentity(studentId);
+  });
+  return {
+    assignments: studentAssignments,
+    availableAssignments: studentAssignments.filter((assignment) => !isAssignmentAttemptLimitReached(assignment, attempts)),
+    completedAssignments: studentAssignments.filter((assignment) => isAssignmentAttemptLimitReached(assignment, attempts)),
+    attempts: studentAttempts
+  };
 }
 
 function isAssignmentAttemptLimitReached(assignment, attempts = []) {
@@ -1547,9 +1561,40 @@ const localDataAdapter = {
         assessment: payload.assessment || {}
       }
     }));
-    const incomingKeys = new Set(incoming.map((item) => item.id));
+    const previousById = new Map(previous.map((item) => [String(item.id), item]));
+    const mergedIncoming = incoming.map((item) => {
+      const existing = previousById.get(String(item.id));
+      if (!existing) return item;
+      const attemptCount = Number(existing.attemptCount || 0);
+      const previousHistory = Array.isArray(existing.metadata?.assignmentHistory)
+        ? existing.metadata.assignmentHistory
+        : [];
+      return {
+        ...existing,
+        ...item,
+        assignedAt: now,
+        attemptLimit: attemptCount + Number(payload.attemptLimit || 1),
+        attemptCount,
+        status: "assigned",
+        metadata: {
+          ...(existing.metadata || {}),
+          ...(item.metadata || {}),
+          assignmentHistory: [
+            ...previousHistory,
+            {
+              assignedAt: existing.assignedAt,
+              attemptLimit: existing.attemptLimit,
+              status: existing.status,
+              attemptCount,
+              replacedAt: now
+            }
+          ]
+        }
+      };
+    });
+    const incomingKeys = new Set(mergedIncoming.map((item) => item.id));
     const next = [
-      ...incoming,
+      ...mergedIncoming,
       ...previous.filter((item) => !incomingKeys.has(item.id))
     ];
     localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(next));

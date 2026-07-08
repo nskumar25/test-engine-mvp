@@ -344,7 +344,7 @@ img {
 
 .student-dashboard-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -366,6 +366,21 @@ img {
 .student-assessment-list {
   display: grid;
   gap: 12px;
+}
+
+.student-dashboard-section {
+  display: grid;
+  gap: 12px;
+}
+
+.student-section-head h2,
+.student-section-head p {
+  margin: 0;
+}
+
+.student-section-head h2 {
+  margin-top: 3px;
+  font-size: 1.35rem;
 }
 
 .student-assessment-card {
@@ -398,6 +413,37 @@ img {
   background: #f3f6f5;
   color: #52606b;
   font-size: 0.88rem;
+}
+
+.student-history-table-wrap {
+  overflow: auto;
+  border: 1px solid #dfe6df;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(43, 56, 63, 0.08);
+}
+
+.student-history-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.student-history-table th,
+.student-history-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e3e9e6;
+  text-align: left;
+}
+
+.student-history-table th {
+  background: #f7f8f6;
+  color: #52606b;
+  font-size: 0.86rem;
+}
+
+.student-history-table tr:last-child td {
+  border-bottom: 0;
 }
 
 .shell {
@@ -756,7 +802,7 @@ img {
 }
 
 .assignment-table {
-  min-width: 1180px;
+  min-width: 1260px;
 }
 
 .assignment-table .select-col {
@@ -2691,6 +2737,10 @@ img {
   .settings-grid {
     grid-template-columns: 1fr;
   }
+
+  .student-dashboard-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 680px) {
@@ -2752,7 +2802,8 @@ img {
 
   .review-header,
   .review-actions,
-  .review-summary {
+  .review-summary,
+  .student-dashboard-summary {
     display: grid;
     grid-template-columns: 1fr;
   }
