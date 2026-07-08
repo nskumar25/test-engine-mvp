@@ -1274,7 +1274,8 @@ img {
 .icon-button,
 .ghost-button,
 .secondary-action,
-.primary-action {
+.primary-action,
+.submit-action {
   border: 0;
   cursor: pointer;
   transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
@@ -1294,7 +1295,8 @@ img {
 .icon-button:hover,
 .ghost-button:hover,
 .secondary-action:hover,
-.primary-action:hover {
+.primary-action:hover,
+.submit-action:hover {
   transform: translateY(-1px);
 }
 
@@ -1744,13 +1746,14 @@ img {
 }
 
 .bottombar {
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   min-height: 58px;
 }
 
 .secondary-action,
-.primary-action {
+.primary-action,
+.submit-action {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -1776,6 +1779,18 @@ img {
   background: #17212b;
   color: #ffffff;
   border: 1px solid #17212b;
+}
+
+.primary-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.submit-action {
+  background: #2f5d50;
+  color: #ffffff;
+  border: 1px solid #2f5d50;
 }
 
 .footer-center {
