@@ -54,6 +54,7 @@ let zoomScale = 1;
 let zoomImageSrc = "";
 let assignmentSelectionMode = "visible";
 let assignmentSelectionFilters = {};
+let pendingAttemptSave = Promise.resolve();
 
 const root = document.getElementById("root");
 
@@ -724,6 +725,31 @@ function getAssignmentAttemptBaseline(assignment) {
   return Number(lastHistory.totalAttemptCount ?? lastHistory.attemptCount ?? 0) || 0;
 }
 
+function getAssignmentType(assignment = {}) {
+  const explicitType = assignment.metadata?.assignmentType
+    || assignment.assignmentType
+    || assignment.assessment?.assignmentType
+    || assignment.metadata?.assessment?.assignmentType;
+  if (explicitType) return String(explicitType).toLowerCase();
+  const title = String(assignment.assessmentTitle || assignment.title || assignment.metadata?.assessment?.title || "").toLowerCase();
+  if (title.includes("worksheet")) return "worksheet";
+  if (title.includes("practice")) return "practice";
+  if (title.includes("diagnostic")) return "diagnostic";
+  if (title.includes("pretest") || title.includes("pre-test")) return "pretest";
+  return "assessment";
+}
+
+function formatAssignmentType(type) {
+  const labels = {
+    pretest: "Pre-test",
+    worksheet: "Worksheet",
+    practice: "Practice",
+    diagnostic: "Diagnostic",
+    assessment: "Assessment"
+  };
+  return labels[String(type || "").toLowerCase()] || "Assessment";
+}
+
 function countAttemptsForAssignment(assignment, attempts = []) {
   return (attempts || []).filter((attempt) => {
     const student = normalizeStudent(attempt);
@@ -1192,7 +1218,7 @@ function markVisited(patch = {}) {
 
 function submitAssessment() {
   const evaluation = buildEvaluation();
-  saveAttempt(evaluation);
+  pendingAttemptSave = saveAttempt(evaluation);
   setState({
     remainingSeconds: Math.max(0, state.remainingSeconds),
     submitted: true,
@@ -1247,6 +1273,9 @@ function buildEvaluation() {
     studentId: state.student?.id || assessment.studentId || "demo-student",
     studentName: state.student?.name || assessment.candidate || "Demo Candidate",
     assessmentTitle: assessment.title,
+    assignmentKey: state.assignment?.id || null,
+    assessmentKey: state.assignment?.assessmentKey || assessment.key || null,
+    assignmentType: getAssignmentType(state.assignment || { metadata: state.assignmentSettings || {}, assessmentTitle: assessment.title }),
     submittedAt,
     startedAt: state.startedAt,
     student: {
@@ -1261,6 +1290,8 @@ function buildEvaluation() {
       questionCount: total,
       inputFormatVersion: assessment.inputFormatVersion || "mvp-1",
       assignmentKey: state.assignment?.id || null,
+      assessmentKey: state.assignment?.assessmentKey || assessment.key || null,
+      assignmentType: getAssignmentType(state.assignment || { metadata: state.assignmentSettings || {}, assessmentTitle: assessment.title }),
       resultOptions: assessment.resultOptions || state.assignmentSettings?.resultOptions || {},
       tools: assessment.tools || {}
     },
@@ -1402,8 +1433,9 @@ function buildTopicBreakdown(responses) {
 }
 
 function saveAttempt(evaluation) {
-  getDataAdapter().saveAttempt(evaluation).catch(() => {
+  return getDataAdapter().saveAttempt(evaluation).catch(() => {
     saveAttemptLocally(evaluation);
+    return evaluation;
   });
 }
 
@@ -1463,7 +1495,7 @@ const localDataAdapter = {
   async saveAttempt(evaluation) {
     saveAttemptLocally(evaluation);
     const assignments = await this.listAssignments();
-    const assignmentId = evaluation.assignmentKey;
+    const assignmentId = evaluation.assignmentKey || evaluation.assessment?.assignmentKey;
     if (assignmentId) {
       const next = assignments.map((assignment) => {
         if (String(assignment.id) !== String(assignmentId)) return assignment;
@@ -1630,7 +1662,7 @@ const localDataAdapter = {
     const assignmentIds = new Set((payload.assignmentIds || []).map(String));
     const previous = await this.listAssignments();
     const next = previous.map((assignment) => (
-      assignmentIds.has(String(assignment.id)) && assignment.status !== "completed"
+      assignmentIds.has(String(assignment.id))
         ? { ...assignment, status: "cancelled" }
         : assignment
     ));
@@ -1922,9 +1954,11 @@ function renderSubmitted() {
           <h1>${escapeHtml(assessment.title)}</h1>
           <p>Your assessment has been submitted successfully.</p>
           <p>Results will be reviewed by your teacher.</p>
+          <button class="primary-action" data-action="go-dashboard">Go to Dashboard</button>
         </section>
       </main>
     `;
+    bindSubmittedDashboardAction();
     return;
   }
 
@@ -1971,15 +2005,31 @@ function renderSubmitted() {
               : `<p class="perfect-score">All questions were answered correctly.</p>`
           }
         </div>
-        <button class="primary-action" data-action="restart">Restart demo</button>
+        <button class="primary-action" data-action="go-dashboard">Go to Dashboard</button>
       </section>
     </main>
   `;
 
-  document.querySelector("[data-action='restart']").addEventListener("click", () => {
-    localStorage.removeItem(STORAGE_KEY);
-    state = getInitialState(questions.length);
-    render();
+  bindSubmittedDashboardAction();
+}
+
+function bindSubmittedDashboardAction() {
+  document.querySelector("[data-action='go-dashboard']")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.textContent = "Opening dashboard...";
+    try {
+      await pendingAttemptSave;
+      const student = state.student || {};
+      const dashboardData = await getStudentDashboardData(student.id);
+      localStorage.removeItem(STORAGE_KEY);
+      state = getInitialState(questions.length);
+      renderStudentDashboard(student, dashboardData);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "Go to Dashboard";
+      renderStudentDashboardError(error.message || "Could not refresh your dashboard.");
+    }
   });
 }
 

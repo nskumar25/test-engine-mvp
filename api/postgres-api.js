@@ -295,13 +295,18 @@ async function listAssignments() {
     const totalAssessmentAttemptCount = Number(row.assessment_attempt_count || 0);
     const attemptBaseline = getAssignmentAttemptBaselineFromMetadata(row.metadata || {});
     const attemptCount = Math.max(0, totalAssessmentAttemptCount - attemptBaseline);
+    const status = row.status === "cancelled"
+      ? "cancelled"
+      : attemptCount >= Number(row.attempt_limit || 1)
+      ? "completed"
+      : row.status;
     return {
     id: row.id,
     studentId: row.student_external_id,
     assignedAt: row.assigned_at,
     dueAt: row.due_at,
     attemptLimit: row.attempt_limit,
-    status: attemptCount >= Number(row.attempt_limit || 1) ? "completed" : row.status,
+    status,
     assessmentKey: row.external_assessment_key,
     assessmentTitle: row.assessment_title,
     attemptCount,
@@ -492,7 +497,6 @@ async function cancelAssignments(payload) {
     update test_engine_assignments
     set status = 'cancelled'
     where id = any($1::uuid[])
-      and status <> 'completed'
   `, [assignmentIds]);
 
   return { ok: true, cancelled: result.rowCount };
@@ -509,7 +513,7 @@ async function saveAttempt(attempt) {
     const assessment = attempt.assessment || {};
     const attemptKey = attempt.attemptId || attempt.id || randomUUID();
     const submittedAt = attempt.submittedAt || new Date().toISOString();
-    const assignmentId = attempt.assignmentKey || null;
+    const assignmentId = attempt.assignmentKey || attempt.assessment?.assignmentKey || null;
     let assessmentId = null;
 
     if (assignmentId) {

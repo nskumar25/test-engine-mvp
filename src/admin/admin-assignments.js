@@ -5,14 +5,20 @@ function renderAdminAssignmentsPage(context) {
     .filter((test) => test.status !== "archived");
   const totalStudents = context.studentFilters?.totalStudents || 0;
   const selectedPretest = sessionStorage.getItem("assessment-engine-selected-pretest") || "";
+  const activeTab = sessionStorage.getItem("assessment-engine-assignment-tab") || "assign";
 
   return `
     <section class="admin-page-shell">
+      <nav class="admin-page-tabs" aria-label="Assessment access sections">
+        <button class="${activeTab === "assign" ? "active" : ""}" type="button" data-assignment-admin-tab="assign">Assign</button>
+        <button class="${activeTab === "history" ? "active" : ""}" type="button" data-assignment-admin-tab="history">History</button>
+      </nav>
       <article class="admin-card assignment-card">
+        <div data-assignment-admin-panel="assign" ${activeTab === "assign" ? "" : "hidden"}>
         <div class="admin-card-head">
           <div>
             <p class="eyebrow">Assignment Builder</p>
-            <h2>Select students and test</h2>
+            <h2>Select students and assignment</h2>
           </div>
           <span class="assignment-count">${totalStudents} registered students</span>
         </div>
@@ -41,7 +47,7 @@ function renderAdminAssignmentsPage(context) {
             <input data-assignment-filter="search" type="search" placeholder="Name, email, or ID" />
           </label>
           <label>
-            Test
+            Assignment
             <select data-assignment-test>
               ${availableTests.map((test) => `
                 <option
@@ -54,6 +60,16 @@ function renderAdminAssignmentsPage(context) {
                   ${selectedPretest === test.key ? "selected" : ""}
                 >${escapeHtml(test.title)}</option>
               `).join("")}
+            </select>
+          </label>
+          <label>
+            Type
+            <select data-assignment-type>
+              <option value="assessment">Assessment</option>
+              <option value="pretest">Pre-test</option>
+              <option value="worksheet">Worksheet</option>
+              <option value="practice">Practice</option>
+              <option value="diagnostic">Diagnostic</option>
             </select>
           </label>
           <label>
@@ -71,12 +87,18 @@ function renderAdminAssignmentsPage(context) {
         <div class="student-assignment-results" data-assignment-results>
           <p class="empty-review">Choose filters and click View Students. Results are loaded in pages, not all at once.</p>
         </div>
+        </div>
+
+        <div data-assignment-admin-panel="history" ${activeTab === "history" ? "" : "hidden"}>
+          ${renderAssignmentHistoryTab(context)}
+        </div>
       </article>
     </section>
   `;
 }
 
 function bindAssignmentControls() {
+  bindAssignmentAdminTabs();
   const results = document.querySelector("[data-assignment-results]");
   if (!results) return;
 
@@ -168,6 +190,21 @@ function bindAssignmentControls() {
   });
 }
 
+function bindAssignmentAdminTabs() {
+  document.querySelectorAll("[data-assignment-admin-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const selected = button.dataset.assignmentAdminTab;
+      sessionStorage.setItem("assessment-engine-assignment-tab", selected);
+      document.querySelectorAll("[data-assignment-admin-tab]").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.assignmentAdminTab === selected);
+      });
+      document.querySelectorAll("[data-assignment-admin-panel]").forEach((panel) => {
+        panel.hidden = panel.dataset.assignmentAdminPanel !== selected;
+      });
+    });
+  });
+}
+
 function bindUnassignControls(loadStudents) {
   document.querySelectorAll("[data-action='unassign-pretest']").forEach((button) => {
     button.addEventListener("click", async () => {
@@ -237,7 +274,6 @@ function renderAssignmentResults(students, payload) {
             <th>Assessment Assigned</th>
             <th>Attempts</th>
             <th>Status</th>
-            <th>History</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -261,10 +297,9 @@ function renderAssignmentResults(students, payload) {
             <td>${escapeHtml(assignedPreTests)}</td>
             <td>${assignment ? `${usedAttempts}/${Number(assignment.attemptLimit || 1)}` : "-"}</td>
             <td><em class="status-pill ${escapeAttribute(status.className)}">${escapeHtml(status.label)}</em></td>
-            <td>${assignment ? getAssignmentHistoryLabel(assignment) : "-"}</td>
             <td>
               ${assignment && isCompleted
-                ? `<button type="button" class="table-action" data-action="quick-reassign" data-student-id="${escapeAttribute(student.id)}">Reassign</button>`
+                ? `<span class="table-action-group"><button type="button" class="table-action" data-action="quick-reassign" data-student-id="${escapeAttribute(student.id)}">Reassign</button><button type="button" class="table-action" data-action="unassign-pretest" data-assignment-id="${escapeAttribute(assignment.id)}">Unassign</button></span>`
                 : assignment
                 ? `<button type="button" class="table-action" data-action="unassign-pretest" data-assignment-id="${escapeAttribute(assignment.id)}">Unassign</button>`
                 : `<span class="muted-cell">-</span>`}
@@ -289,6 +324,66 @@ function renderAssignmentResults(students, payload) {
       <button class="secondary-action" data-action="assignment-page" data-offset="${payload.offset + payload.limit}" ${payload.offset + payload.limit >= payload.total ? "disabled" : ""}>Next</button>
     </div>
   `;
+}
+
+function renderAssignmentHistoryTab(context) {
+  const assignments = [...(context.assignments || [])]
+    .sort((a, b) => String(b.assignedAt || "").localeCompare(String(a.assignedAt || "")));
+
+  if (!assignments.length) {
+    return `
+      <div class="admin-card-head compact-head">
+        <div>
+          <p class="eyebrow">Assignment History</p>
+          <h2>No assignment history yet</h2>
+        </div>
+      </div>
+      <p class="empty-review">Assignments will appear here after students are assigned work.</p>
+    `;
+  }
+
+  return `
+    <div class="admin-card-head compact-head">
+      <div>
+        <p class="eyebrow">Assignment History</p>
+        <h2>Assignment timeline</h2>
+      </div>
+      <span class="assignment-count">${assignments.length} current record(s)</span>
+    </div>
+    <div class="admin-table-wrap assignment-history-wrap">
+      <table class="admin-table assignment-history-table">
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Assignment</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Attempts</th>
+            <th>Assigned</th>
+            <th>History</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${assignments.map((assignment) => `
+            <tr>
+              <td>${escapeHtml(assignment.studentId || "")}</td>
+              <td>${escapeHtml(assignment.assessmentTitle || assignment.assessmentKey || "Assessment")}</td>
+              <td>${escapeHtml(formatAssignmentType(getAssignmentType(assignment)))}</td>
+              <td><em class="status-pill ${escapeAttribute(assignment.status || "assigned")}">${escapeHtml(formatAssignmentStatusText(assignment.status))}</em></td>
+              <td>${getCurrentAssignmentUsedAttempts(assignment)}/${Number(assignment.attemptLimit || 1)}</td>
+              <td>${assignment.assignedAt ? escapeHtml(formatDateTime(assignment.assignedAt)) : "-"}</td>
+              <td>${escapeHtml(getAssignmentHistoryLabel(assignment))}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function formatAssignmentStatusText(status) {
+  if (!status) return "Assigned";
+  return String(status).charAt(0).toUpperCase() + String(status).slice(1);
 }
 
 function getAssignmentHistoryLabel(assignment) {
@@ -407,6 +502,7 @@ async function getSelectedAssignmentStudents(visibleStudents, pageLimit) {
 function renderAssignmentConfirmation(students) {
   const selectedTest = getAssignmentAssessmentPayload();
   const defaultDuration = selectedTest.durationMinutes || assessment.durationMinutes || 30;
+  const selectedType = getSelectedAssignmentType(selectedTest);
   return `
     <div class="assignment-confirmation">
       <div class="confirm-head">
@@ -414,7 +510,7 @@ function renderAssignmentConfirmation(students) {
           <p class="eyebrow">Confirm Assignment</p>
           <h2>${escapeHtml(selectedTest.title)}</h2>
         </div>
-        <span>${students.length} student(s)</span>
+        <span>${students.length} student(s) / ${escapeHtml(formatAssignmentType(selectedType))}</span>
       </div>
       <div class="bulk-settings">
         <label>Duration <input data-bulk-duration type="number" min="1" max="240" value="${escapeAttribute(defaultDuration)}" /></label>
@@ -432,7 +528,8 @@ function renderAssignmentConfirmation(students) {
               <th>Student</th>
               <th>School</th>
               <th>Grade</th>
-              <th>Test</th>
+              <th>Assignment</th>
+              <th>Type</th>
               <th>Duration</th>
               <th>Calculator</th>
               <th>Scratch</th>
@@ -447,6 +544,7 @@ function renderAssignmentConfirmation(students) {
                 <td>${escapeHtml(student.schoolName || "")}</td>
                 <td>${escapeHtml(student.gradeLevel || "")}</td>
                 <td>${escapeHtml(selectedTest.title)}</td>
+                <td>${escapeHtml(formatAssignmentType(selectedType))}</td>
                 <td><input data-confirm-field="durationMinutes" type="number" min="1" max="240" value="${escapeAttribute(defaultDuration)}" /></td>
                 <td><input data-confirm-field="calculator" type="checkbox" checked /></td>
                 <td><input data-confirm-field="scratchpad" type="checkbox" checked /></td>
@@ -491,6 +589,7 @@ function bindAssignmentConfirmation(onBack) {
     const status = document.querySelector("[data-confirm-status]");
     const rows = Array.from(document.querySelectorAll("[data-confirm-student]"));
     const assessmentPayload = getAssignmentAssessmentPayload();
+    const assignmentType = getSelectedAssignmentType(assessmentPayload);
     const attemptLimit = Number(document.querySelector("[data-assignment-attempt-limit]")?.value || 1);
     const studentIds = rows.map((row) => row.dataset.confirmStudent);
     const perStudentSettings = {};
@@ -509,7 +608,8 @@ function bindAssignmentConfirmation(onBack) {
         resultOptions: {
           showResults: Boolean(row.querySelector("[data-confirm-field='showResults']")?.checked),
           showAnswers: Boolean(row.querySelector("[data-confirm-field='showAnswers']")?.checked)
-        }
+        },
+        assignmentType
       };
     });
 
@@ -520,6 +620,7 @@ function bindAssignmentConfirmation(onBack) {
         studentIds,
         attemptLimit,
         assignedBy: "admin",
+        metadata: { assignmentType },
         perStudentSettings
       });
       status.textContent = `Assigned ${result.assigned || studentIds.length} student(s).`;
@@ -528,6 +629,10 @@ function bindAssignmentConfirmation(onBack) {
       status.textContent = error.message || "Could not save assignments.";
     }
   });
+}
+
+function getSelectedAssignmentType(selectedTest = {}) {
+  return document.querySelector("[data-assignment-type]")?.value || getAssignmentType(selectedTest);
 }
 
 function bindAssignmentPaging(loadStudents) {

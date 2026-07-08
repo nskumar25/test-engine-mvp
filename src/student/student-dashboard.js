@@ -21,24 +21,29 @@ function renderStudentDashboard(student, dashboardData) {
           <span><strong>${escapeHtml(student.gradeLevel || "-")}</strong> grade</span>
         </div>
 
-        <section class="student-dashboard-section">
+        <nav class="student-dashboard-tabs" aria-label="Student dashboard sections">
+          <button class="active" data-student-tab="available" type="button">Assigned</button>
+          <button data-student-tab="history" type="button">History</button>
+        </nav>
+
+        <section class="student-dashboard-section" data-student-tab-panel="available">
           <div class="student-section-head">
             <p class="eyebrow">Available</p>
-            <h2>Assigned assessments</h2>
+            <h2>Assigned work</h2>
           </div>
-          <div class="student-assessment-list" aria-label="Assigned assessments">
+          <div class="student-assessment-list" aria-label="Assigned work">
             ${availableAssignments.length
               ? availableAssignments.map((assignment) => renderStudentAssignmentCard(student, assignment, attempts)).join("")
-              : `<p class="empty-review">No available assessments right now.</p>`}
+              : `<p class="empty-review">No available assignments right now.</p>`}
           </div>
         </section>
 
-        <section class="student-dashboard-section">
+        <section class="student-dashboard-section" data-student-tab-panel="history" hidden>
           <div class="student-section-head">
             <p class="eyebrow">History</p>
-            <h2>Completed assessments</h2>
+            <h2>Completed and submitted work</h2>
           </div>
-          <div class="student-history-list" aria-label="Completed assessments">
+          <div class="student-history-list" aria-label="Completed and submitted work">
             ${renderCompletedAssessmentHistory(completedAssignments, attempts)}
           </div>
         </section>
@@ -50,6 +55,18 @@ function renderStudentDashboard(student, dashboardData) {
     localStorage.removeItem(STORAGE_KEY);
     state = getInitialState(questions.length);
     renderStartScreen();
+  });
+
+  document.querySelectorAll("[data-student-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const selected = button.dataset.studentTab;
+      document.querySelectorAll("[data-student-tab]").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.studentTab === selected);
+      });
+      document.querySelectorAll("[data-student-tab-panel]").forEach((panel) => {
+        panel.hidden = panel.dataset.studentTabPanel !== selected;
+      });
+    });
   });
 
   document.querySelectorAll("[data-action='start-assigned-assessment']").forEach((button) => {
@@ -76,10 +93,11 @@ function renderStudentAssignmentCard(student, assignment, attempts = []) {
   const attemptCount = getAssignmentAttemptUsage(assignment, attempts);
   const attemptsLeft = Math.max(0, attemptLimit - attemptCount);
   const historyCount = assignment.metadata?.assignmentHistory?.length || 0;
+  const assignmentType = formatAssignmentType(getAssignmentType(assignment));
   return `
     <article class="student-assessment-card">
       <div>
-        <p class="eyebrow">Assigned assessment</p>
+        <p class="eyebrow">${escapeHtml(assignmentType)}</p>
         <h2>${escapeHtml(assignment.assessmentTitle || assignment.assessmentKey || "Assessment")}</h2>
         <div class="student-assessment-meta">
           <span>${duration} minutes</span>
@@ -94,20 +112,23 @@ function renderStudentAssignmentCard(student, assignment, attempts = []) {
 }
 
 function renderCompletedAssessmentHistory(completedAssignments, attempts) {
+  const assignmentIds = new Set(completedAssignments.map((assignment) => String(assignment.id)));
   const historyRows = [
     ...completedAssignments.map((assignment) => ({
       title: assignment.assessmentTitle || assignment.assessmentKey || "Assessment",
+      type: formatAssignmentType(getAssignmentType(assignment)),
       status: "Completed",
       submittedAt: getLatestAttemptDateForAssignment(assignment, attempts),
       score: getLatestAttemptScoreForAssignment(assignment, attempts),
       attempts: `${getAssignmentAttemptUsage(assignment, attempts)}/${Number(assignment.attemptLimit || 1)}`
     })),
     ...attempts
-      .filter((attempt) => !completedAssignments.some((assignment) => String(assignment.id) === String(attempt.assignmentKey)))
+      .filter((attempt) => !assignmentIds.has(String(getAttemptAssignmentKey(attempt))))
       .map((attempt) => {
         const score = normalizeScore(attempt);
         return {
           title: attempt.assessment?.title || attempt.assessmentTitle || "Assessment",
+          type: formatAssignmentType(attempt.assignmentType || attempt.assessment?.assignmentType || "assessment"),
           status: "Submitted",
           submittedAt: attempt.submittedAt || "",
           score: `${score.percentage}%`,
@@ -116,16 +137,17 @@ function renderCompletedAssessmentHistory(completedAssignments, attempts) {
       })
   ];
 
-  if (!historyRows.length) return `<p class="empty-review">No completed assessments yet.</p>`;
+  if (!historyRows.length) return `<p class="empty-review">No completed assignments yet.</p>`;
 
   return `
     <div class="student-history-table-wrap">
       <table class="student-history-table">
-        <thead><tr><th>Assessment</th><th>Status</th><th>Score</th><th>Attempts</th><th>Submitted</th></tr></thead>
+        <thead><tr><th>Assignment</th><th>Type</th><th>Status</th><th>Score</th><th>Attempts</th><th>Submitted</th></tr></thead>
         <tbody>
           ${historyRows.map((row) => `
             <tr>
               <td>${escapeHtml(row.title)}</td>
+              <td>${escapeHtml(row.type)}</td>
               <td>${escapeHtml(row.status)}</td>
               <td>${escapeHtml(row.score || "-")}</td>
               <td>${escapeHtml(row.attempts || "-")}</td>
@@ -141,12 +163,16 @@ function renderCompletedAssessmentHistory(completedAssignments, attempts) {
 function getLatestAttemptForAssignment(assignment, attempts) {
   return attempts
     .filter((attempt) => {
-      const sameAssignment = attempt.assignmentKey && String(attempt.assignmentKey) === String(assignment.id);
+      const sameAssignment = getAttemptAssignmentKey(attempt) && String(getAttemptAssignmentKey(attempt)) === String(assignment.id);
       const sameAssessment = (attempt.assessment?.key || attempt.assessmentKey) === assignment.assessmentKey;
       const sameTitle = (attempt.assessment?.title || attempt.assessmentTitle) === assignment.assessmentTitle;
       return sameAssignment || sameAssessment || sameTitle;
     })
     .sort((a, b) => String(b.submittedAt || "").localeCompare(String(a.submittedAt || "")))[0] || null;
+}
+
+function getAttemptAssignmentKey(attempt) {
+  return attempt.assignmentKey || attempt.assessment?.assignmentKey || "";
 }
 
 function getLatestAttemptDateForAssignment(assignment, attempts) {
