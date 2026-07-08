@@ -17,6 +17,7 @@ function paintAdminDashboard(attempts, students, assignments = [], dataErrors = 
     validation: validateAssessment(),
     ilpAttempts: latestAttempts.filter((attempt) => attempt.ilp)
   };
+  window.assessmentAdminContext = context;
   const meta = getAdminPageMeta(activePage);
 
   document.querySelector(".admin-main").innerHTML = `

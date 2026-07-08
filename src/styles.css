@@ -672,8 +672,14 @@ img {
 .admin-table td {
   padding: 11px 12px;
   border-bottom: 1px solid #e3e9e6;
+  border-right: 1px solid #e3e9e6;
   text-align: left;
   vertical-align: top;
+}
+
+.admin-table th:last-child,
+.admin-table td:last-child {
+  border-right: 0;
 }
 
 .admin-table th {

@@ -88,7 +88,7 @@ function renderAdminAssignmentsPage(context) {
         </div>
 
         <div data-assignment-admin-panel="history" ${activeTab === "history" ? "" : "hidden"}>
-          ${renderAssignmentHistoryTab(context)}
+          ${renderAssignmentHistoryTab(context, sessionStorage.getItem("assessment-engine-history-student-id") || "")}
         </div>
       </article>
     </section>
@@ -97,6 +97,7 @@ function renderAdminAssignmentsPage(context) {
 
 function bindAssignmentControls() {
   bindAssignmentAdminTabs();
+  bindAssignmentHistoryControls();
   bindAssignmentTypeFilter();
   const results = document.querySelector("[data-assignment-results]");
   if (!results) return;
@@ -300,7 +301,13 @@ function bindAssignmentTableActions(visibleStudents, openReview) {
 
   document.querySelectorAll("[data-action='view-assignment-history']").forEach((button) => {
     button.addEventListener("click", () => {
+      sessionStorage.setItem("assessment-engine-history-student-id", button.dataset.studentId || "");
       sessionStorage.setItem("assessment-engine-assignment-tab", "history");
+      const panel = document.querySelector("[data-assignment-admin-panel='history']");
+      if (panel) {
+        panel.innerHTML = renderAssignmentHistoryTab(getCurrentAdminContext(), button.dataset.studentId || "");
+        bindAssignmentHistoryControls();
+      }
       document.querySelector("[data-assignment-admin-tab='history']")?.click();
     });
   });
@@ -399,8 +406,10 @@ function renderAssignmentResults(students, payload) {
   `;
 }
 
-function renderAssignmentHistoryTab(context) {
+function renderAssignmentHistoryTab(context, studentId = "") {
+  const normalizedStudentId = String(studentId || "");
   const assignments = [...(context.assignments || [])]
+    .filter((assignment) => !normalizedStudentId || String(assignment.studentId) === normalizedStudentId)
     .sort((a, b) => String(b.assignedAt || "").localeCompare(String(a.assignedAt || "")));
 
   if (!assignments.length) {
@@ -410,8 +419,9 @@ function renderAssignmentHistoryTab(context) {
           <p class="eyebrow">Assignment History</p>
           <h2>No assignment history yet</h2>
         </div>
+        ${normalizedStudentId ? `<button type="button" class="secondary-action" data-action="show-all-assignment-history">Show all</button>` : ""}
       </div>
-      <p class="empty-review">Assignments will appear here after students are assigned work.</p>
+      <p class="empty-review">${normalizedStudentId ? "No history was found for this student." : "Assignments will appear here after students are assigned work."}</p>
     `;
   }
 
@@ -419,9 +429,10 @@ function renderAssignmentHistoryTab(context) {
     <div class="admin-card-head compact-head">
       <div>
         <p class="eyebrow">Assignment History</p>
-        <h2>Assignment timeline</h2>
+        <h2>${normalizedStudentId ? `Student ${escapeHtml(normalizedStudentId)}` : "Assignment timeline"}</h2>
       </div>
       <span class="assignment-count">${assignments.length} current record(s)</span>
+      ${normalizedStudentId ? `<button type="button" class="secondary-action" data-action="show-all-assignment-history">Show all</button>` : ""}
     </div>
     <div class="admin-table-wrap assignment-history-wrap">
       <table class="admin-table assignment-history-table">
@@ -452,6 +463,24 @@ function renderAssignmentHistoryTab(context) {
       </table>
     </div>
   `;
+}
+
+function bindAssignmentHistoryControls() {
+  document.querySelector("[data-action='show-all-assignment-history']")?.addEventListener("click", () => {
+    sessionStorage.removeItem("assessment-engine-history-student-id");
+    const panel = document.querySelector("[data-assignment-admin-panel='history']");
+    if (panel) {
+      panel.innerHTML = renderAssignmentHistoryTab(getCurrentAdminContext(), "");
+      bindAssignmentHistoryControls();
+    }
+  });
+}
+
+function getCurrentAdminContext() {
+  return {
+    assignments: window.assessmentAdminContext?.assignments || [],
+    attempts: window.assessmentAdminContext?.attempts || []
+  };
 }
 
 function formatAssignmentStatusText(status) {
