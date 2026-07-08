@@ -107,6 +107,13 @@ function bindAssignmentControls() {
         getDataAdapter().listAttempts()
       ]);
       const assessmentKey = getAssignmentAssessmentPayload().key;
+      const assignmentsByStudent = new Map();
+      assignments
+        .filter((item) => item.status !== "cancelled")
+        .forEach((item) => {
+          const key = String(item.studentId);
+          assignmentsByStudent.set(key, [...(assignmentsByStudent.get(key) || []), item]);
+        });
       const assignmentByStudent = new Map(
         assignments
           .filter((item) => item.assessmentKey === assessmentKey && item.status !== "cancelled")
@@ -116,6 +123,7 @@ function bindAssignmentControls() {
       const students = (payload.items || []).map((student) => ({
         ...student,
         assignment: assignmentByStudent.get(String(student.id)) || null,
+        assignments: assignmentsByStudent.get(String(student.id)) || [],
         completedAttempts: completedCounts.get(String(student.id)) || 0
       }));
       visibleStudents = students;
@@ -128,6 +136,7 @@ function bindAssignmentControls() {
         : "No students match the selected filters.";
       bindAssignmentPaging(loadStudents);
       bindAssignmentSelectionMenu(loadStudents);
+      bindUnassignControls(loadStudents);
     } catch (error) {
       status.textContent = "Could not load students. Check the API connection.";
       results.innerHTML = `<div class="admin-error">${escapeHtml(error.message || "Student search failed.")}</div>`;
@@ -152,6 +161,26 @@ function bindAssignmentControls() {
   });
 }
 
+function bindUnassignControls(loadStudents) {
+  document.querySelectorAll("[data-action='unassign-pretest']").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const status = document.querySelector("[data-assignment-status]");
+      const assignmentId = button.dataset.assignmentId;
+      if (!assignmentId) return;
+      button.disabled = true;
+      if (status) status.textContent = "Unassigning pre-test...";
+      try {
+        await getDataAdapter().cancelAssignments({ assignmentIds: [assignmentId] });
+        if (status) status.textContent = "Pre-test unassigned.";
+        loadStudents();
+      } catch (error) {
+        button.disabled = false;
+        if (status) status.textContent = error.message || "Could not unassign pre-test.";
+      }
+    });
+  });
+}
+
 function renderAssignmentResults(students, payload) {
   if (!students.length) return `<p class="empty-review">No students match the selected filters.</p>`;
   return `
@@ -170,25 +199,40 @@ function renderAssignmentResults(students, payload) {
                 </span>
               </span>
             </th>
-            <th>Student</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Student ID</th>
             <th>School</th>
             <th>Grade</th>
+            <th>Pre-Test Assigned</th>
+            <th>Attempts</th>
             <th>Status</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
           ${students.map((student) => {
         const status = getAssignmentDisplayStatus(student);
+        const assignment = student.assignment || null;
+        const assignedPreTests = getAssignedPreTestText(student);
         return `
           <tr>
             <td><input type="checkbox" data-student-assignment-id="${escapeAttribute(student.id)}" data-student-payload="${escapeAttribute(JSON.stringify(student))}" /></td>
             <td>
               <strong>${escapeHtml(student.name || "Unnamed Student")}</strong>
-              <small>${escapeHtml(student.email || student.username || student.id)}</small>
             </td>
+            <td>${escapeHtml(student.email || student.username || "")}</td>
+            <td>${escapeHtml(student.id || "")}</td>
             <td>${escapeHtml(student.schoolName || "")}</td>
             <td>${escapeHtml(student.gradeLevel || "")}</td>
+            <td>${escapeHtml(assignedPreTests)}</td>
+            <td>${assignment ? `${Number(assignment.attemptCount || student.completedAttempts || 0)}/${Number(assignment.attemptLimit || 1)}` : "-"}</td>
             <td><em class="status-pill ${escapeAttribute(status.className)}">${escapeHtml(status.label)}</em></td>
+            <td>
+              ${assignment && assignment.status !== "completed"
+                ? `<button type="button" class="table-action" data-action="unassign-pretest" data-assignment-id="${escapeAttribute(assignment.id)}">Unassign</button>`
+                : `<span class="muted-cell">-</span>`}
+            </td>
           </tr>
         `;
       }).join("")}
@@ -211,6 +255,16 @@ function renderAssignmentResults(students, payload) {
   `;
 }
 
+function getAssignedPreTestText(student) {
+  const assignments = student.assignments || (student.assignment ? [student.assignment] : []);
+  const titles = uniqueValues(
+    assignments
+      .filter((assignment) => assignment.status !== "cancelled")
+      .map((assignment) => assignment.assessmentTitle || assignment.assessmentKey)
+  );
+  return titles.length ? titles.join(", ") : "-";
+}
+
 function getCompletedAttemptCounts(attempts, assessmentKey) {
   const counts = new Map();
   for (const attempt of attempts || []) {
@@ -230,6 +284,7 @@ function getAssignmentDisplayStatus(student) {
   if (!assignment) return { label: "Ready", className: "ready" };
   const completed = Number(assignment.attemptCount || student.completedAttempts || 0);
   const limit = Number(assignment.attemptLimit || 1);
+  if (assignment.status === "completed") return { label: "Completed", className: "completed" };
   if (completed >= limit) return { label: "Completed", className: "completed" };
   if (completed > 0) return { label: `${completed}/${limit} used`, className: "started" };
   return { label: "Assigned", className: "assigned" };

@@ -274,8 +274,8 @@ function renderAdminDashboard() {
         <nav class="admin-nav">
           <a href="#overview">Overview</a>
           <a href="#assessments">Settings</a>
-          <a href="#assignments">Assignments</a>
-          <a href="#questions">Questions</a>
+          <a href="#assignments">Pre-Test Access</a>
+          <a href="#questions">Question Library</a>
           <a href="#import">Import</a>
           <a href="#results">Results</a>
           <a href="#ilp">ILP</a>
@@ -1533,6 +1533,18 @@ const localDataAdapter = {
     ];
     localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(next));
     return { ok: true, assigned: incoming.length };
+  },
+
+  async cancelAssignments(payload) {
+    const assignmentIds = new Set((payload.assignmentIds || []).map(String));
+    const previous = await this.listAssignments();
+    const next = previous.map((assignment) => (
+      assignmentIds.has(String(assignment.id)) && assignment.status !== "completed"
+        ? { ...assignment, status: "cancelled" }
+        : assignment
+    ));
+    localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(next));
+    return { ok: true, cancelled: assignmentIds.size };
   }
 };
 
@@ -1609,6 +1621,16 @@ const apiDataAdapter = {
       body: JSON.stringify(payload)
     });
     if (!response.ok) throw new Error("Could not save assignments");
+    return response.json();
+  },
+
+  async cancelAssignments(payload) {
+    const response = await fetch(`${API_BASE_URL}/api/assignments/cancel`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error("Could not unassign pre-test");
     return response.json();
   }
 };

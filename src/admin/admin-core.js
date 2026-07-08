@@ -58,8 +58,8 @@ function getAdminPageMeta(page) {
   const pages = {
     overview: { eyebrow: "Admin Overview", title: "Dashboard" },
     assessments: { eyebrow: "Assessment Setup", title: "Pre-Test Settings" },
-    assignments: { eyebrow: "Student Assignments", title: "Assignments" },
-    questions: { eyebrow: "Question Bank", title: "Questions" },
+    assignments: { eyebrow: "Pre-Test Access", title: "Pre-Test Access" },
+    questions: { eyebrow: "Question Review", title: "Question Library" },
     import: { eyebrow: "Import Workflow", title: "JSON Intake" },
     results: { eyebrow: "Performance", title: "Results" },
     ilp: { eyebrow: "Personalized Learning", title: "ILP Review" },

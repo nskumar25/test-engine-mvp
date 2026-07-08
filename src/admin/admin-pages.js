@@ -91,19 +91,44 @@ function renderAdminQuestionsPage() {
       <article class="admin-card">
         <div class="admin-card-head">
           <div>
-            <p class="eyebrow">MVP JSON Source</p>
-            <h2>${questions.length} Questions</h2>
+            <p class="eyebrow">Question Library</p>
+            <h2>${questions.length} Questions in Current Pre-Test</h2>
           </div>
         </div>
-        <div class="question-admin-list roomy">
-          ${questions.map((question, index) => `
-            <div>
-              <strong>Q${question.number || index + 1}</strong>
-              <span>${escapeHtml(question.topic || "General")}</span>
-              <p>${escapeHtml(question.question)}</p>
-              <small>${question.options.length} options / Answer ${escapeHtml(String(question.answer || "").toUpperCase())} / ${question.image ? "Has image" : "No image"}</small>
-            </div>
-          `).join("")}
+        <div class="question-library-summary">
+          <span>${escapeHtml(assessment.title || "Current Pre-Test")}</span>
+          <span>${questions.filter((question) => question.image).length} with images</span>
+          <span>${uniqueValues(questions.map((question) => question.topic || "General")).length} topics</span>
+        </div>
+        <div class="admin-table-wrap question-library-wrap">
+          <table class="admin-table question-library-table">
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Topic</th>
+                <th>Prompt</th>
+                <th>Options</th>
+                <th>Answer</th>
+                <th>Media</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${questions.map((question, index) => `
+                <tr>
+                  <td><strong>Q${question.number || index + 1}</strong></td>
+                  <td>${escapeHtml(question.topic || "General")}</td>
+                  <td class="question-prompt-cell">${escapeHtml(question.question)}</td>
+                  <td>
+                    <div class="option-chip-list">
+                      ${question.options.map((option) => `<span>${escapeHtml(String(option.id || "").toUpperCase())}. ${escapeHtml(option.text || option.label || "")}${option.image ? " [image]" : ""}</span>`).join("")}
+                    </div>
+                  </td>
+                  <td><em class="status-pill completed">${escapeHtml(String(question.answer || "").toUpperCase())}</em></td>
+                  <td>${question.image ? "Question image" : question.options.some((option) => option.image) ? "Option image" : "-"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
         </div>
       </article>
     </section>

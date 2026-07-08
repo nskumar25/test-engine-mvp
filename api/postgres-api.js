@@ -83,6 +83,13 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "POST" && url.pathname === "/api/assignments/cancel") {
+      const payload = await readJson(request);
+      const saved = await cancelAssignments(payload);
+      sendJson(response, 200, saved);
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/api/students") {
       const students = await listStudents({
         search: url.searchParams.get("search") || "",
@@ -342,6 +349,20 @@ async function saveAssignments(payload) {
   } finally {
     client.release();
   }
+}
+
+async function cancelAssignments(payload) {
+  const assignmentIds = Array.isArray(payload.assignmentIds) ? payload.assignmentIds.filter(Boolean) : [];
+  if (!assignmentIds.length) return { ok: true, cancelled: 0 };
+
+  const result = await pool.query(`
+    update test_engine_assignments
+    set status = 'cancelled'
+    where id = any($1::uuid[])
+      and status <> 'completed'
+  `, [assignmentIds]);
+
+  return { ok: true, cancelled: result.rowCount };
 }
 
 async function saveAttempt(attempt) {
