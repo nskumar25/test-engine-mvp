@@ -97,23 +97,26 @@ function bindAssignmentControls() {
     results.innerHTML = `<p class="empty-review">Loading students...</p>`;
 
     try {
-      const [payload, assignments] = await Promise.all([
+      const [payload, assignments, attempts] = await Promise.all([
         getDataAdapter().searchStudents({
           ...getFilters(),
           limit,
           offset
         }),
-        getDataAdapter().listAssignments()
+        getDataAdapter().listAssignments(),
+        getDataAdapter().listAttempts()
       ]);
       const assessmentKey = getAssignmentAssessmentPayload().key;
-      const assignedIds = new Set(
+      const assignmentByStudent = new Map(
         assignments
           .filter((item) => item.assessmentKey === assessmentKey && item.status !== "cancelled")
-          .map((item) => String(item.studentId))
+          .map((item) => [String(item.studentId), item])
       );
+      const completedCounts = getCompletedAttemptCounts(attempts, assessmentKey);
       const students = (payload.items || []).map((student) => ({
         ...student,
-        isAssigned: assignedIds.has(String(student.id))
+        assignment: assignmentByStudent.get(String(student.id)) || null,
+        completedAttempts: completedCounts.get(String(student.id)) || 0
       }));
       visibleStudents = students;
       assignmentSelectionMode = "visible";
@@ -175,17 +178,17 @@ function renderAssignmentResults(students, payload) {
         </thead>
         <tbody>
           ${students.map((student) => {
-        const assigned = Boolean(student.isAssigned);
+        const status = getAssignmentDisplayStatus(student);
         return `
           <tr>
-            <td><input type="checkbox" data-student-assignment-id="${escapeAttribute(student.id)}" data-student-payload="${escapeAttribute(JSON.stringify(student))}" ${assigned ? "checked" : ""} /></td>
+            <td><input type="checkbox" data-student-assignment-id="${escapeAttribute(student.id)}" data-student-payload="${escapeAttribute(JSON.stringify(student))}" /></td>
             <td>
               <strong>${escapeHtml(student.name || "Unnamed Student")}</strong>
               <small>${escapeHtml(student.email || student.username || student.id)}</small>
             </td>
             <td>${escapeHtml(student.schoolName || "")}</td>
             <td>${escapeHtml(student.gradeLevel || "")}</td>
-            <td><em class="status-pill">${assigned ? "Assigned" : "Ready"}</em></td>
+            <td><em class="status-pill ${escapeAttribute(status.className)}">${escapeHtml(status.label)}</em></td>
           </tr>
         `;
       }).join("")}
@@ -206,6 +209,30 @@ function renderAssignmentResults(students, payload) {
       <button class="secondary-action" data-action="assignment-page" data-offset="${payload.offset + payload.limit}" ${payload.offset + payload.limit >= payload.total ? "disabled" : ""}>Next</button>
     </div>
   `;
+}
+
+function getCompletedAttemptCounts(attempts, assessmentKey) {
+  const counts = new Map();
+  for (const attempt of attempts || []) {
+    const student = normalizeStudent(attempt);
+    const key = attempt.assessment?.key || attempt.assessmentKey || attempt.assessment?.assessmentKey || "";
+    const title = attempt.assessment?.title || attempt.assessmentTitle || "";
+    const matchesKey = key && key === assessmentKey;
+    const matchesTitle = title && title === getAssignmentAssessmentPayload().title;
+    if (!student.id || (!matchesKey && !matchesTitle)) continue;
+    counts.set(String(student.id), (counts.get(String(student.id)) || 0) + 1);
+  }
+  return counts;
+}
+
+function getAssignmentDisplayStatus(student) {
+  const assignment = student.assignment || null;
+  if (!assignment) return { label: "Ready", className: "ready" };
+  const completed = Number(assignment.attemptCount || student.completedAttempts || 0);
+  const limit = Number(assignment.attemptLimit || 1);
+  if (completed >= limit) return { label: "Completed", className: "completed" };
+  if (completed > 0) return { label: `${completed}/${limit} used`, className: "started" };
+  return { label: "Assigned", className: "assigned" };
 }
 
 function bindAssignmentSelectionMenu() {

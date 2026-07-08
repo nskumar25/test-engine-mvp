@@ -696,6 +696,10 @@ img {
   box-shadow: 0 14px 28px rgba(16, 28, 38, 0.14);
 }
 
+.selection-menu[hidden] {
+  display: none;
+}
+
 .selection-menu button {
   border: 0;
   border-radius: 6px;

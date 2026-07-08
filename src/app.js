@@ -664,11 +664,32 @@ function normalizeIdentity(value) {
 }
 
 async function findActiveAssignmentForStudent(studentId) {
-  const assignments = await getDataAdapter().listAssignments();
+  const [assignments, attempts] = await Promise.all([
+    getDataAdapter().listAssignments(),
+    getDataAdapter().listAttempts()
+  ]);
   return assignments.find((assignment) =>
     normalizeIdentity(assignment.studentId) === normalizeIdentity(studentId)
       && assignment.status !== "cancelled"
+      && !isAssignmentAttemptLimitReached(assignment, attempts)
   ) || null;
+}
+
+function isAssignmentAttemptLimitReached(assignment, attempts = []) {
+  const limit = Number(assignment.attemptLimit || 1);
+  const used = Number(assignment.attemptCount || countAttemptsForAssignment(assignment, attempts));
+  return used >= limit;
+}
+
+function countAttemptsForAssignment(assignment, attempts = []) {
+  return (attempts || []).filter((attempt) => {
+    const student = normalizeStudent(attempt);
+    const sameStudent = normalizeIdentity(student.id || attempt.studentId) === normalizeIdentity(assignment.studentId);
+    const sameAssignment = attempt.assignmentKey && String(attempt.assignmentKey) === String(assignment.id);
+    const sameAssessment = (attempt.assessment?.key || attempt.assessmentKey) === assignment.assessmentKey;
+    const sameTitle = (attempt.assessment?.title || attempt.assessmentTitle) === assignment.assessmentTitle;
+    return sameStudent && (sameAssignment || sameAssessment || sameTitle);
+  }).length;
 }
 
 async function applyAssignedAssessment(assignment) {
@@ -1387,6 +1408,20 @@ const localDataAdapter = {
 
   async saveAttempt(evaluation) {
     saveAttemptLocally(evaluation);
+    const assignments = await this.listAssignments();
+    const assignmentId = evaluation.assignmentKey;
+    if (assignmentId) {
+      const next = assignments.map((assignment) => {
+        if (String(assignment.id) !== String(assignmentId)) return assignment;
+        const attemptCount = Number(assignment.attemptCount || 0) + 1;
+        return {
+          ...assignment,
+          attemptCount,
+          status: attemptCount >= Number(assignment.attemptLimit || 1) ? "completed" : "assigned"
+        };
+      });
+      localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(next));
+    }
     return evaluation;
   },
 

@@ -216,10 +216,25 @@ async function listAssignments() {
       a.status,
       a.metadata,
       ass.external_assessment_key,
-      ass.title as assessment_title
+      ass.title as assessment_title,
+      count(t.id)::int as attempt_count
     from test_engine_assignments a
     join test_engine_assessments ass
       on ass.id = a.assessment_id
+    left join test_engine_attempts t
+      on (t.assessment_id = a.assessment_id or (t.assessment_id is null and t.assessment_title = ass.title))
+      and t.student_external_id = a.student_external_id
+      and t.status in ('submitted', 'scored')
+    group by
+      a.id,
+      a.student_external_id,
+      a.assigned_at,
+      a.due_at,
+      a.attempt_limit,
+      a.status,
+      a.metadata,
+      ass.external_assessment_key,
+      ass.title
     order by a.assigned_at desc
     limit 2000
   `);
@@ -230,9 +245,10 @@ async function listAssignments() {
     assignedAt: row.assigned_at,
     dueAt: row.due_at,
     attemptLimit: row.attempt_limit,
-    status: row.status,
+    status: Number(row.attempt_count || 0) >= Number(row.attempt_limit || 1) ? "completed" : row.status,
     assessmentKey: row.external_assessment_key,
     assessmentTitle: row.assessment_title,
+    attemptCount: row.attempt_count || 0,
     metadata: row.metadata || {}
   }));
 }
@@ -339,10 +355,31 @@ async function saveAttempt(attempt) {
     const assessment = attempt.assessment || {};
     const attemptKey = attempt.attemptId || attempt.id || randomUUID();
     const submittedAt = attempt.submittedAt || new Date().toISOString();
+    const assignmentId = attempt.assignmentKey || null;
+    let assessmentId = null;
+
+    if (assignmentId) {
+      const assignmentResult = await client.query(`
+        select assessment_id
+        from test_engine_assignments
+        where id = $1
+      `, [assignmentId]);
+      assessmentId = assignmentResult.rows[0]?.assessment_id || null;
+    }
+
+    if (!assessmentId && assessment.key) {
+      const assessmentResult = await client.query(`
+        select id
+        from test_engine_assessments
+        where external_assessment_key = $1
+      `, [assessment.key]);
+      assessmentId = assessmentResult.rows[0]?.id || null;
+    }
 
     const attemptResult = await client.query(`
       insert into test_engine_attempts (
         attempt_key,
+        assessment_id,
         assessment_title,
         student_external_id,
         student_name,
@@ -358,8 +395,9 @@ async function saveAttempt(attempt) {
         summary,
         raw_attempt
       )
-      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
       on conflict (attempt_key) do update set
+        assessment_id = excluded.assessment_id,
         submitted_at = excluded.submitted_at,
         score_correct = excluded.score_correct,
         score_total = excluded.score_total,
@@ -373,6 +411,7 @@ async function saveAttempt(attempt) {
       returning id
     `, [
       attemptKey,
+      assessmentId,
       assessment.title || attempt.assessmentTitle || "Assessment",
       student.id || attempt.studentId || "unknown-student",
       student.name || attempt.studentName || "Student",
@@ -388,6 +427,28 @@ async function saveAttempt(attempt) {
       JSON.stringify(attempt.summary || {}),
       JSON.stringify({ ...attempt, attemptId: attemptKey, id: attemptKey, submittedAt })
     ]);
+
+    if (assignmentId && assessmentId) {
+      await client.query(`
+        update test_engine_assignments a
+        set status = case
+          when completed.count >= a.attempt_limit then 'completed'
+          else 'assigned'
+        end
+        from (
+          select count(*)::int as count
+          from test_engine_attempts
+          where assessment_id = $1
+            and student_external_id = $2
+            and status in ('submitted', 'scored')
+        ) completed
+        where a.id = $3
+      `, [
+        assessmentId,
+        student.id || attempt.studentId || "unknown-student",
+        assignmentId
+      ]);
+    }
 
     const attemptId = attemptResult.rows[0].id;
     await client.query("delete from test_engine_responses where attempt_id = $1", [attemptId]);

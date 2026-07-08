@@ -47,7 +47,7 @@ function renderStartScreen() {
       const assigned = await findActiveAssignmentForStudent(student.id);
       if (!assigned) {
         submitButton.disabled = false;
-        message.textContent = "No assessment is assigned to this student yet. Please contact the administrator.";
+        message.textContent = "No active assessment is available for this student. The assignment may be completed or not assigned yet.";
         return;
       }
 
