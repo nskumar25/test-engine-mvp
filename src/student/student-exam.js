@@ -119,6 +119,8 @@ function renderAssessmentWorkspace() {
           <div class="nav-actions">
             <button class="secondary-action" data-action="previous" ${state.currentIndex === 0 ? "disabled" : ""}>${icons.previous} Previous</button>
             <button class="primary-action" data-action="next" ${state.currentIndex === questions.length - 1 ? "disabled" : ""}>Next ${icons.next}</button>
+          </div>
+          <div class="submit-slot">
             <button class="submit-action" data-action="submit">${icons.submit} Submit</button>
           </div>
         </footer>

@@ -82,6 +82,14 @@ img {
   font-size: 2rem;
 }
 
+.review-confirmation-message {
+  max-width: 640px;
+  margin: 10px 0 0;
+  color: #52606b;
+  font-size: 1.02rem;
+  line-height: 1.45;
+}
+
 .review-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1746,9 +1754,11 @@ img {
 }
 
 .bottombar {
+  position: relative;
   justify-content: center;
   gap: 16px;
   min-height: 58px;
+  padding-right: 96px;
 }
 
 .secondary-action,
@@ -1791,6 +1801,13 @@ img {
   background: #2f5d50;
   color: #ffffff;
   border: 1px solid #2f5d50;
+}
+
+.submit-slot {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .footer-center {
@@ -2139,6 +2156,15 @@ img {
   .top-actions,
   .footer-center {
     justify-content: space-between;
+  }
+
+  .bottombar {
+    padding-right: 0;
+  }
+
+  .submit-slot {
+    position: static;
+    transform: none;
   }
 
   .question-pane {

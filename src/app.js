@@ -722,14 +722,22 @@ async function fetchAssessmentPayload(path) {
 function renderSubmitReview() {
   const answeredCount = getAnsweredCount();
   const unanswered = questions.filter((question) => !state.answers[question.id]);
+  const hasExtraTime = state.remainingSeconds > 180;
+  const confirmationNotes = [
+    unanswered.length ? `${unanswered.length} question${unanswered.length === 1 ? "" : "s"} unanswered.` : "",
+    hasExtraTime ? `${formatDuration(state.remainingSeconds)} remaining.` : ""
+  ].filter(Boolean);
 
   root.innerHTML = `
     <main class="review-shell">
       <section class="submit-review-panel">
         <header class="review-header">
           <div>
-            <p class="eyebrow">Before you submit</p>
-            <h1>Review your assessment</h1>
+            <p class="eyebrow">Submit confirmation</p>
+            <h1>Are you sure?</h1>
+            <p class="review-confirmation-message">
+              ${confirmationNotes.length ? escapeHtml(confirmationNotes.join(" ")) : "Your assessment will be submitted now."}
+            </p>
           </div>
           <div class="timer" data-timer aria-label="Time remaining">${renderTimerContent()}</div>
         </header>
