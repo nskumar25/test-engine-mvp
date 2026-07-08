@@ -865,28 +865,120 @@ img {
   color: #8a9694;
 }
 
-.question-library-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.question-library-summary span {
-  padding: 7px 10px;
-  border: 1px solid #dfe6df;
-  border-radius: 8px;
-  background: #f8faf8;
-  color: #52606b;
-  font-size: 0.88rem;
-}
-
 .question-library-wrap {
-  max-height: calc(100vh - 250px);
+  max-height: calc(100vh - 395px);
 }
 
 .question-library-table {
-  min-width: 1100px;
+  min-width: 1180px;
+}
+
+.question-library-dashboard {
+  gap: 14px;
+}
+
+.question-library-workspace {
+  grid-template-columns: minmax(0, 1.25fr) minmax(390px, 0.75fr);
+}
+
+.question-filter-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.question-summary-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.question-preview-card {
+  align-content: start;
+  max-height: calc(100vh - 245px);
+  overflow: auto;
+}
+
+.question-preview-card section {
+  display: grid;
+  gap: 10px;
+}
+
+.question-preview-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.question-preview-prompt {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #fbfbf8;
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.question-preview-options {
+  display: grid;
+  gap: 8px;
+}
+
+.question-preview-options article {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 10px;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.question-preview-options article.correct {
+  border-color: #6ea47d;
+  background: #f3fbf5;
+}
+
+.question-preview-options strong {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: #263c63;
+}
+
+.quality-check-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quality-ok,
+.quality-issue {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.quality-ok {
+  background: #e8f5ed;
+  color: #245d3a;
+}
+
+.quality-issue {
+  background: #fff4eb;
+  color: #8a3c1b;
+}
+
+.admin-question-image {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
 .pretest-catalog-card {
@@ -2588,7 +2680,10 @@ img {
   .admin-split.results-layout,
   .results-workspace,
   .ilp-workspace,
+  .question-library-workspace,
   .results-filter-grid,
+  .question-filter-grid,
+  .question-summary-grid,
   .results-summary-grid,
   .assignment-toolbar,
   .database-plan,

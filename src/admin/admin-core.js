@@ -61,6 +61,7 @@ function paintAdminDashboard(attempts, students, assignments = [], dataErrors = 
   bindPretestCatalogControls();
   bindResultsDashboardControls();
   bindIlpDashboardControls();
+  bindQuestionLibraryControls();
 }
 
 function getAdminPageMeta(page) {
