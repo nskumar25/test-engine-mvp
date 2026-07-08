@@ -840,7 +840,51 @@ img {
 }
 
 .assignment-table {
-  min-width: 1260px;
+  min-width: 1900px;
+}
+
+.assignment-confirm-wrap {
+  max-width: 100%;
+}
+
+.assignment-confirm-table {
+  min-width: 1700px;
+}
+
+.assignment-table,
+.assignment-confirm-table {
+  table-layout: fixed;
+}
+
+.assignment-table th,
+.assignment-table td,
+.assignment-confirm-table th,
+.assignment-confirm-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.assignment-table th,
+.assignment-confirm-table th {
+  min-width: 90px;
+  position: relative;
+  padding-right: 18px;
+}
+
+.column-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 9px;
+  height: 100%;
+  cursor: col-resize;
+  border-right: 2px solid transparent;
+}
+
+.column-resize-handle:hover {
+  border-right-color: #365f9f;
 }
 
 .assignment-table .select-col {
@@ -902,7 +946,7 @@ img {
 .table-action-group {
   display: inline-flex;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .status-pill {
@@ -1402,14 +1446,10 @@ img {
   font: inherit;
 }
 
-.assignment-confirm-table {
-  min-width: 1080px;
-}
-
 .assignment-confirm-table small,
 .assignment-table small {
-  display: block;
-  margin-top: 2px;
+  display: inline;
+  margin-left: 8px;
   color: #52606b;
   font-weight: 800;
 }
@@ -2457,6 +2497,26 @@ img {
   padding: 28px;
 }
 
+.submitted-shell {
+  align-content: start;
+  place-items: stretch center;
+  gap: 16px;
+  padding-top: 0;
+}
+
+.submitted-actionbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: min(960px, calc(100vw - 40px));
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 0;
+  background:
+    linear-gradient(180deg, rgba(246, 247, 243, 0.98), rgba(246, 247, 243, 0.82));
+  backdrop-filter: blur(10px);
+}
+
 .result-panel {
   width: min(620px, calc(100vw - 40px));
   padding: 40px;
@@ -2465,8 +2525,6 @@ img {
 
 .result-panel-wide {
   width: min(960px, calc(100vw - 40px));
-  max-height: calc(100vh - 56px);
-  overflow: auto;
 }
 
 .result-icon {

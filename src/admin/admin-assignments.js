@@ -161,6 +161,7 @@ function bindAssignmentControls() {
         : "No students match the selected filters.";
       bindAssignmentPaging(loadStudents);
       bindAssignmentSelectionMenu(loadStudents);
+      makeAssignmentTablesResizable();
       bindUnassignControls(loadStudents);
       bindQuickReassignControls(visibleStudents, () => {
         results.innerHTML = renderAssignmentConfirmation(getSelectedVisibleStudentsForReassign(visibleStudents));
@@ -186,6 +187,7 @@ function bindAssignmentControls() {
 
     status.textContent = `Reviewing ${selectedStudents.length} student assignment(s).`;
     results.innerHTML = renderAssignmentConfirmation(selectedStudents);
+    makeAssignmentTablesResizable();
     bindAssignmentConfirmation(() => loadStudents(offset));
   });
 }
@@ -252,7 +254,7 @@ function renderAssignmentResults(students, payload) {
   if (!students.length) return `<p class="empty-review">No students match the selected filters.</p>`;
   return `
     <div class="admin-table-wrap assignment-table-wrap">
-      <table class="admin-table assignment-table">
+      <table class="admin-table assignment-table resizable-table">
         <thead>
           <tr>
             <th class="select-col">
@@ -521,8 +523,8 @@ function renderAssignmentConfirmation(students) {
         <label><input data-bulk-setting="showAnswers" type="checkbox" checked /> Show answers</label>
         <button class="secondary-action" data-action="apply-options-all">Apply options to all</button>
       </div>
-      <div class="admin-table-wrap">
-        <table class="admin-table assignment-confirm-table">
+      <div class="admin-table-wrap assignment-confirm-wrap">
+        <table class="admin-table assignment-confirm-table resizable-table">
           <thead>
             <tr>
               <th>Student</th>
@@ -565,6 +567,7 @@ function renderAssignmentConfirmation(students) {
 }
 
 function bindAssignmentConfirmation(onBack) {
+  makeAssignmentTablesResizable();
   document.querySelector("[data-action='apply-duration-all']")?.addEventListener("click", () => {
     const duration = document.querySelector("[data-bulk-duration]")?.value || "";
     document.querySelectorAll("[data-confirm-field='durationMinutes']").forEach((input) => {
@@ -628,6 +631,43 @@ function bindAssignmentConfirmation(onBack) {
     } catch (error) {
       status.textContent = error.message || "Could not save assignments.";
     }
+  });
+}
+
+function makeAssignmentTablesResizable() {
+  document.querySelectorAll(".resizable-table").forEach((table) => {
+    if (table.dataset.resizableReady === "true") return;
+    const headers = Array.from(table.querySelectorAll("thead th"));
+    const colgroup = document.createElement("colgroup");
+    headers.forEach((header) => {
+      const col = document.createElement("col");
+      col.style.width = `${Math.max(90, header.offsetWidth || 120)}px`;
+      colgroup.appendChild(col);
+    });
+    table.prepend(colgroup);
+    headers.forEach((header, index) => {
+      header.title = "Drag the lower-right edge to resize this column";
+      const handle = document.createElement("span");
+      handle.className = "column-resize-handle";
+      handle.setAttribute("aria-hidden", "true");
+      header.appendChild(handle);
+      handle.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        const startX = event.clientX;
+        const startWidth = colgroup.children[index].getBoundingClientRect().width;
+        const onMove = (moveEvent) => {
+          const nextWidth = Math.max(72, startWidth + moveEvent.clientX - startX);
+          colgroup.children[index].style.width = `${nextWidth}px`;
+        };
+        const onUp = () => {
+          document.removeEventListener("mousemove", onMove);
+          document.removeEventListener("mouseup", onUp);
+        };
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+      });
+    });
+    table.dataset.resizableReady = "true";
   });
 }
 

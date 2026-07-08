@@ -1947,14 +1947,16 @@ function renderSubmitted() {
 
   if (resultOptions.showResults === false) {
     root.innerHTML = `
-      <main class="shell locked-shell">
+      <main class="shell locked-shell submitted-shell">
+        <div class="submitted-actionbar">
+          <button class="primary-action" data-action="go-dashboard">Go to Dashboard</button>
+        </div>
         <section class="result-panel">
           <div class="result-icon">${icons.shield}</div>
           <p class="eyebrow">Assessment submitted</p>
           <h1>${escapeHtml(assessment.title)}</h1>
           <p>Your assessment has been submitted successfully.</p>
           <p>Results will be reviewed by your teacher.</p>
-          <button class="primary-action" data-action="go-dashboard">Go to Dashboard</button>
         </section>
       </main>
     `;
@@ -1963,7 +1965,10 @@ function renderSubmitted() {
   }
 
   root.innerHTML = `
-    <main class="shell locked-shell">
+    <main class="shell locked-shell submitted-shell">
+      <div class="submitted-actionbar">
+        <button class="primary-action" data-action="go-dashboard">Go to Dashboard</button>
+      </div>
       <section class="result-panel result-panel-wide">
         <div class="result-icon">${icons.shield}</div>
         <p class="eyebrow">Assessment submitted</p>
@@ -2005,7 +2010,6 @@ function renderSubmitted() {
               : `<p class="perfect-score">All questions were answered correctly.</p>`
           }
         </div>
-        <button class="primary-action" data-action="go-dashboard">Go to Dashboard</button>
       </section>
     </main>
   `;
