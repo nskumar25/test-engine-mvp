@@ -5,6 +5,8 @@ function renderAdminAssignmentsPage(context) {
     .filter((test) => test.status !== "archived");
   const totalStudents = context.studentFilters?.totalStudents || 0;
   const selectedPretest = sessionStorage.getItem("assessment-engine-selected-pretest") || "";
+  const selectedTest = availableTests.find((test) => test.key === selectedPretest) || availableTests[0] || {};
+  const selectedAssignmentType = getAssignmentType(selectedTest);
   const activeTab = sessionStorage.getItem("assessment-engine-assignment-tab") || "assign";
 
   return `
@@ -43,8 +45,16 @@ function renderAdminAssignmentsPage(context) {
             </select>
           </label>
           <label>
-            Search
+            Student
             <input data-assignment-filter="search" type="search" placeholder="Name, email, or ID" />
+          </label>
+          <label>
+            Type
+            <select data-assignment-type>
+              ${["pretest", "worksheet", "practice", "diagnostic"].map((type) => `
+                <option value="${escapeAttribute(type)}" ${selectedAssignmentType === type ? "selected" : ""}>${escapeHtml(formatAssignmentType(type))}</option>
+              `).join("")}
+            </select>
           </label>
           <label>
             Assignment
@@ -53,6 +63,7 @@ function renderAdminAssignmentsPage(context) {
                 <option
                   value="${escapeAttribute(test.key)}"
                   data-title="${escapeAttribute(test.title)}"
+                  data-assignment-type="${escapeAttribute(getAssignmentType(test))}"
                   data-source-document="${escapeAttribute(test.sourceDocument || test.path || "")}"
                   data-path="${escapeAttribute(test.path || getAssessmentPathFromKey(test.key))}"
                   data-duration-minutes="${escapeAttribute(test.durationMinutes || 30)}"
@@ -61,20 +72,6 @@ function renderAdminAssignmentsPage(context) {
                 >${escapeHtml(test.title)}</option>
               `).join("")}
             </select>
-          </label>
-          <label>
-            Type
-            <select data-assignment-type>
-              <option value="assessment">Assessment</option>
-              <option value="pretest">Pre-test</option>
-              <option value="worksheet">Worksheet</option>
-              <option value="practice">Practice</option>
-              <option value="diagnostic">Diagnostic</option>
-            </select>
-          </label>
-          <label>
-            Attempts
-            <input data-assignment-attempt-limit type="number" min="1" max="5" value="1" />
           </label>
         </div>
 
@@ -99,6 +96,7 @@ function renderAdminAssignmentsPage(context) {
 
 function bindAssignmentControls() {
   bindAssignmentAdminTabs();
+  bindAssignmentTypeFilter();
   const results = document.querySelector("[data-assignment-results]");
   if (!results) return;
 
@@ -205,6 +203,33 @@ function bindAssignmentAdminTabs() {
       });
     });
   });
+}
+
+function bindAssignmentTypeFilter() {
+  const typeSelect = document.querySelector("[data-assignment-type]");
+  const assignmentSelect = document.querySelector("[data-assignment-test]");
+  if (!typeSelect || !assignmentSelect) return;
+
+  const syncOptions = () => {
+    const selectedType = typeSelect.value;
+    const options = Array.from(assignmentSelect.options);
+    const matching = options.filter((option) => option.dataset.assignmentType === selectedType);
+    const optionsToShow = matching.length ? matching : options;
+    const shownValues = new Set(optionsToShow.map((option) => option.value));
+
+    options.forEach((option) => {
+      const visible = shownValues.has(option.value);
+      option.hidden = !visible;
+      option.disabled = !visible;
+    });
+
+    if (!shownValues.has(assignmentSelect.value) && optionsToShow[0]) {
+      assignmentSelect.value = optionsToShow[0].value;
+    }
+  };
+
+  typeSelect.addEventListener("change", syncOptions);
+  syncOptions();
 }
 
 function bindUnassignControls(loadStudents) {
@@ -516,6 +541,7 @@ function renderAssignmentConfirmation(students) {
       </div>
       <div class="bulk-settings">
         <label>Duration <input data-bulk-duration type="number" min="1" max="240" value="${escapeAttribute(defaultDuration)}" /></label>
+        <label>Attempts <input data-assignment-attempt-limit type="number" min="1" max="5" value="1" /></label>
         <button class="secondary-action" data-action="apply-duration-all">Apply to all</button>
         <label><input data-bulk-setting="calculator" type="checkbox" checked /> Calculator</label>
         <label><input data-bulk-setting="scratchpad" type="checkbox" checked /> Scratch pad</label>
