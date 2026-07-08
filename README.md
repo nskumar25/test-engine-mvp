@@ -1,133 +1,134 @@
 # Assessment Test Engine MVP
 
-Student-facing web assessment MVP with:
+A robust, student-facing web assessment platform designed for modularity and ease of deployment. This MVP supports both local-only demo modes and a full PostgreSQL-backed production environment.
 
-- JSON-based assessment input
-- MCQ questions
-- Embedded question and option images
-- Question navigation grid
-- Calculator and scratch pad tools
-- Silent copy/selection friction
-- Submission evaluation
-- ILP/practice plan generation
-- Local demo storage with a PostgreSQL API path for production
+## 🚀 Overview
 
-## Run Frontend Locally
+The Assessment Test Engine provides a comprehensive environment for students to take multiple-choice question (MCQ) assessments. It includes features like question navigation, embedded images, and supporting tools (calculator, scratch pad). For administrators, it offers a dashboard for result analysis and Individualized Learning Plan (ILP) generation.
 
-```powershell
+### Key Features
+
+- **Rich Assessment UI**: Support for MCQ questions with embedded question and option images.
+- **Student Tools**: Integrated calculator and scratch pad for use during assessments.
+- **Secure Environment**: Silent copy/selection friction to discourage cheating.
+- **Dual Data Modes**:
+  - **Local Mode**: Uses browser `localStorage` and `IndexedDB` for instant demos without a backend.
+  - **API Mode**: Connects to a Node.js backend with PostgreSQL for persistent, multi-user storage.
+- **Submission & Scoring**: Automated evaluation of submissions and server-side scoring (in production).
+- **Admin Dashboard**: Tools for managing assessments, viewing student results, and generating ILPs.
+
+---
+
+## 🛠 Tech Stack
+
+- **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3.
+- **Backend**: Node.js (using the native `http` module for minimal dependencies).
+- **Database**: PostgreSQL (compatible with Neon and local instances).
+- **Dependencies**: `pg` (PostgreSQL client for Node.js).
+
+---
+
+## 📂 Project Structure
+
+```text
+├── api/                # Production Node.js API (PostgreSQL backend)
+├── data/               # Local data storage (if any)
+├── database/           # SQL schema definitions and database views
+├── input/              # Static assessment JSON files and assets (images)
+├── scripts/            # Utility scripts (seeding, syncing, doc conversion)
+├── src/                # Frontend source code
+│   ├── admin/          # Admin-specific logic and UI
+│   ├── student/        # Student exam and dashboard logic
+│   ├── app.js          # Main application entry point
+│   ├── config.js       # App configuration (API endpoints, data provider)
+│   └── styles.css      # Core application styling
+├── index.html          # Main HTML entry point
+├── server.js           # Local development server and integrated API
+└── package.json        # Node.js project metadata and scripts
+```
+
+---
+
+## 🏁 Getting Started
+
+### Prerequisites
+
+- Node.js (version 20 or higher recommended)
+- A PostgreSQL database (for API mode)
+
+### 1. Installation
+
+Clone the repository and install dependencies:
+
+```bash
+npm install
+```
+
+### 2. Local Development (Frontend + Integrated API)
+
+The `server.js` file provides a convenient development server that also includes an integrated version of the API.
+
+```bash
 npm run dev
 ```
+- **Student View**: `http://localhost:5173/`
+- **Admin Dashboard**: `http://localhost:5173/?admin=1`
 
-Open:
+### 3. Running the Dedicated Production API
 
-```text
-http://127.0.0.1:5173/
-```
+For production environments, use the dedicated API entry point:
 
-Admin dashboard:
+```bash
+# Set environment variables
+export DATABASE_URL="postgres://user:password@host:5432/database"
+export STUDENT_VIEW="test_engine_registered_students"
 
-```text
-http://127.0.0.1:5173/?admin=1
-```
-
-## Current Input
-
-The app currently loads:
-
-```text
-input/pre-test-for-demo.json
-```
-
-Images are stored in:
-
-```text
-input/assets/pre-test-for-demo/
-```
-
-## PostgreSQL Backend
-
-Production should use a backend API between the browser and PostgreSQL:
-
-```text
-Frontend
-  -> Node API
-  -> PostgreSQL
-  -> Existing student registration table/view
-```
-
-Run the schema:
-
-```text
-database/postgres-schema.sql
-```
-
-Run the API locally:
-
-```powershell
-$env:DATABASE_URL="postgres://user:password@host:5432/database"
-$env:STUDENT_VIEW="test_engine_registered_students"
 npm run api
 ```
 
-Sync students from local PostgreSQL to Neon:
+---
 
-```powershell
-$env:LOCAL_DATABASE_URL="postgres://postgres:LOCAL_PASSWORD@localhost:5432/postgres"
-$env:NEON_DATABASE_URL="postgresql://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require"
-npm run sync:students
-```
+## ⚙️ Configuration
 
-The frontend is configured in:
+The frontend configuration is managed in `src/config.js`. You can switch between `local` and `api` providers:
 
-```text
-src/config.js
-```
-
-For local API testing it currently uses:
-
-```js
-window.ASSESSMENT_DATA_PROVIDER = "api";
+```javascript
+// src/config.js
+window.ASSESSMENT_DATA_PROVIDER = "api"; // or "local"
 window.ASSESSMENT_API_BASE_URL = "http://127.0.0.1:9000";
 ```
 
-When the API is hosted, update only `ASSESSMENT_API_BASE_URL`.
+For live testing with a hosted backend (e.g., Render), update `ASSESSMENT_API_BASE_URL` to your service URL.
 
-## Shared Live Testing
+---
 
-For multiple team members to test with the same database, use:
+## 🗄 Database Setup
 
-```text
-GitHub Pages frontend
-  -> Render Node API
-  -> Neon PostgreSQL
-```
+1. **Initialize Schema**: Run the SQL scripts in the `database/` directory against your PostgreSQL instance:
+   - `postgres-schema.sql`: Core tables for assessments, attempts, and assignments.
+   - `student-registration-view.sql`: Creates the student view required by the API.
 
-The repo includes `render.yaml` for deploying `api/postgres-api.js` to Render.
+2. **Seed Data**: Use the provided scripts to populate your database:
+   - `npm run seed:pretests`: Seed pre-test assessments from `input/`.
+   - `npm run sync:students`: Sync student data to a remote (e.g., Neon) database.
 
-Render environment variables:
+---
 
-```text
-DATABASE_URL=<Neon pooled connection string>
-DATABASE_SSL=true
-STUDENT_VIEW=test_engine_registered_students
-API_HOST=0.0.0.0
-CORS_ORIGIN=https://nskumar25.github.io
-```
+## 🚢 Deployment
 
-After Render deploys, test:
+### Frontend (GitHub Pages)
+The frontend is a static site and can be hosted on GitHub Pages or any static file host. Ensure `src/config.js` points to your live API.
 
-```text
-https://YOUR-RENDER-SERVICE.onrender.com/health
-https://YOUR-RENDER-SERVICE.onrender.com/api/student-filters
-```
+### Backend (Render)
+A `render.yaml` file is included for easy deployment to Render. Required environment variables:
+- `DATABASE_URL`: Your PostgreSQL connection string.
+- `STUDENT_VIEW`: Name of the student view (e.g., `test_engine_registered_students`).
+- `CORS_ORIGIN`: Your frontend URL.
 
-Then update `src/config.js` for live:
+---
 
-```js
-window.ASSESSMENT_DATA_PROVIDER = "api";
-window.ASSESSMENT_API_BASE_URL = "https://YOUR-RENDER-SERVICE.onrender.com";
-```
+## 📝 Assessment Input
 
-## GitHub Pages
+Assessments are currently loaded from JSON files in `input/pre-test-for-demo.json`. Assets such as images should be placed in `input/assets/pre-test-for-demo/`.
 
-GitHub Pages can host the frontend only. PostgreSQL requires a separate backend host such as Render, Railway, Fly.io, Vercel serverless functions, or your own server.
+Refer to `DATA_SOURCE_NOTES.md` for details on the question format and the roadmap for moving questions into the database.
