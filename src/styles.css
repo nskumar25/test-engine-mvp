@@ -1097,6 +1097,59 @@ img {
   font-size: 0.88rem;
 }
 
+.ilp-dashboard {
+  gap: 14px;
+}
+
+.ilp-workspace {
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 0.9fr);
+}
+
+.ilp-table-wrap {
+  max-height: calc(100vh - 395px);
+}
+
+.ilp-table {
+  min-width: 900px;
+}
+
+.ilp-detail-card {
+  align-content: start;
+  max-height: calc(100vh - 245px);
+  overflow: auto;
+}
+
+.ilp-detail-card section {
+  display: grid;
+  gap: 10px;
+}
+
+.ilp-detail-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.worksheet-list {
+  display: grid;
+  gap: 8px;
+}
+
+.worksheet-list article {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #fbfbf8;
+}
+
+.worksheet-list span,
+.worksheet-list p {
+  margin: 0;
+  color: #52606b;
+  line-height: 1.4;
+}
+
 .question-prompt-cell {
   max-width: 420px;
   white-space: normal;
@@ -2534,6 +2587,7 @@ img {
   .admin-split,
   .admin-split.results-layout,
   .results-workspace,
+  .ilp-workspace,
   .results-filter-grid,
   .results-summary-grid,
   .assignment-toolbar,

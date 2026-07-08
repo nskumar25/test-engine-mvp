@@ -92,11 +92,11 @@ function renderAdminQuestionsPage() {
         <div class="admin-card-head">
           <div>
             <p class="eyebrow">Question Library</p>
-            <h2>${questions.length} Questions in Current Pre-Test</h2>
+            <h2>${questions.length} Questions in Current Assessment</h2>
           </div>
         </div>
         <div class="question-library-summary">
-          <span>${escapeHtml(assessment.title || "Current Pre-Test")}</span>
+          <span>${escapeHtml(assessment.title || "Current Assessment")}</span>
           <span>${questions.filter((question) => question.image).length} with images</span>
           <span>${uniqueValues(questions.map((question) => question.topic || "General")).length} topics</span>
         </div>
@@ -157,26 +157,6 @@ function renderAdminImportPage() {
   `;
 }
 
-function renderAdminIlpPage(context) {
-  return `
-    <section class="admin-page-shell">
-      <article class="admin-card">
-        <div class="admin-card-head">
-          <div>
-            <p class="eyebrow">Personalized Learning</p>
-            <h2>Automatic ILP Review</h2>
-          </div>
-        </div>
-        <div class="ilp-admin-list">
-          ${context.ilpAttempts.length
-            ? context.ilpAttempts.map((attempt) => renderAdminILPCard(attempt)).join("")
-            : `<p class="empty-review">No ILPs yet. Submit a student attempt to generate one automatically.</p>`}
-        </div>
-      </article>
-    </section>
-  `;
-}
-
 function renderAdminDatabasePage() {
   return `
     <section class="admin-page-shell">
@@ -187,7 +167,7 @@ function renderAdminDatabasePage() {
         </article>
         <article>
           <h3>Needed For MVP</h3>
-          <p>Student lookup, pre-test assignments, submitted attempts, responses, and ILPs. Questions can stay in JSON for now.</p>
+          <p>Student lookup, assessment assignments, submitted attempts, responses, and ILPs. Questions can stay in JSON for now.</p>
         </article>
         <article>
           <h3>Later</h3>
@@ -207,7 +187,7 @@ function renderAdminDatabasePage() {
             <tbody>
               <tr><td>public."Student"</td><td>Existing registration source. Students enter username/email.</td></tr>
               <tr><td>test_engine_registered_students</td><td>Read-only mapping view used by the API.</td></tr>
-              <tr><td>test_engine_assignments</td><td>Which students are allowed to take the current pre-test.</td></tr>
+              <tr><td>test_engine_assignments</td><td>Which students are allowed to take the current assessment.</td></tr>
               <tr><td>test_engine_attempts</td><td>Attempt summary, timing, score, and raw JSON payload.</td></tr>
               <tr><td>test_engine_responses</td><td>Each selected answer and correctness result.</td></tr>
               <tr><td>test_engine_ilp_plans</td><td>Generated individualized learning plans.</td></tr>

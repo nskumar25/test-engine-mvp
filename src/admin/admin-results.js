@@ -69,16 +69,16 @@ function bindResultsDashboardControls() {
 }
 
 function renderResultsFilters(rows, context) {
-  const pretests = uniqueValues(rows.map((row) => row.assessmentTitle));
+  const assessments = uniqueValues(rows.map((row) => row.assessmentTitle));
   const schools = uniqueValues(rows.map((row) => row.schoolName).concat(context.studentFilters?.schools || []));
   const grades = uniqueValues(rows.map((row) => row.gradeLevel).concat(context.studentFilters?.grades || []));
   return `
     <div class="results-filter-grid">
       <label>
-        Pretest
+        Assessment
         <select data-results-filter="pretest">
-          <option value="">All pretests</option>
-          ${pretests.map((item) => `<option value="${escapeAttribute(item)}" ${adminResultsFilterState.pretest === item ? "selected" : ""}>${escapeHtml(item)}</option>`).join("")}
+          <option value="">All assessments</option>
+          ${assessments.map((item) => `<option value="${escapeAttribute(item)}" ${adminResultsFilterState.pretest === item ? "selected" : ""}>${escapeHtml(item)}</option>`).join("")}
         </select>
       </label>
       <label>
@@ -121,7 +121,7 @@ function renderResultsTable(rows, selectedAttemptId) {
             <th>Email / ID</th>
             <th>School</th>
             <th>Grade</th>
-            <th>Pretest</th>
+            <th>Assessment</th>
             <th>Score</th>
             <th>Time</th>
             <th>Submitted</th>

@@ -274,8 +274,8 @@ function renderAdminDashboard() {
         </div>
         <nav class="admin-nav">
           <a href="#overview">Overview</a>
-          <a href="#assessments">Pretest Catalog</a>
-          <a href="#assignments">Pre-Test Access</a>
+          <a href="#assessments">Assessment Catalog</a>
+          <a href="#assignments">Assessment Access</a>
           <a href="#questions">Question Library</a>
           <a href="#import">Import</a>
           <a href="#results">Results</a>
@@ -288,7 +288,7 @@ function renderAdminDashboard() {
         <header class="admin-header">
           <div>
             <p class="eyebrow">Local MVP Dashboard</p>
-            <h1>Pre-Test Management</h1>
+            <h1>Assessment Management</h1>
           </div>
           <div class="admin-actions">
             <button class="secondary-action" data-action="export-attempts-json">Export Attempts JSON</button>
@@ -351,7 +351,7 @@ function paintAdminDashboardLegacy(attempts, students) {
     <header class="admin-header">
       <div>
         <p class="eyebrow">Local MVP Dashboard</p>
-        <h1>Pre-Test Management</h1>
+        <h1>Assessment Management</h1>
       </div>
       <div class="admin-actions">
         <button class="secondary-action" data-action="export-attempts-json">Export Attempts JSON</button>
@@ -1582,7 +1582,7 @@ const apiDataAdapter = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status })
     });
-    if (!response.ok) throw new Error("Could not update pretest status");
+    if (!response.ok) throw new Error("Could not update assessment status");
     return response.json();
   },
 
@@ -1661,7 +1661,7 @@ const apiDataAdapter = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    if (!response.ok) throw new Error("Could not unassign pre-test");
+    if (!response.ok) throw new Error("Could not unassign assessment");
     return response.json();
   }
 };

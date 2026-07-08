@@ -60,17 +60,18 @@ function paintAdminDashboard(attempts, students, assignments = [], dataErrors = 
   bindAssignmentControls();
   bindPretestCatalogControls();
   bindResultsDashboardControls();
+  bindIlpDashboardControls();
 }
 
 function getAdminPageMeta(page) {
   const pages = {
     overview: { eyebrow: "Admin Overview", title: "Dashboard" },
-    assessments: { eyebrow: "Assessment Setup", title: "Pretest Catalog" },
-    assignments: { eyebrow: "Pre-Test Access", title: "Pre-Test Access" },
+    assessments: { eyebrow: "Assessment Setup", title: "Assessment Catalog" },
+    assignments: { eyebrow: "Assessment Access", title: "Assessment Access" },
     questions: { eyebrow: "Question Review", title: "Question Library" },
     import: { eyebrow: "Import Workflow", title: "JSON Intake" },
     results: { eyebrow: "Performance", title: "Results" },
-    ilp: { eyebrow: "Personalized Learning", title: "ILP Review" },
+    ilp: { eyebrow: "Personalized Learning", title: "ILP & Worksheets" },
     database: { eyebrow: "Data Layer", title: "PostgreSQL Connection" }
   };
   return pages[page] || pages.overview;

@@ -171,14 +171,14 @@ function bindUnassignControls(loadStudents) {
       const assignmentId = button.dataset.assignmentId;
       if (!assignmentId) return;
       button.disabled = true;
-      if (status) status.textContent = "Unassigning pre-test...";
+      if (status) status.textContent = "Unassigning assessment...";
       try {
         await getDataAdapter().cancelAssignments({ assignmentIds: [assignmentId] });
-        if (status) status.textContent = "Pre-test unassigned.";
+        if (status) status.textContent = "Assessment unassigned.";
         loadStudents();
       } catch (error) {
         button.disabled = false;
-        if (status) status.textContent = error.message || "Could not unassign pre-test.";
+        if (status) status.textContent = error.message || "Could not unassign assessment.";
       }
     });
   });
@@ -207,7 +207,7 @@ function renderAssignmentResults(students, payload) {
             <th>Student ID</th>
             <th>School</th>
             <th>Grade</th>
-            <th>Pre-Test Assigned</th>
+            <th>Assessment Assigned</th>
             <th>Attempts</th>
             <th>Status</th>
             <th>Action</th>

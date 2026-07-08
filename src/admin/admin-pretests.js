@@ -8,10 +8,10 @@ function renderAdminPretestCatalogPage(context) {
       <article class="admin-card pretest-catalog-card">
         <div class="admin-card-head">
           <div>
-            <p class="eyebrow">Pretest Catalog</p>
-            <h2>${assessments.length} pretests</h2>
+            <p class="eyebrow">Assessment Catalog</p>
+            <h2>${assessments.length} assessments</h2>
           </div>
-          <a class="secondary-action admin-link-button" href="#import">Import Pretest</a>
+          <a class="secondary-action admin-link-button" href="#import">Import Assessment</a>
         </div>
 
         <div class="pretest-catalog-summary">
@@ -24,7 +24,7 @@ function renderAdminPretestCatalogPage(context) {
           <table class="admin-table pretest-catalog-table">
             <thead>
               <tr>
-                <th>Pretest</th>
+                <th>Assessment</th>
                 <th>Grade</th>
                 <th>Questions</th>
                 <th>Duration</th>
@@ -82,7 +82,7 @@ function bindPretestCatalogControls() {
         renderAdminDashboard();
       } catch (error) {
         button.disabled = false;
-        alert(error.message || "Could not update pretest status.");
+        alert(error.message || "Could not update assessment status.");
       }
     });
   });

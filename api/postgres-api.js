@@ -331,7 +331,7 @@ async function saveAssignments(payload) {
       returning id
     `, [
       assessment.key || "pre-test-for-demo",
-      assessment.title || "Pre-Test",
+      assessment.title || "Assessment",
       assessment.sourceDocument || null,
       assessment.durationMinutes || 30,
       assessment.inputFormatVersion || "mvp-1",
