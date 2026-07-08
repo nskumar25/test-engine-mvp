@@ -61,7 +61,9 @@ function renderStartScreen() {
       }, dashboardData);
     } catch (error) {
       submitButton.disabled = false;
-      message.textContent = error.message || "Could not begin the assessment. Please contact the administrator.";
+      message.textContent = error.message?.includes("assignments") || error.message?.includes("attempts")
+        ? "Could not load assessment assignments. Please ask the administrator to check the API deployment."
+        : error.message || "Could not begin the assessment. Please contact the administrator.";
     }
   });
 }

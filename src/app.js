@@ -706,10 +706,13 @@ function isAssignmentAttemptLimitReached(assignment, attempts = []) {
 }
 
 function countAttemptsForAssignment(assignment, attempts = []) {
+  const hasAssignmentHistory = Array.isArray(assignment.metadata?.assignmentHistory)
+    && assignment.metadata.assignmentHistory.length > 0;
   return (attempts || []).filter((attempt) => {
     const student = normalizeStudent(attempt);
     const sameStudent = normalizeIdentity(student.id || attempt.studentId) === normalizeIdentity(assignment.studentId);
     const sameAssignment = attempt.assignmentKey && String(attempt.assignmentKey) === String(assignment.id);
+    if (hasAssignmentHistory) return sameStudent && sameAssignment;
     const sameAssessment = (attempt.assessment?.key || attempt.assessmentKey) === assignment.assessmentKey;
     const sameTitle = (attempt.assessment?.title || attempt.assessmentTitle) === assignment.assessmentTitle;
     return sameStudent && (sameAssignment || sameAssessment || sameTitle);

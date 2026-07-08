@@ -263,7 +263,8 @@ async function listAssignments() {
       a.metadata,
       ass.external_assessment_key,
       ass.title as assessment_title,
-      count(t.id)::int as attempt_count
+      count(distinct t.id)::int as assessment_attempt_count,
+      count(distinct current_t.id)::int as current_assignment_attempt_count
     from test_engine_assignments a
     join test_engine_assessments ass
       on ass.id = a.assessment_id
@@ -271,6 +272,11 @@ async function listAssignments() {
       on (t.assessment_id = a.assessment_id or (t.assessment_id is null and t.assessment_title = ass.title))
       and t.student_external_id = a.student_external_id
       and t.status in ('submitted', 'scored')
+    left join test_engine_attempts current_t
+      on current_t.assessment_id = a.assessment_id
+      and current_t.student_external_id = a.student_external_id
+      and current_t.raw_attempt->>'assignmentKey' = a.id::text
+      and current_t.status in ('submitted', 'scored')
     group by
       a.id,
       a.student_external_id,
@@ -285,18 +291,25 @@ async function listAssignments() {
     limit 2000
   `);
 
-  return rows.map((row) => ({
+  return rows.map((row) => {
+    const hasHistory = Array.isArray(row.metadata?.assignmentHistory) && row.metadata.assignmentHistory.length > 0;
+    const attemptCount = hasHistory
+      ? Number(row.current_assignment_attempt_count || 0)
+      : Number(row.assessment_attempt_count || 0);
+    return {
     id: row.id,
     studentId: row.student_external_id,
     assignedAt: row.assigned_at,
     dueAt: row.due_at,
     attemptLimit: row.attempt_limit,
-    status: Number(row.attempt_count || 0) >= Number(row.attempt_limit || 1) ? "completed" : row.status,
+    status: attemptCount >= Number(row.attempt_limit || 1) ? "completed" : row.status,
     assessmentKey: row.external_assessment_key,
     assessmentTitle: row.assessment_title,
-    attemptCount: row.attempt_count || 0,
+    attemptCount,
+    totalAssessmentAttemptCount: row.assessment_attempt_count || 0,
     metadata: row.metadata || {}
-  }));
+    };
+  });
 }
 
 async function saveAssignments(payload) {
@@ -364,10 +377,16 @@ async function saveAssignments(payload) {
         left join test_engine_attempts t
           on t.assessment_id = a.assessment_id
           and t.student_external_id = a.student_external_id
+          and t.raw_attempt->>'assignmentKey' = a.id::text
           and t.status in ('submitted', 'scored')
         where a.assessment_id = $1
           and a.student_external_id = $2
-        group by a.id
+        group by
+          a.id,
+          a.assigned_at,
+          a.attempt_limit,
+          a.status,
+          a.metadata
       `, [assessmentId, String(studentId)]);
 
       const existing = existingResult.rows[0];
