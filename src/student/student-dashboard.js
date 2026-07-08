@@ -73,7 +73,7 @@ function renderStudentAssignmentCard(student, assignment, attempts = []) {
   const settings = assignment.metadata || {};
   const duration = Number(settings.durationMinutes || assignment.durationMinutes || assignment.metadata?.assessment?.durationMinutes || 30);
   const attemptLimit = Number(assignment.attemptLimit || 1);
-  const attemptCount = Number(assignment.attemptCount || countAttemptsForAssignment(assignment, attempts));
+  const attemptCount = getAssignmentAttemptUsage(assignment, attempts);
   const attemptsLeft = Math.max(0, attemptLimit - attemptCount);
   const historyCount = assignment.metadata?.assignmentHistory?.length || 0;
   return `
@@ -100,7 +100,7 @@ function renderCompletedAssessmentHistory(completedAssignments, attempts) {
       status: "Completed",
       submittedAt: getLatestAttemptDateForAssignment(assignment, attempts),
       score: getLatestAttemptScoreForAssignment(assignment, attempts),
-      attempts: `${Number(assignment.attemptCount || countAttemptsForAssignment(assignment, attempts))}/${Number(assignment.attemptLimit || 1)}`
+      attempts: `${getAssignmentAttemptUsage(assignment, attempts)}/${Number(assignment.attemptLimit || 1)}`
     })),
     ...attempts
       .filter((attempt) => !completedAssignments.some((assignment) => String(assignment.id) === String(attempt.assignmentKey)))

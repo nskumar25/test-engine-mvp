@@ -701,18 +701,34 @@ async function getStudentDashboardData(studentId) {
 
 function isAssignmentAttemptLimitReached(assignment, attempts = []) {
   const limit = Number(assignment.attemptLimit || 1);
-  const used = Number(assignment.attemptCount || countAttemptsForAssignment(assignment, attempts));
+  const used = getAssignmentAttemptUsage(assignment, attempts);
   return used >= limit;
 }
 
+function getAssignmentAttemptUsage(assignment, attempts = []) {
+  if (assignment.attemptCount !== undefined && assignment.attemptCount !== null) {
+    return Number(assignment.attemptCount || 0);
+  }
+  return Math.max(0, countAttemptsForAssignment(assignment, attempts) - getAssignmentAttemptBaseline(assignment));
+}
+
+function getAssignmentAttemptBaseline(assignment) {
+  const explicitBaseline = assignment.metadata?.attemptBaseline;
+  if (explicitBaseline !== undefined && explicitBaseline !== null && explicitBaseline !== "") {
+    return Number(explicitBaseline) || 0;
+  }
+  const history = Array.isArray(assignment.metadata?.assignmentHistory)
+    ? assignment.metadata.assignmentHistory
+    : [];
+  const lastHistory = history[history.length - 1] || {};
+  return Number(lastHistory.totalAttemptCount ?? lastHistory.attemptCount ?? 0) || 0;
+}
+
 function countAttemptsForAssignment(assignment, attempts = []) {
-  const hasAssignmentHistory = Array.isArray(assignment.metadata?.assignmentHistory)
-    && assignment.metadata.assignmentHistory.length > 0;
   return (attempts || []).filter((attempt) => {
     const student = normalizeStudent(attempt);
     const sameStudent = normalizeIdentity(student.id || attempt.studentId) === normalizeIdentity(assignment.studentId);
     const sameAssignment = attempt.assignmentKey && String(attempt.assignmentKey) === String(assignment.id);
-    if (hasAssignmentHistory) return sameStudent && sameAssignment;
     const sameAssessment = (attempt.assessment?.key || attempt.assessmentKey) === assignment.assessmentKey;
     const sameTitle = (attempt.assessment?.title || attempt.assessmentTitle) === assignment.assessmentTitle;
     return sameStudent && (sameAssignment || sameAssessment || sameTitle);
@@ -1568,7 +1584,9 @@ const localDataAdapter = {
     const mergedIncoming = incoming.map((item) => {
       const existing = previousById.get(String(item.id));
       if (!existing) return item;
-      const attemptCount = Number(existing.attemptCount || 0);
+      const attemptCount = Number(existing.totalAssessmentAttemptCount ?? existing.attemptCount ?? 0);
+      const previousBaseline = getAssignmentAttemptBaseline(existing);
+      const previousWindowAttempts = Math.max(0, attemptCount - previousBaseline);
       const previousHistory = Array.isArray(existing.metadata?.assignmentHistory)
         ? existing.metadata.assignmentHistory
         : [];
@@ -1576,19 +1594,23 @@ const localDataAdapter = {
         ...existing,
         ...item,
         assignedAt: now,
-        attemptLimit: attemptCount + Number(payload.attemptLimit || 1),
-        attemptCount,
+        attemptLimit: Number(payload.attemptLimit || 1),
+        attemptCount: 0,
+        totalAssessmentAttemptCount: attemptCount,
         status: "assigned",
         metadata: {
           ...(existing.metadata || {}),
           ...(item.metadata || {}),
+          attemptBaseline: attemptCount,
           assignmentHistory: [
             ...previousHistory,
             {
               assignedAt: existing.assignedAt,
               attemptLimit: existing.attemptLimit,
               status: existing.status,
-              attemptCount,
+              attemptBaseline: previousBaseline,
+              attemptCount: previousWindowAttempts,
+              totalAttemptCount: attemptCount,
               replacedAt: now
             }
           ]

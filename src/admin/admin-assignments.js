@@ -140,6 +140,10 @@ function bindAssignmentControls() {
       bindAssignmentPaging(loadStudents);
       bindAssignmentSelectionMenu(loadStudents);
       bindUnassignControls(loadStudents);
+      bindQuickReassignControls(visibleStudents, () => {
+        results.innerHTML = renderAssignmentConfirmation(getSelectedVisibleStudentsForReassign(visibleStudents));
+        bindAssignmentConfirmation(() => loadStudents(offset));
+      });
     } catch (error) {
       status.textContent = "Could not load students. Check the API connection.";
       results.innerHTML = `<div class="admin-error">${escapeHtml(error.message || "Student search failed.")}</div>`;
@@ -184,6 +188,29 @@ function bindUnassignControls(loadStudents) {
   });
 }
 
+function bindQuickReassignControls(visibleStudents, openReview) {
+  document.querySelectorAll("[data-action='quick-reassign']").forEach((button) => {
+    button.addEventListener("click", () => {
+      const studentId = String(button.dataset.studentId || "");
+      document.querySelectorAll("[data-student-assignment-id]").forEach((input) => {
+        input.checked = String(input.dataset.studentAssignmentId) === studentId;
+      });
+      assignmentSelectionMode = "visible";
+      const status = document.querySelector("[data-assignment-status]");
+      if (status) status.textContent = "Review reassignment settings before saving.";
+      openReview();
+    });
+  });
+}
+
+function getSelectedVisibleStudentsForReassign(visibleStudents) {
+  const selectedIds = new Set(
+    Array.from(document.querySelectorAll("[data-student-assignment-id]:checked"))
+      .map((input) => String(input.dataset.studentAssignmentId))
+  );
+  return visibleStudents.filter((student) => selectedIds.has(String(student.id)));
+}
+
 function renderAssignmentResults(students, payload) {
   if (!students.length) return `<p class="empty-review">No students match the selected filters.</p>`;
   return `
@@ -216,10 +243,12 @@ function renderAssignmentResults(students, payload) {
         </thead>
         <tbody>
           ${students.map((student) => {
-        const status = getAssignmentDisplayStatus(student);
-        const assignment = student.assignment || null;
-        const assignedPreTests = getAssignedPreTestText(student);
-        return `
+      const status = getAssignmentDisplayStatus(student);
+      const assignment = student.assignment || null;
+      const assignedPreTests = getAssignedPreTestText(student);
+      const usedAttempts = getCurrentAssignmentUsedAttempts(assignment, student.completedAttempts);
+      const isCompleted = status.className === "completed";
+      return `
           <tr>
             <td><input type="checkbox" data-student-assignment-id="${escapeAttribute(student.id)}" data-student-payload="${escapeAttribute(JSON.stringify(student))}" /></td>
             <td>
@@ -230,11 +259,13 @@ function renderAssignmentResults(students, payload) {
             <td>${escapeHtml(student.schoolName || "")}</td>
             <td>${escapeHtml(student.gradeLevel || "")}</td>
             <td>${escapeHtml(assignedPreTests)}</td>
-            <td>${assignment ? `${Number(assignment.attemptCount || student.completedAttempts || 0)}/${Number(assignment.attemptLimit || 1)}` : "-"}</td>
+            <td>${assignment ? `${usedAttempts}/${Number(assignment.attemptLimit || 1)}` : "-"}</td>
             <td><em class="status-pill ${escapeAttribute(status.className)}">${escapeHtml(status.label)}</em></td>
             <td>${assignment ? getAssignmentHistoryLabel(assignment) : "-"}</td>
             <td>
-              ${assignment && assignment.status !== "completed"
+              ${assignment && isCompleted
+                ? `<button type="button" class="table-action" data-action="quick-reassign" data-student-id="${escapeAttribute(student.id)}">Reassign</button>`
+                : assignment
                 ? `<button type="button" class="table-action" data-action="unassign-pretest" data-assignment-id="${escapeAttribute(assignment.id)}">Unassign</button>`
                 : `<span class="muted-cell">-</span>`}
             </td>
@@ -292,12 +323,20 @@ function getCompletedAttemptCounts(attempts, assessmentKey) {
 function getAssignmentDisplayStatus(student) {
   const assignment = student.assignment || null;
   if (!assignment) return { label: "Ready", className: "ready" };
-  const completed = Number(assignment.attemptCount || student.completedAttempts || 0);
+  const completed = getCurrentAssignmentUsedAttempts(assignment, student.completedAttempts);
   const limit = Number(assignment.attemptLimit || 1);
   if (assignment.status === "completed") return { label: "Completed", className: "completed" };
   if (completed >= limit) return { label: "Completed", className: "completed" };
   if (completed > 0) return { label: `${completed}/${limit} used`, className: "started" };
   return { label: "Assigned", className: "assigned" };
+}
+
+function getCurrentAssignmentUsedAttempts(assignment, fallbackAttemptCount = 0) {
+  if (!assignment) return 0;
+  if (assignment.attemptCount !== undefined && assignment.attemptCount !== null) {
+    return Number(assignment.attemptCount || 0);
+  }
+  return Math.max(0, Number(fallbackAttemptCount || 0) - getAssignmentAttemptBaseline(assignment));
 }
 
 function bindAssignmentSelectionMenu() {

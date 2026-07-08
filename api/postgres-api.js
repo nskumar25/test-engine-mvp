@@ -292,10 +292,9 @@ async function listAssignments() {
   `);
 
   return rows.map((row) => {
-    const hasHistory = Array.isArray(row.metadata?.assignmentHistory) && row.metadata.assignmentHistory.length > 0;
-    const attemptCount = hasHistory
-      ? Number(row.current_assignment_attempt_count || 0)
-      : Number(row.assessment_attempt_count || 0);
+    const totalAssessmentAttemptCount = Number(row.assessment_attempt_count || 0);
+    const attemptBaseline = getAssignmentAttemptBaselineFromMetadata(row.metadata || {});
+    const attemptCount = Math.max(0, totalAssessmentAttemptCount - attemptBaseline);
     return {
     id: row.id,
     studentId: row.student_external_id,
@@ -306,10 +305,22 @@ async function listAssignments() {
     assessmentKey: row.external_assessment_key,
     assessmentTitle: row.assessment_title,
     attemptCount,
-    totalAssessmentAttemptCount: row.assessment_attempt_count || 0,
-    metadata: row.metadata || {}
+    totalAssessmentAttemptCount,
+    metadata: {
+      ...(row.metadata || {}),
+      attemptBaseline
+    }
     };
   });
+}
+
+function getAssignmentAttemptBaselineFromMetadata(metadata = {}) {
+  if (metadata.attemptBaseline !== undefined && metadata.attemptBaseline !== null && metadata.attemptBaseline !== "") {
+    return Number(metadata.attemptBaseline) || 0;
+  }
+  const history = Array.isArray(metadata.assignmentHistory) ? metadata.assignmentHistory : [];
+  const lastHistory = history[history.length - 1] || {};
+  return Number(lastHistory.totalAttemptCount ?? lastHistory.attemptCount ?? 0) || 0;
 }
 
 async function saveAssignments(payload) {
@@ -372,12 +383,11 @@ async function saveAssignments(payload) {
           a.attempt_limit,
           a.status,
           a.metadata,
-          count(t.id)::int as attempt_count
+          count(t.id)::int as total_attempt_count
         from test_engine_assignments a
         left join test_engine_attempts t
           on t.assessment_id = a.assessment_id
           and t.student_external_id = a.student_external_id
-          and t.raw_attempt->>'assignmentKey' = a.id::text
           and t.status in ('submitted', 'scored')
         where a.assessment_id = $1
           and a.student_external_id = $2
@@ -392,20 +402,25 @@ async function saveAssignments(payload) {
       const existing = existingResult.rows[0];
       if (existing) {
         const previousMetadata = existing.metadata || {};
+        const totalAttemptCount = Number(existing.total_attempt_count || 0);
+        const previousBaseline = getAssignmentAttemptBaselineFromMetadata(previousMetadata);
+        const previousWindowAttempts = Math.max(0, totalAttemptCount - previousBaseline);
         const previousHistory = Array.isArray(previousMetadata.assignmentHistory)
           ? previousMetadata.assignmentHistory
           : [];
-        const nextAttemptLimit = Number(existing.attempt_count || 0) + attemptLimit;
         const nextMetadata = {
           ...previousMetadata,
           ...metadata,
+          attemptBaseline: totalAttemptCount,
           assignmentHistory: [
             ...previousHistory,
             {
               assignedAt: existing.assigned_at,
               attemptLimit: existing.attempt_limit,
               status: existing.status,
-              attemptCount: existing.attempt_count || 0,
+              attemptBaseline: previousBaseline,
+              attemptCount: previousWindowAttempts,
+              totalAttemptCount,
               replacedAt: new Date().toISOString()
             }
           ]
@@ -423,7 +438,7 @@ async function saveAssignments(payload) {
         `, [
           assignedBy,
           dueAt,
-          nextAttemptLimit,
+          attemptLimit,
           JSON.stringify(nextMetadata),
           existing.id
         ]);
@@ -571,7 +586,7 @@ async function saveAttempt(attempt) {
       await client.query(`
         update test_engine_assignments a
         set status = case
-          when completed.count >= a.attempt_limit then 'completed'
+          when greatest(0, completed.count - coalesce(nullif(a.metadata->>'attemptBaseline', '')::int, 0)) >= a.attempt_limit then 'completed'
           else 'assigned'
         end
         from (
