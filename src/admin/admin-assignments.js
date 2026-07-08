@@ -279,7 +279,7 @@ function renderAssignmentResults(students, payload) {
   if (!students.length) return `<p class="empty-review">No students match the selected filters.</p>`;
   return `
     <div class="admin-table-wrap assignment-table-wrap">
-      <table class="admin-table assignment-table resizable-table">
+      <table class="admin-table assignment-table resizable-table" data-resize-table="assignment">
         <thead>
           <tr>
             <th class="select-col">
@@ -444,12 +444,19 @@ function getCompletedAttemptCounts(attempts, assessmentKey) {
 
 function getAssignmentDisplayStatus(student) {
   const assignment = student.assignment || null;
-  if (!assignment) return { label: "Ready", className: "ready" };
+  if (!assignment) return { label: "Not assigned", className: "unassigned" };
   const completed = getCurrentAssignmentUsedAttempts(assignment, student.completedAttempts);
   const limit = Number(assignment.attemptLimit || 1);
+  if (assignment.status === "cancelled") return { label: "Unassigned", className: "cancelled" };
+  if (assignment.dueAt && new Date(assignment.dueAt).getTime() < Date.now() && completed < limit) {
+    return { label: "Expired", className: "expired" };
+  }
   if (assignment.status === "completed") return { label: "Completed", className: "completed" };
   if (completed >= limit) return { label: "Completed", className: "completed" };
-  if (completed > 0) return { label: `${completed}/${limit} used`, className: "started" };
+  if (completed > 0) return { label: "In progress", className: "started" };
+  if (Array.isArray(assignment.metadata?.assignmentHistory) && assignment.metadata.assignmentHistory.length > 0) {
+    return { label: "Reassigned", className: "reassigned" };
+  }
   return { label: "Assigned", className: "assigned" };
 }
 
@@ -550,7 +557,7 @@ function renderAssignmentConfirmation(students) {
         <button class="secondary-action" data-action="apply-options-all">Apply options to all</button>
       </div>
       <div class="admin-table-wrap assignment-confirm-wrap">
-        <table class="admin-table assignment-confirm-table resizable-table">
+        <table class="admin-table assignment-confirm-table resizable-table" data-resize-table="confirm">
           <thead>
             <tr>
               <th>Student</th>
@@ -665,11 +672,13 @@ function makeAssignmentTablesResizable() {
     if (table.dataset.resizableReady === "true") return;
     const headers = Array.from(table.querySelectorAll("thead th"));
     const colgroup = document.createElement("colgroup");
-    headers.forEach((header) => {
+    const widths = getInitialTableColumnWidths(table, headers);
+    headers.forEach((header, index) => {
       const col = document.createElement("col");
-      col.style.width = `${Math.max(90, header.offsetWidth || 120)}px`;
+      col.style.width = `${widths[index]}px`;
       colgroup.appendChild(col);
     });
+    table.style.width = `${widths.reduce((sum, width) => sum + width, 0)}px`;
     table.prepend(colgroup);
     headers.forEach((header, index) => {
       header.title = "Drag the lower-right edge to resize this column";
@@ -684,6 +693,10 @@ function makeAssignmentTablesResizable() {
         const onMove = (moveEvent) => {
           const nextWidth = Math.max(72, startWidth + moveEvent.clientX - startX);
           colgroup.children[index].style.width = `${nextWidth}px`;
+          const totalWidth = Array.from(colgroup.children).reduce((sum, col) => {
+            return sum + col.getBoundingClientRect().width;
+          }, 0);
+          table.style.width = `${totalWidth}px`;
         };
         const onUp = () => {
           document.removeEventListener("mousemove", onMove);
@@ -695,6 +708,51 @@ function makeAssignmentTablesResizable() {
     });
     table.dataset.resizableReady = "true";
   });
+}
+
+function getInitialTableColumnWidths(table, headers) {
+  const caps = getTableWidthCaps(table.dataset.resizeTable);
+  return headers.map((header, index) => {
+    const cells = Array.from(table.querySelectorAll(`tbody tr td:nth-child(${index + 1})`)).slice(0, 50);
+    const textSamples = [header.textContent || "", ...cells.map((cell) => cell.textContent || "")];
+    const longest = textSamples.reduce((max, text) => Math.max(max, normalizeTableCellText(text).length), 0);
+    const measured = Math.ceil(longest * 7.2) + 34;
+    const cap = caps[index] || { min: 90, max: 220 };
+    return Math.min(cap.max, Math.max(cap.min, measured));
+  });
+}
+
+function getTableWidthCaps(kind) {
+  if (kind === "confirm") {
+    return [
+      { min: 180, max: 260 },
+      { min: 150, max: 240 },
+      { min: 80, max: 120 },
+      { min: 170, max: 260 },
+      { min: 90, max: 130 },
+      { min: 90, max: 120 },
+      { min: 90, max: 120 },
+      { min: 80, max: 110 },
+      { min: 80, max: 110 },
+      { min: 80, max: 110 }
+    ];
+  }
+  return [
+    { min: 58, max: 78 },
+    { min: 120, max: 180 },
+    { min: 170, max: 260 },
+    { min: 80, max: 120 },
+    { min: 170, max: 250 },
+    { min: 80, max: 110 },
+    { min: 170, max: 280 },
+    { min: 80, max: 110 },
+    { min: 110, max: 150 },
+    { min: 150, max: 220 }
+  ];
+}
+
+function normalizeTableCellText(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
 }
 
 function getSelectedAssignmentType(selectedTest = {}) {

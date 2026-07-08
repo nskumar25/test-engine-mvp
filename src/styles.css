@@ -677,6 +677,9 @@ img {
 }
 
 .admin-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   background: #f7f8f6;
   color: #52606b;
   font-size: 0.84rem;
@@ -840,7 +843,7 @@ img {
 }
 
 .assignment-table {
-  min-width: 1900px;
+  min-width: 100%;
 }
 
 .assignment-confirm-wrap {
@@ -848,7 +851,7 @@ img {
 }
 
 .assignment-confirm-table {
-  min-width: 1700px;
+  min-width: 100%;
 }
 
 .assignment-table,
@@ -869,7 +872,9 @@ img {
 .assignment-table th,
 .assignment-confirm-table th {
   min-width: 90px;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 3;
   padding-right: 18px;
 }
 
@@ -969,6 +974,11 @@ img {
   color: #68480f;
 }
 
+.status-pill.reassigned {
+  background: #eef3fb;
+  color: #263c63;
+}
+
 .status-pill.started {
   background: #f1edf9;
   color: #4a326f;
@@ -977,6 +987,21 @@ img {
 .status-pill.completed {
   background: #e8f5ed;
   color: #245d3a;
+}
+
+.status-pill.unassigned {
+  background: #f3f6f5;
+  color: #52606b;
+}
+
+.status-pill.cancelled {
+  background: #f7ecea;
+  color: #8a2f28;
+}
+
+.status-pill.expired {
+  background: #fff0df;
+  color: #86500c;
 }
 
 .table-action {
