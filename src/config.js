@@ -1,4 +1,6 @@
-window.ASSESSMENT_ENV = "live"; // "live" or "local"
+window.ASSESSMENT_ENV =
+  window.ASSESSMENT_ENV ||
+  (["localhost", "127.0.0.1"].includes(window.location.hostname) ? "local" : "live");
 
 const environments = {
   live: {
@@ -8,7 +10,7 @@ const environments = {
 
   local: {
     dataProvider: "api",
-    apiBaseUrl: "http://127.0.0.1:5173"
+    apiBaseUrl: "http://127.0.0.1:9001"
   }
 };
 
