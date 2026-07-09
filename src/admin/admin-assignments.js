@@ -408,6 +408,11 @@ function renderAssignmentResults(students, payload) {
 
 function renderAssignmentHistoryTab(context, studentId = "") {
   const normalizedStudentId = String(studentId || "");
+  const events = [...(context.assignmentEvents || [])]
+    .filter((event) => !normalizedStudentId || String(event.studentId) === normalizedStudentId)
+    .sort((a, b) => String(b.eventAt || "").localeCompare(String(a.eventAt || "")));
+  if (events.length) return renderAssignmentEventHistory(events, normalizedStudentId);
+
   const assignments = [...(context.assignments || [])]
     .filter((assignment) => !normalizedStudentId || String(assignment.studentId) === normalizedStudentId)
     .sort((a, b) => String(b.assignedAt || "").localeCompare(String(a.assignedAt || "")));
@@ -465,6 +470,47 @@ function renderAssignmentHistoryTab(context, studentId = "") {
   `;
 }
 
+function renderAssignmentEventHistory(events, normalizedStudentId) {
+  return `
+    <div class="admin-card-head compact-head">
+      <div>
+        <p class="eyebrow">Assignment History</p>
+        <h2>${normalizedStudentId ? `Student ${escapeHtml(normalizedStudentId)}` : "Assignment timeline"}</h2>
+      </div>
+      <span class="assignment-count">${events.length} event(s)</span>
+      ${normalizedStudentId ? `<button type="button" class="secondary-action" data-action="show-all-assignment-history">Show all</button>` : ""}
+    </div>
+    <div class="admin-table-wrap assignment-history-wrap">
+      <table class="admin-table assignment-history-table">
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Assignment</th>
+            <th>Type</th>
+            <th>Event</th>
+            <th>When</th>
+            <th>By</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${events.map((event) => `
+            <tr>
+              <td>${escapeHtml(event.studentId || "")}</td>
+              <td>${escapeHtml(event.assessmentTitle || event.assessmentKey || event.metadata?.assessmentTitle || "Assignment")}</td>
+              <td>${escapeHtml(formatAssignmentType(event.assignmentType || event.metadata?.assignmentType || "assessment"))}</td>
+              <td><em class="status-pill ${escapeAttribute(event.eventType || "assigned")}">${escapeHtml(formatAssignmentStatusText(event.eventType))}</em></td>
+              <td>${event.eventAt ? escapeHtml(formatDateTime(event.eventAt)) : "-"}</td>
+              <td>${escapeHtml(event.eventBy || "-")}</td>
+              <td>${escapeHtml(event.eventNote || "-")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function bindAssignmentHistoryControls() {
   document.querySelector("[data-action='show-all-assignment-history']")?.addEventListener("click", () => {
     sessionStorage.removeItem("assessment-engine-history-student-id");
@@ -479,7 +525,8 @@ function bindAssignmentHistoryControls() {
 function getCurrentAdminContext() {
   return {
     assignments: window.assessmentAdminContext?.assignments || [],
-    attempts: window.assessmentAdminContext?.attempts || []
+    attempts: window.assessmentAdminContext?.attempts || [],
+    assignmentEvents: window.assessmentAdminContext?.assignmentEvents || []
   };
 }
 

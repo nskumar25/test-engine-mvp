@@ -1,4 +1,4 @@
-function paintAdminDashboard(attempts, students, assignments = [], dataErrors = {}, studentFilters = {}, assessments = []) {
+function paintAdminDashboard(attempts, students, assignments = [], dataErrors = {}, studentFilters = {}, assessments = [], assignmentEvents = []) {
   const activePage = getAdminPage();
   const latestAttempts = [...attempts].sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
   const context = {
@@ -6,6 +6,7 @@ function paintAdminDashboard(attempts, students, assignments = [], dataErrors = 
     students,
     studentFilters,
     assignments,
+    assignmentEvents,
     assessments,
     dataErrors,
     latestAttempts,

@@ -310,30 +310,33 @@ function renderAdminDashboard() {
     localStorage.setItem("assessment-admin-sidebar-collapsed", collapsed ? "1" : "0");
   });
 
-  loadAdminData().then(({ attempts, students, assignments, dataErrors, studentFilters, assessments }) => {
-    paintAdminDashboard(attempts, students, assignments, dataErrors, studentFilters, assessments);
+  loadAdminData().then(({ attempts, students, assignments, dataErrors, studentFilters, assessments, assignmentEvents }) => {
+    paintAdminDashboard(attempts, students, assignments, dataErrors, studentFilters, assessments, assignmentEvents);
   });
 }
 
 async function loadAdminData() {
   const adapter = getDataAdapter();
-  const [attempts, studentFilters, assignments, assessments] = await Promise.all([
+  const [attempts, studentFilters, assignments, assessments, assignmentEvents] = await Promise.all([
     loadAdminDataset(() => adapter.listAttempts()),
     loadAdminDataset(() => adapter.listStudentFilters()),
     loadAdminDataset(() => adapter.listAssignments()),
-    loadAdminDataset(() => adapter.listAssessments())
+    loadAdminDataset(() => adapter.listAssessments()),
+    loadAdminDataset(() => adapter.listAssignmentEvents ? adapter.listAssignmentEvents() : [])
   ]);
   return {
     attempts: attempts.data,
     students: [],
     studentFilters: studentFilters.data,
     assignments: assignments.data,
+    assignmentEvents: assignmentEvents.data,
     assessments: assessments.data?.length ? assessments.data : [getCurrentAssessmentPayload()],
     dataErrors: {
       attempts: attempts.error,
       students: studentFilters.error,
       assignments: assignments.error,
-      assessments: assessments.error
+      assessments: assessments.error,
+      assignmentEvents: assignmentEvents.error
     }
   };
 }
@@ -1606,6 +1609,10 @@ const localDataAdapter = {
     return JSON.parse(localStorage.getItem(ASSIGNMENTS_STORAGE_KEY) || "[]");
   },
 
+  async listAssignmentEvents() {
+    return [];
+  },
+
   async saveAssignments(payload) {
     const previous = await this.listAssignments();
     const assessmentKey = payload.assessment?.key || getCurrentAssessmentKey();
@@ -1758,6 +1765,12 @@ const apiDataAdapter = {
   async listAssignments() {
     const response = await fetch(`${API_BASE_URL}/api/assignments`);
     if (!response.ok) throw new Error("Could not load assignments");
+    return response.json();
+  },
+
+  async listAssignmentEvents() {
+    const response = await fetch(`${API_BASE_URL}/api/assignment-events`);
+    if (!response.ok) throw new Error("Could not load assignment history");
     return response.json();
   },
 

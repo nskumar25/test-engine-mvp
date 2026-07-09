@@ -31,7 +31,7 @@ const server = http.createServer(async (request, response) => {
       sendJson(response, 200, {
         ok: true,
         service: "Assessment Test Engine API",
-        routes: ["/health", "/api/student-filters", "/api/students", "/api/assessments"]
+        routes: ["/health", "/api/student-filters", "/api/students", "/api/assessments", "/api/assignment-events"]
       });
       return;
     }
@@ -81,6 +81,12 @@ const server = http.createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname === "/api/assignments") {
       const assignments = await listAssignments();
       sendJson(response, 200, assignments);
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/assignment-events") {
+      const events = await listAssignmentEvents();
+      sendJson(response, 200, events);
       return;
     }
 
@@ -368,6 +374,65 @@ function getAssignmentAttemptBaselineFromMetadata(metadata = {}) {
   return Number(lastHistory.totalAttemptCount ?? lastHistory.attemptCount ?? 0) || 0;
 }
 
+async function listAssignmentEvents() {
+  const { rows } = await pool.query(`
+    select
+      e.id,
+      e.assignment_id,
+      e.student_external_id,
+      e.event_type,
+      e.event_note,
+      e.event_by,
+      e.event_at,
+      e.metadata,
+      ass.external_assessment_key,
+      ass.title as assessment_title,
+      ass.assignment_type_code
+    from test_engine_assignment_events e
+    left join test_engine_assignments a
+      on a.id = e.assignment_id
+    left join test_engine_assessments ass
+      on ass.id = a.assessment_id
+    order by e.event_at desc
+    limit 3000
+  `);
+
+  return rows.map((row) => ({
+    id: row.id,
+    assignmentId: row.assignment_id,
+    studentId: row.student_external_id,
+    eventType: row.event_type,
+    eventNote: row.event_note || "",
+    eventBy: row.event_by || "",
+    eventAt: row.event_at,
+    assessmentKey: row.external_assessment_key || row.metadata?.assessmentKey || "",
+    assessmentTitle: row.assessment_title || row.metadata?.assessmentTitle || "",
+    assignmentType: row.assignment_type_code || row.metadata?.assignmentType || "assessment",
+    metadata: row.metadata || {}
+  }));
+}
+
+async function insertAssignmentEvent(client, event) {
+  await client.query(`
+    insert into test_engine_assignment_events (
+      assignment_id,
+      student_external_id,
+      event_type,
+      event_note,
+      event_by,
+      metadata
+    )
+    values ($1,$2,$3,$4,$5,$6)
+  `, [
+    event.assignmentId || null,
+    String(event.studentId || ""),
+    event.eventType,
+    event.eventNote || null,
+    event.eventBy || null,
+    JSON.stringify(event.metadata || {})
+  ]);
+}
+
 async function saveAssignments(payload) {
   const assessment = payload.assessment || {};
   const studentIds = Array.isArray(payload.studentIds) ? payload.studentIds.filter(Boolean) : [];
@@ -491,11 +556,26 @@ async function saveAssignments(payload) {
           JSON.stringify(nextMetadata),
           existing.id
         ]);
+        await insertAssignmentEvent(client, {
+          assignmentId: existing.id,
+          studentId,
+          eventType: "reassigned",
+          eventBy: assignedBy,
+          eventNote: "Assignment access window was reassigned.",
+          metadata: {
+            assessmentKey: assessment.key || "pre-test-for-demo",
+            assessmentTitle: assessment.title || "Assessment",
+            previousAttemptLimit: existing.attempt_limit,
+            attemptLimit,
+            previousWindowAttempts,
+            totalAttemptCount
+          }
+        });
         assigned += 1;
         continue;
       }
 
-      await client.query(`
+      const insertedAssignment = await client.query(`
         insert into test_engine_assignments (
           assessment_id,
           student_external_id,
@@ -512,6 +592,7 @@ async function saveAssignments(payload) {
           attempt_limit = excluded.attempt_limit,
           status = 'assigned',
           metadata = excluded.metadata
+        returning id
       `, [
         assessmentId,
         String(studentId),
@@ -520,6 +601,18 @@ async function saveAssignments(payload) {
         attemptLimit,
         JSON.stringify(metadata)
       ]);
+      await insertAssignmentEvent(client, {
+        assignmentId: insertedAssignment.rows[0]?.id,
+        studentId,
+        eventType: "assigned",
+        eventBy: assignedBy,
+        eventNote: "Assignment was assigned.",
+        metadata: {
+          assessmentKey: assessment.key || "pre-test-for-demo",
+          assessmentTitle: assessment.title || "Assessment",
+          attemptLimit
+        }
+      });
       assigned += 1;
     }
 
@@ -537,13 +630,35 @@ async function cancelAssignments(payload) {
   const assignmentIds = Array.isArray(payload.assignmentIds) ? payload.assignmentIds.filter(Boolean) : [];
   if (!assignmentIds.length) return { ok: true, cancelled: 0 };
 
-  const result = await pool.query(`
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const result = await client.query(`
     update test_engine_assignments
     set status = 'cancelled'
     where id = any($1::uuid[])
+    returning id, student_external_id
   `, [assignmentIds]);
 
-  return { ok: true, cancelled: result.rowCount };
+    for (const row of result.rows) {
+      await insertAssignmentEvent(client, {
+        assignmentId: row.id,
+        studentId: row.student_external_id,
+        eventType: "unassigned",
+        eventBy: "admin",
+        eventNote: "Assignment access was removed.",
+        metadata: {}
+      });
+    }
+
+    await client.query("commit");
+    return { ok: true, cancelled: result.rowCount };
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function saveAttempt(attempt) {
@@ -631,7 +746,7 @@ async function saveAttempt(attempt) {
     ]);
 
     if (assignmentId && assessmentId) {
-      await client.query(`
+      const statusResult = await client.query(`
         update test_engine_assignments a
         set status = case
           when greatest(0, completed.count - coalesce(nullif(a.metadata->>'attemptBaseline', '')::int, 0)) >= a.attempt_limit then 'completed'
@@ -645,11 +760,53 @@ async function saveAttempt(attempt) {
             and status in ('submitted', 'scored')
         ) completed
         where a.id = $3
+        returning a.status
       `, [
         assessmentId,
         student.id || attempt.studentId || "unknown-student",
         assignmentId
       ]);
+      const nextStatus = statusResult.rows[0]?.status || "assigned";
+      if (attempt.startedAt) {
+        await insertAssignmentEvent(client, {
+          assignmentId,
+          studentId: student.id || attempt.studentId || "unknown-student",
+          eventType: "started",
+          eventBy: "student",
+          eventNote: "Student started assignment attempt.",
+          metadata: {
+            attemptKey,
+            startedAt: attempt.startedAt,
+            assessmentTitle: assessment.title || attempt.assessmentTitle || "Assessment"
+          }
+        });
+      }
+      await insertAssignmentEvent(client, {
+        assignmentId,
+        studentId: student.id || attempt.studentId || "unknown-student",
+        eventType: "submitted",
+        eventBy: "student",
+        eventNote: "Student submitted assignment attempt.",
+        metadata: {
+          attemptKey,
+          assessmentTitle: assessment.title || attempt.assessmentTitle || "Assessment",
+          scorePercentage: score.percentage || 0
+        }
+      });
+      if (nextStatus === "completed") {
+        await insertAssignmentEvent(client, {
+          assignmentId,
+          studentId: student.id || attempt.studentId || "unknown-student",
+          eventType: "completed",
+          eventBy: "system",
+          eventNote: "Assignment was marked completed.",
+          metadata: {
+            attemptKey,
+            assessmentTitle: assessment.title || attempt.assessmentTitle || "Assessment",
+            scorePercentage: score.percentage || 0
+          }
+        });
+      }
     }
 
     const attemptId = attemptResult.rows[0].id;
