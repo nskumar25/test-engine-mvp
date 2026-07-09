@@ -13,15 +13,15 @@ function renderAdminAssignmentsPage(context) {
   return `
     <section class="admin-page-shell">
       <nav class="admin-page-tabs" aria-label="Assessment access sections">
-        <button class="${activeTab === "assign" ? "active" : ""}" type="button" data-assignment-admin-tab="assign">Assign</button>
+        <button class="${activeTab === "assign" ? "active" : ""}" type="button" data-assignment-admin-tab="assign">Manage</button>
         <button class="${activeTab === "history" ? "active" : ""}" type="button" data-assignment-admin-tab="history">History</button>
       </nav>
       <article class="admin-card assignment-card">
         <div data-assignment-admin-panel="assign" ${activeTab === "assign" ? "" : "hidden"}>
         <div class="admin-card-head">
           <div>
-            <p class="eyebrow">Assignment Builder</p>
-            <h2>Select students and assignment</h2>
+            <p class="eyebrow">Assignment Management</p>
+            <h2>View students and manage access</h2>
           </div>
           <span class="assignment-count">${totalStudents} registered students</span>
         </div>
@@ -79,7 +79,7 @@ function renderAdminAssignmentsPage(context) {
         <div class="assignment-actions">
           <button class="primary-action" data-action="view-filtered-students">View Students</button>
           <button class="primary-action" data-action="prepare-assignment">Assign Selected</button>
-          <span data-assignment-status>Choose filters, then view students.</span>
+          <span data-assignment-status>Choose filters, then view students. Assignment selection is only needed when assigning or reviewing assignment-specific status.</span>
         </div>
 
         <div class="student-assignment-results" data-assignment-results>
@@ -354,7 +354,6 @@ function renderAssignmentResults(students, payload) {
             <th>School</th>
             <th>Grade</th>
             <th>Assignments</th>
-            <th>Selected Assignment</th>
             <th>Status</th>
             <th>Progress</th>
             <th>Due</th>
@@ -377,7 +376,6 @@ function renderAssignmentResults(students, payload) {
             <td>${escapeHtml(student.schoolName || "")}</td>
             <td>${escapeHtml(student.gradeLevel || "")}</td>
             <td>${renderAssignmentsCount(student)}</td>
-            <td>${escapeHtml(state.selectedAssignmentTitle)}</td>
             <td><em class="status-pill ${escapeAttribute(state.className)}">${escapeHtml(state.label)}</em></td>
             <td>${escapeHtml(state.progressLabel)}</td>
             <td>${state.dueDate ? escapeHtml(formatDateTime(state.dueDate)) : `<span class="muted-cell">-</span>`}</td>
@@ -757,6 +755,7 @@ function renderAssignmentConfirmation(students) {
       </div>
       <div class="bulk-settings">
         <label>Duration <input data-bulk-duration type="number" min="1" max="240" value="${escapeAttribute(defaultDuration)}" /></label>
+        <label>Due date <input data-bulk-due type="datetime-local" /></label>
         <label>Attempts <input data-assignment-attempt-limit type="number" min="1" max="5" value="1" /></label>
         <button class="secondary-action" data-action="apply-duration-all">Apply to all</button>
         <label><input data-bulk-setting="calculator" type="checkbox" checked /> Calculator</label>
@@ -770,10 +769,12 @@ function renderAssignmentConfirmation(students) {
           <thead>
             <tr>
               <th>Student</th>
+              <th>Email</th>
               <th>School</th>
               <th>Grade</th>
               <th>Assignment</th>
               <th>Type</th>
+              <th>Due Date</th>
               <th>Duration</th>
               <th>Calculator</th>
               <th>Scratch</th>
@@ -784,11 +785,13 @@ function renderAssignmentConfirmation(students) {
           <tbody>
             ${students.map((student) => `
               <tr data-confirm-student="${escapeAttribute(student.id)}">
-                <td><strong>${escapeHtml(student.name || "Unnamed Student")}</strong><small>${escapeHtml(student.email || student.username || student.id)}</small></td>
+                <td><strong>${escapeHtml(student.name || "Unnamed Student")}</strong></td>
+                <td>${escapeHtml(student.email || student.username || "")}</td>
                 <td>${escapeHtml(student.schoolName || "")}</td>
                 <td>${escapeHtml(student.gradeLevel || "")}</td>
                 <td>${escapeHtml(selectedTest.title)}</td>
                 <td>${escapeHtml(formatAssignmentType(selectedType))}</td>
+                <td><input data-confirm-field="dueAt" type="datetime-local" /></td>
                 <td><input data-confirm-field="durationMinutes" type="number" min="1" max="240" value="${escapeAttribute(defaultDuration)}" /></td>
                 <td><input data-confirm-field="calculator" type="checkbox" checked /></td>
                 <td><input data-confirm-field="scratchpad" type="checkbox" checked /></td>
@@ -815,6 +818,10 @@ function bindAssignmentConfirmation(onBack) {
     document.querySelectorAll("[data-confirm-field='durationMinutes']").forEach((input) => {
       input.value = duration;
     });
+    const dueAt = document.querySelector("[data-bulk-due]")?.value || "";
+    document.querySelectorAll("[data-confirm-field='dueAt']").forEach((input) => {
+      input.value = dueAt;
+    });
   });
 
   document.querySelector("[data-action='apply-options-all']")?.addEventListener("click", () => {
@@ -838,12 +845,16 @@ function bindAssignmentConfirmation(onBack) {
     const attemptLimit = Number(document.querySelector("[data-assignment-attempt-limit]")?.value || 1);
     const studentIds = rows.map((row) => row.dataset.confirmStudent);
     const perStudentSettings = {};
+    const dueDates = [];
 
     rows.forEach((row) => {
       const studentId = row.dataset.confirmStudent;
+      const dueAt = formatDueDateForApi(row.querySelector("[data-confirm-field='dueAt']")?.value || "");
+      if (dueAt) dueDates.push(dueAt);
       perStudentSettings[studentId] = {
         assessmentPath: assessmentPayload.path || getAssessmentPathFromKey(assessmentPayload.key),
         durationMinutes: Number(row.querySelector("[data-confirm-field='durationMinutes']")?.value || assessmentPayload.durationMinutes || 30),
+        dueAt,
         tools: {
           calculator: Boolean(row.querySelector("[data-confirm-field='calculator']")?.checked),
           scratchpad: Boolean(row.querySelector("[data-confirm-field='scratchpad']")?.checked),
@@ -864,6 +875,7 @@ function bindAssignmentConfirmation(onBack) {
         assessment: assessmentPayload,
         studentIds,
         attemptLimit,
+        dueAt: dueDates.length === 1 ? dueDates[0] : "",
         assignedBy: "admin",
         metadata: { assignmentType },
         perStudentSettings
@@ -935,10 +947,12 @@ function getTableWidthCaps(kind) {
   if (kind === "confirm") {
     return [
       { min: 180, max: 260 },
+      { min: 180, max: 260 },
       { min: 150, max: 240 },
       { min: 80, max: 120 },
       { min: 170, max: 260 },
       { min: 90, max: 130 },
+      { min: 150, max: 190 },
       { min: 90, max: 120 },
       { min: 90, max: 120 },
       { min: 80, max: 110 },
@@ -954,7 +968,6 @@ function getTableWidthCaps(kind) {
     { min: 170, max: 250 },
     { min: 80, max: 110 },
     { min: 95, max: 125 },
-    { min: 170, max: 280 },
     { min: 110, max: 150 },
     { min: 125, max: 190 },
     { min: 105, max: 155 },
@@ -981,4 +994,10 @@ function bindAssignmentPaging(loadStudents) {
   document.querySelector("[data-assignment-page-size]")?.addEventListener("change", (event) => {
     loadStudents(0, Number(event.currentTarget.value || 10));
   });
+}
+
+function formatDueDateForApi(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 }

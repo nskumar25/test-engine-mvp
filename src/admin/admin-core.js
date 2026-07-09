@@ -91,7 +91,7 @@ function renderAdminHeaderActions(page) {
   if (page === "questions") {
     return `<a class="secondary-action admin-link-button" href="./" target="_blank">Preview Student View</a>`;
   }
-  return `<a class="secondary-action admin-link-button" href="./">Open Student Test</a>`;
+  return `<a class="secondary-action admin-link-button" href="./">Preview</a>`;
 }
 
 function renderAdminPage(page, context) {

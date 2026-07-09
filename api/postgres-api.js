@@ -484,9 +484,11 @@ async function saveAssignments(payload) {
     let assigned = 0;
 
     for (const studentId of studentIds) {
+      const studentSettings = perStudentSettings[String(studentId)] || perStudentSettings[studentId] || {};
+      const studentDueAt = studentSettings.dueAt || dueAt;
       const metadata = {
         ...(payload.metadata || {}),
-        ...(perStudentSettings[String(studentId)] || perStudentSettings[studentId] || {}),
+        ...studentSettings,
         assignmentType: payload.metadata?.assignmentType || assessment.assignmentType || "assessment",
         assessment
       };
@@ -551,7 +553,7 @@ async function saveAssignments(payload) {
           where id = $5
         `, [
           assignedBy,
-          dueAt,
+          studentDueAt,
           attemptLimit,
           JSON.stringify(nextMetadata),
           existing.id
@@ -597,7 +599,7 @@ async function saveAssignments(payload) {
         assessmentId,
         String(studentId),
         assignedBy,
-        dueAt,
+        studentDueAt,
         attemptLimit,
         JSON.stringify(metadata)
       ]);

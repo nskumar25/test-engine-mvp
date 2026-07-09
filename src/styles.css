@@ -599,7 +599,7 @@ img {
 .admin-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 196px minmax(0, 1fr);
+  grid-template-columns: 232px minmax(0, 1fr);
   background: #f4f6f4;
   color: #17212b;
   user-select: text;
@@ -611,6 +611,7 @@ img {
 
 .admin-sidebar {
   min-height: 100vh;
+  width: 232px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -638,6 +639,10 @@ img {
 .admin-shell.sidebar-collapsed .admin-nav a,
 .admin-shell.sidebar-collapsed .admin-student-link {
   justify-content: center;
+}
+
+.admin-shell.sidebar-collapsed .admin-sidebar {
+  width: 72px;
 }
 
 .admin-nav {

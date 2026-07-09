@@ -294,7 +294,7 @@ function renderAdminDashboard() {
           <a href="#ilp" title="ILP"><span class="nav-icon">${icons.pencil}</span><span class="nav-label">ILP</span></a>
           <a href="#database" title="Database"><span class="nav-icon">${icons.calc}</span><span class="nav-label">Database</span></a>
         </nav>
-        <a class="admin-student-link" href="./" title="Open student test"><span class="nav-icon">${icons.next}</span><span class="nav-label">Open student test</span></a>
+        <a class="admin-student-link" href="./" title="Preview"><span class="nav-icon">${icons.next}</span><span class="nav-label">Preview</span></a>
       </aside>
       <section class="admin-main">
         <header class="admin-header">
@@ -1808,22 +1808,25 @@ const localDataAdapter = {
     const previous = await this.listAssignments();
     const assessmentKey = payload.assessment?.key || getCurrentAssessmentKey();
     const now = new Date().toISOString();
-    const incoming = (payload.studentIds || []).map((studentId) => ({
-      id: `${assessmentKey}-${studentId}`,
-      studentId,
-      assessmentKey,
-      assessmentTitle: payload.assessment?.title || assessment.title,
-      assignedAt: now,
-      dueAt: payload.dueAt || null,
-      attemptLimit: Number(payload.attemptLimit || 1),
-      status: "assigned",
-      metadata: {
-        ...(payload.metadata || {}),
-        ...(payload.perStudentSettings?.[studentId] || {}),
-        assignmentType: payload.metadata?.assignmentType || payload.assessment?.assignmentType || getAssignmentType(payload.assessment || {}),
-        assessment: payload.assessment || {}
-      }
-    }));
+    const incoming = (payload.studentIds || []).map((studentId) => {
+      const studentSettings = payload.perStudentSettings?.[studentId] || {};
+      return {
+        id: `${assessmentKey}-${studentId}`,
+        studentId,
+        assessmentKey,
+        assessmentTitle: payload.assessment?.title || assessment.title,
+        assignedAt: now,
+        dueAt: studentSettings.dueAt || payload.dueAt || null,
+        attemptLimit: Number(payload.attemptLimit || 1),
+        status: "assigned",
+        metadata: {
+          ...(payload.metadata || {}),
+          ...studentSettings,
+          assignmentType: payload.metadata?.assignmentType || payload.assessment?.assignmentType || getAssignmentType(payload.assessment || {}),
+          assessment: payload.assessment || {}
+        }
+      };
+    });
     const previousById = new Map(previous.map((item) => [String(item.id), item]));
     const mergedIncoming = incoming.map((item) => {
       const existing = previousById.get(String(item.id));
