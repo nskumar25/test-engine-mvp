@@ -192,12 +192,37 @@ function readJson(request) {
 
 async function listAttempts() {
   const { rows } = await pool.query(`
-    select raw_attempt
-    from test_engine_attempts
-    order by submitted_at desc
-    limit 1000
+    select
+      t.raw_attempt,
+      t.student_external_id,
+      t.student_name,
+      t.assessment_title,
+      s.email,
+      s.school_name,
+      s.grade_level
+    from test_engine_attempts t
+    left join test_engine_registered_students s
+      on s.student_external_id = t.student_external_id
+    order by t.submitted_at desc
+    limit 10000
   `);
-  return rows.map((row) => row.raw_attempt).filter(Boolean);
+  return rows.map((row) => {
+    const attempt = row.raw_attempt || {};
+    return {
+      ...attempt,
+      studentId: attempt.studentId || row.student_external_id,
+      studentName: attempt.studentName || row.student_name,
+      assessmentTitle: attempt.assessmentTitle || row.assessment_title,
+      student: {
+        ...(attempt.student || {}),
+        id: attempt.student?.id || row.student_external_id,
+        name: attempt.student?.name || row.student_name,
+        email: attempt.student?.email || row.email || "",
+        schoolName: attempt.student?.schoolName || row.school_name || "",
+        gradeLevel: attempt.student?.gradeLevel || row.grade_level || ""
+      }
+    };
+  }).filter(Boolean);
 }
 
 async function listAssessments() {

@@ -2312,15 +2312,20 @@ function bindSubmittedDashboardAction() {
 }
 
 function normalizeScore(evaluation) {
-  return evaluation.score && typeof evaluation.score === "object"
+  const score = evaluation.score && typeof evaluation.score === "object"
     ? evaluation.score
-    : {
-      correct: evaluation.score || 0,
-      total: evaluation.total || questions.length,
-      percentage: evaluation.percentage || 0,
-      answered: evaluation.answered || 0,
-      unanswered: evaluation.unanswered || 0
-    };
+    : {};
+  const correct = Number(score.correct ?? evaluation.score ?? 0);
+  const total = Number(score.total ?? evaluation.total ?? questions.length);
+  const percentage = Number(score.percentage ?? evaluation.percentage ?? (total ? Math.round((correct / total) * 100) : 0));
+  const answered = Number(score.answered ?? evaluation.answered ?? 0);
+  return {
+    correct,
+    total,
+    percentage,
+    answered,
+    unanswered: Number(score.unanswered ?? evaluation.unanswered ?? Math.max(0, total - answered))
+  };
 }
 
 function normalizeStudent(evaluation) {
@@ -2332,10 +2337,15 @@ function normalizeStudent(evaluation) {
 }
 
 function normalizeTiming(evaluation) {
-  return evaluation.timing || {
-    durationSeconds: assessment.durationMinutes * 60,
-    timeUsedSeconds: Math.max(0, assessment.durationMinutes * 60 - (evaluation.timeRemainingSeconds || 0)),
-    timeRemainingSeconds: evaluation.timeRemainingSeconds || 0
+  const timing = evaluation.timing && typeof evaluation.timing === "object"
+    ? evaluation.timing
+    : {};
+  const durationSeconds = Number(timing.durationSeconds ?? assessment.durationMinutes * 60);
+  const timeRemainingSeconds = Number(timing.timeRemainingSeconds ?? evaluation.timeRemainingSeconds ?? 0);
+  return {
+    durationSeconds,
+    timeUsedSeconds: Number(timing.timeUsedSeconds ?? Math.max(0, durationSeconds - timeRemainingSeconds)),
+    timeRemainingSeconds
   };
 }
 
