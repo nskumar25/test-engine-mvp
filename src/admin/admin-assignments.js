@@ -240,7 +240,7 @@ function getAssignmentTypeOptions(assessments = []) {
   for (const item of assessments) {
     const code = getAssignmentType(item);
     if (!code) continue;
-    typeMap.set(code, formatAssignmentType(code));
+    typeMap.set(code, item.assignmentTypeLabel || item.assignmentTypeConfig?.displayName || formatAssignmentType(code));
   }
   if (!typeMap.size) {
     typeMap.set("assessment", "Assessment");

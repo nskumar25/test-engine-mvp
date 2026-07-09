@@ -196,14 +196,30 @@ async function listAssessments() {
       a.duration_minutes,
       a.status,
       a.input_format_version,
+      coalesce(a.assignment_type_code, 'assessment') as assignment_type_code,
+      at.display_name as assignment_type_label,
+      at.supports_attempts,
+      at.supports_due_date,
+      at.supports_reassignment,
+      at.supports_result,
+      at.completion_rule,
       a.tools,
       a.instructions,
       count(aq.question_id)::int as question_count
     from test_engine_assessments a
+    left join test_engine_assignment_types at
+      on at.code = a.assignment_type_code
     left join test_engine_assessment_questions aq
       on aq.assessment_id = a.id
     where a.status <> 'archived'
-    group by a.id
+    group by
+      a.id,
+      at.display_name,
+      at.supports_attempts,
+      at.supports_due_date,
+      at.supports_reassignment,
+      at.supports_result,
+      at.completion_rule
     order by a.title
   `);
 
@@ -214,10 +230,34 @@ async function listAssessments() {
     durationMinutes: row.duration_minutes,
     status: row.status,
     inputFormatVersion: row.input_format_version,
+    assignmentType: row.assignment_type_code,
+    assignmentTypeLabel: row.assignment_type_label || formatAssignmentTypeLabel(row.assignment_type_code),
+    assignmentTypeConfig: {
+      code: row.assignment_type_code,
+      displayName: row.assignment_type_label || formatAssignmentTypeLabel(row.assignment_type_code),
+      supportsAttempts: row.supports_attempts !== false,
+      supportsDueDate: row.supports_due_date !== false,
+      supportsReassignment: row.supports_reassignment !== false,
+      supportsResult: row.supports_result !== false,
+      completionRule: row.completion_rule || "submission"
+    },
     tools: row.tools || {},
     instructions: row.instructions || [],
     questionCount: row.question_count
   }));
+}
+
+function formatAssignmentTypeLabel(code) {
+  const labels = {
+    assessment: "Assessment",
+    pretest: "Pre-test",
+    worksheet: "Worksheet",
+    practice: "Practice",
+    diagnostic: "Diagnostic Test",
+    benchmark: "Benchmark",
+    quiz: "Quiz"
+  };
+  return labels[String(code || "assessment").toLowerCase()] || "Assessment";
 }
 
 async function updateAssessmentStatus(key, status) {
@@ -345,15 +385,17 @@ async function saveAssignments(payload) {
         duration_minutes,
         status,
         input_format_version,
+        assignment_type_code,
         tools,
         instructions
       )
-      values ($1,$2,$3,$4,'published',$5,$6,$7)
+      values ($1,$2,$3,$4,'published',$5,$6,$7,$8)
       on conflict (external_assessment_key) do update set
         title = excluded.title,
         source_document = excluded.source_document,
         duration_minutes = excluded.duration_minutes,
         input_format_version = excluded.input_format_version,
+        assignment_type_code = excluded.assignment_type_code,
         tools = excluded.tools,
         instructions = excluded.instructions,
         updated_at = now()
@@ -364,6 +406,7 @@ async function saveAssignments(payload) {
       assessment.sourceDocument || null,
       assessment.durationMinutes || 30,
       assessment.inputFormatVersion || "mvp-1",
+      assessment.assignmentType || payload.metadata?.assignmentType || "assessment",
       JSON.stringify(assessment.tools || {}),
       JSON.stringify(assessment.instructions || [])
     ]);
@@ -379,6 +422,7 @@ async function saveAssignments(payload) {
       const metadata = {
         ...(payload.metadata || {}),
         ...(perStudentSettings[String(studentId)] || perStudentSettings[studentId] || {}),
+        assignmentType: payload.metadata?.assignmentType || assessment.assignmentType || "assessment",
         assessment
       };
       const existingResult = await client.query(`

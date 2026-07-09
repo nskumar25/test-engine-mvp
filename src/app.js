@@ -737,7 +737,9 @@ function getAssignmentAttemptBaseline(assignment) {
 function getAssignmentType(assignment = {}) {
   const explicitType = assignment.metadata?.assignmentType
     || assignment.assignmentType
+    || assignment.assignmentTypeCode
     || assignment.assessment?.assignmentType
+    || assignment.assessment?.assignmentTypeCode
     || assignment.metadata?.assessment?.assignmentType;
   if (explicitType) return String(explicitType).toLowerCase();
   const title = String(assignment.assessmentTitle || assignment.title || assignment.metadata?.assessment?.title || "").toLowerCase();
@@ -753,7 +755,9 @@ function formatAssignmentType(type) {
     pretest: "Pre-test",
     worksheet: "Worksheet",
     practice: "Practice",
-    diagnostic: "Diagnostic",
+    diagnostic: "Diagnostic Test",
+    benchmark: "Benchmark",
+    quiz: "Quiz",
     assessment: "Assessment"
   };
   return labels[String(type || "").toLowerCase()] || "Assessment";
@@ -1618,6 +1622,7 @@ const localDataAdapter = {
       metadata: {
         ...(payload.metadata || {}),
         ...(payload.perStudentSettings?.[studentId] || {}),
+        assignmentType: payload.metadata?.assignmentType || payload.assessment?.assignmentType || getAssignmentType(payload.assessment || {}),
         assessment: payload.assessment || {}
       }
     }));

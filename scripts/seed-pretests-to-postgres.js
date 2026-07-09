@@ -43,6 +43,7 @@ async function seedAssessment(payload) {
   const assessment = payload.assessment || {};
   const questions = Array.isArray(payload.questions) ? payload.questions : [];
   const assessmentKey = assessment.key || slugify(assessment.sourceDocument || assessment.title || "assessment");
+  const assignmentType = getAssignmentType(assessment);
 
   try {
     await client.query("begin");
@@ -55,16 +56,18 @@ async function seedAssessment(payload) {
         duration_minutes,
         status,
         input_format_version,
+        assignment_type_code,
         tools,
         instructions
       )
-      values ($1,$2,$3,$4,'published',$5,$6,$7)
+      values ($1,$2,$3,$4,'published',$5,$6,$7,$8)
       on conflict (external_assessment_key) do update set
         title = excluded.title,
         source_document = excluded.source_document,
         duration_minutes = excluded.duration_minutes,
         status = 'published',
         input_format_version = excluded.input_format_version,
+        assignment_type_code = excluded.assignment_type_code,
         tools = excluded.tools,
         instructions = excluded.instructions,
         updated_at = now()
@@ -75,6 +78,7 @@ async function seedAssessment(payload) {
       assessment.sourceDocument || null,
       Number(assessment.durationMinutes || 30),
       assessment.inputFormatVersion || "mvp-1",
+      assignmentType,
       JSON.stringify(assessment.tools || {}),
       JSON.stringify(assessment.instructions || [])
     ]);
@@ -166,6 +170,18 @@ function slugify(value) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "") || "assessment";
+}
+
+function getAssignmentType(assessment) {
+  if (assessment.assignmentType) return String(assessment.assignmentType).toLowerCase();
+  const title = String(assessment.title || assessment.sourceDocument || "").toLowerCase();
+  if (title.includes("worksheet")) return "worksheet";
+  if (title.includes("practice")) return "practice";
+  if (title.includes("diagnostic")) return "diagnostic";
+  if (title.includes("benchmark")) return "benchmark";
+  if (title.includes("quiz")) return "quiz";
+  if (title.includes("pretest") || title.includes("pre-test")) return "pretest";
+  return "assessment";
 }
 
 main()
