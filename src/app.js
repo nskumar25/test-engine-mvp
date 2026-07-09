@@ -44,6 +44,7 @@ const icons = {
 
 let questions = [];
 let assessment = {};
+let questionLibraryAssessments = [];
 let state = {};
 let scratchTool = "pencil";
 let scratchColor = "#18212b";
@@ -310,35 +311,64 @@ function renderAdminDashboard() {
     localStorage.setItem("assessment-admin-sidebar-collapsed", collapsed ? "1" : "0");
   });
 
-  loadAdminData().then(({ attempts, students, assignments, dataErrors, studentFilters, assessments, assignmentEvents }) => {
-    paintAdminDashboard(attempts, students, assignments, dataErrors, studentFilters, assessments, assignmentEvents);
+  loadAdminData().then(({ attempts, students, assignments, dataErrors, studentFilters, assessments, assignmentEvents, questionLibrary }) => {
+    paintAdminDashboard(attempts, students, assignments, dataErrors, studentFilters, assessments, assignmentEvents, questionLibrary);
   });
 }
 
 async function loadAdminData() {
   const adapter = getDataAdapter();
-  const [attempts, studentFilters, assignments, assessments, assignmentEvents] = await Promise.all([
+  const [attempts, studentFilters, assignments, assessments, assignmentEvents, questionLibrary] = await Promise.all([
     loadAdminDataset(() => adapter.listAttempts()),
     loadAdminDataset(() => adapter.listStudentFilters()),
     loadAdminDataset(() => adapter.listAssignments()),
     loadAdminDataset(() => adapter.listAssessments()),
-    loadAdminDataset(() => adapter.listAssignmentEvents ? adapter.listAssignmentEvents() : [])
+    loadAdminDataset(() => adapter.listAssignmentEvents ? adapter.listAssignmentEvents() : []),
+    loadAdminDataset(() => loadQuestionLibraryAssessments())
   ]);
+  questionLibraryAssessments = questionLibrary.data?.length ? questionLibrary.data : [{
+    assessment: getCurrentAssessmentPayload(),
+    questions
+  }];
   return {
     attempts: attempts.data,
     students: [],
     studentFilters: studentFilters.data,
     assignments: assignments.data,
     assignmentEvents: assignmentEvents.data,
+    questionLibrary: questionLibraryAssessments,
     assessments: assessments.data?.length ? assessments.data : [getCurrentAssessmentPayload()],
     dataErrors: {
       attempts: attempts.error,
       students: studentFilters.error,
       assignments: assignments.error,
       assessments: assessments.error,
-      assignmentEvents: assignmentEvents.error
+      assignmentEvents: assignmentEvents.error,
+      questionLibrary: questionLibrary.error
     }
   };
+}
+
+async function loadQuestionLibraryAssessments() {
+  const catalogResponse = await fetch(ASSESSMENT_CATALOG_SOURCE);
+  if (!catalogResponse.ok) throw new Error("Could not load assessment catalog");
+  const catalog = await catalogResponse.json();
+  const items = Array.isArray(catalog.assessments) ? catalog.assessments : [];
+  const loaded = await Promise.all(items.map(async (item) => {
+    const response = await fetch(item.path || getAssessmentPathFromKey(item.key));
+    if (!response.ok) throw new Error(`Could not load ${item.title || item.key}`);
+    const payload = await response.json();
+    return {
+      assessment: {
+        ...(payload.assessment || {}),
+        key: payload.assessment?.key || item.key,
+        title: payload.assessment?.title || item.title || item.key,
+        path: item.path || getAssessmentPathFromKey(item.key)
+      },
+      questions: Array.isArray(payload.questions) ? payload.questions : []
+    };
+  }));
+  return loaded;
 }
 
 async function loadAdminDataset(loader) {

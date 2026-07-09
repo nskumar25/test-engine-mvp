@@ -1,14 +1,6 @@
 {
   "assessments": [
     {
-      "key": "pre-test-for-demo",
-      "title": "Pre-Test - For Demo",
-      "sourceDocument": "Pre-Test - For Demo (1).docx",
-      "questionCount": 16,
-      "durationMinutes": 30,
-      "path": "input/assessments/pre-test-for-demo.json"
-    },
-    {
       "key": "grade-6-pretest",
       "title": "Grade 6 Pretest",
       "sourceDocument": "Grade 6 Pretest.docx",

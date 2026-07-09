@@ -10,15 +10,52 @@ from docx.text.paragraph import Paragraph
 
 
 SOURCE_FILES = [
-    Path(r"C:\Users\srava\Downloads\Pre-Test - For Demo (1).docx"),
-    Path(r"C:\Users\srava\Downloads\Grade 6 Pretest.docx"),
-    Path(r"C:\Users\srava\Downloads\Grade 7 Pretest.docx"),
-    Path(r"C:\Users\srava\Downloads\Grade 8 Pretest.docx"),
+    Path(r"C:\Users\srava\Downloads\Pre-test\Grade 6 Pretest.docx"),
+    Path(r"C:\Users\srava\Downloads\Pre-test\Grade 7 Pretest.docx"),
+    Path(r"C:\Users\srava\Downloads\Pre-test\Grade 8 Pretest.docx"),
 ]
 
 OUTPUT_DIR = Path("input/assessments")
 ASSET_ROOT = Path("input/assets")
 CATALOG_PATH = Path("input/assessment-catalog.json")
+
+SUPERSCRIPT_MAP = str.maketrans({
+    "0": "⁰",
+    "1": "¹",
+    "2": "²",
+    "3": "³",
+    "4": "⁴",
+    "5": "⁵",
+    "6": "⁶",
+    "7": "⁷",
+    "8": "⁸",
+    "9": "⁹",
+    "+": "⁺",
+    "-": "⁻",
+    "=": "⁼",
+    "(": "⁽",
+    ")": "⁾",
+    "n": "ⁿ",
+    "i": "ⁱ",
+})
+
+SUBSCRIPT_MAP = str.maketrans({
+    "0": "₀",
+    "1": "₁",
+    "2": "₂",
+    "3": "₃",
+    "4": "₄",
+    "5": "₅",
+    "6": "₆",
+    "7": "₇",
+    "8": "₈",
+    "9": "₉",
+    "+": "₊",
+    "-": "₋",
+    "=": "₌",
+    "(": "₍",
+    ")": "₎",
+})
 
 
 def slugify(value):
@@ -53,10 +90,10 @@ def paragraph_images(paragraph, document, asset_dir, slug, image_counter):
 def table_to_text(table):
     rows = []
     for row in table.rows:
-        cells = [cell.text.strip().replace("\n", " ") for cell in row.cells]
+        cells = [clean_inline_text(cell.text) for cell in row.cells]
         if any(cells):
             rows.append(" | ".join(cells))
-    return "\n".join(rows)
+    return " ".join(rows)
 
 
 def table_images(table, document, asset_dir, slug, image_counter):
@@ -102,9 +139,34 @@ def split_option_lines(text):
     return lines
 
 
-def new_question(number):
+def clean_inline_text(value):
+    value = str(value or "").replace("\u00a0", " ")
+    value = value.replace("\r", " ").replace("\n", " ").replace("\t", " ")
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def format_run_text(run):
+    text = run.text or ""
+    if run.font.superscript:
+        return text.translate(SUPERSCRIPT_MAP)
+    if run.font.subscript:
+        return text.translate(SUBSCRIPT_MAP)
+    return text
+
+
+def paragraph_text(paragraph):
+    return clean_inline_text("".join(format_run_text(run) for run in paragraph.runs))
+
+
+def append_text(existing, addition):
+    existing = clean_inline_text(existing)
+    addition = clean_inline_text(addition)
+    return clean_inline_text(f"{existing} {addition}" if existing else addition)
+
+
+def new_question(number, assessment_key):
     return {
-        "id": f"q{number}",
+        "id": f"{assessment_key}-q{number:02d}",
         "type": "mcq",
         "number": number,
         "level": "",
@@ -132,7 +194,7 @@ def add_images(question, images):
 
 def parse_docx(path):
     document = Document(path)
-    title = next((p.text.strip() for p in document.paragraphs if p.text.strip()), path.stem)
+    title = next((paragraph_text(p) for p in document.paragraphs if paragraph_text(p)), path.stem)
     slug = slugify(title)
     asset_dir = ASSET_ROOT / slug
     if asset_dir.exists():
@@ -150,11 +212,11 @@ def parse_docx(path):
             images = table_images(block, document, asset_dir, slug, image_counter)
             if current:
                 if table_text:
-                    current["question"] = f"{current['question']}\n\n{table_text}".strip()
+                    current["question"] = append_text(current["question"], table_text)
                 add_images(current, images)
             continue
 
-        text = block.text.strip()
+        text = paragraph_text(block)
         images = paragraph_images(block, document, asset_dir, slug, image_counter)
         if not text and images:
             add_images(current, images)
@@ -170,10 +232,10 @@ def parse_docx(path):
         if question_match:
             if current:
                 questions.append(current)
-            current = new_question(int(question_match.group(1)))
+            current = new_question(int(question_match.group(1)), slug)
             current["level"] = (question_match.group(2) or "").strip()
             current["topic"] = current["level"] or "General"
-            current["question"] = question_match.group(3).strip()
+            current["question"] = clean_inline_text(question_match.group(3))
             add_images(current, images)
             mode = "question"
             continue
@@ -194,7 +256,7 @@ def parse_docx(path):
             if current and current.get("question"):
                 questions.append(current)
             number = int(re.search(r"\d+", text).group(0))
-            current = new_question(number)
+            current = new_question(number, slug)
             current["standard"] = locals().get("pending_standard", "")
             current["level"] = locals().get("pending_level", "")
             current["topic"] = current["standard"] or current["level"] or "General"
@@ -212,21 +274,19 @@ def parse_docx(path):
         if not current:
             continue
 
-        add_images(current, images)
-
         if text.startswith("Correct Answer:"):
-            answer_text = text.split(":", 1)[1].strip()
+            answer_text = clean_inline_text(text.split(":", 1)[1])
             answer_match = re.match(r"^([A-Da-d])\)\s*(.*)$", answer_text)
             if answer_match:
                 current["answer"] = answer_match.group(1).lower()
-                current["correctAnswerText"] = answer_match.group(2).strip()
+                current["correctAnswerText"] = clean_inline_text(answer_match.group(2))
             else:
                 current["correctAnswerText"] = answer_text
             mode = None
             continue
 
         if text.startswith("Explanation:"):
-            current["explanation"] = text.split(":", 1)[1].strip()
+            current["explanation"] = clean_inline_text(text.split(":", 1)[1])
             mode = None
             continue
 
@@ -243,16 +303,21 @@ def parse_docx(path):
         if option_lines and all(re.match(r"^[A-Da-d]\)", line) for line in option_lines):
             for line in option_lines:
                 option_id = line[0].lower()
+                option_image = images[0] if len(option_lines) == 1 and images else None
                 current["options"].append({
                     "id": option_id,
                     "label": normalize_option_text(line),
-                    "image": None,
+                    "image": option_image,
                 })
+            if not (len(option_lines) == 1 and images):
+                add_images(current, images)
             mode = "options"
             continue
 
+        add_images(current, images)
+
         if mode == "question":
-            current["question"] = f"{current['question']}\n{text}".strip()
+            current["question"] = append_text(current["question"], text)
 
     if current:
         questions.append(current)

@@ -1,4 +1,4 @@
-function paintAdminDashboard(attempts, students, assignments = [], dataErrors = {}, studentFilters = {}, assessments = [], assignmentEvents = []) {
+function paintAdminDashboard(attempts, students, assignments = [], dataErrors = {}, studentFilters = {}, assessments = [], assignmentEvents = [], questionLibrary = []) {
   const activePage = getAdminPage();
   const latestAttempts = [...attempts].sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
   const context = {
@@ -7,6 +7,7 @@ function paintAdminDashboard(attempts, students, assignments = [], dataErrors = 
     studentFilters,
     assignments,
     assignmentEvents,
+    questionLibrary,
     assessments,
     dataErrors,
     latestAttempts,
@@ -96,7 +97,7 @@ function renderAdminHeaderActions(page) {
 function renderAdminPage(page, context) {
   if (page === "assessments") return renderAdminPretestCatalogPage(context);
   if (page === "assignments") return renderAdminAssignmentsPage(context);
-  if (page === "questions") return renderAdminQuestionsPage();
+  if (page === "questions") return renderAdminQuestionsPage(context);
   if (page === "import") return renderAdminImportPage();
   if (page === "results") return renderAdminResultsPage(context);
   if (page === "ilp") return renderAdminIlpPage(context);

@@ -20,13 +20,13 @@
   },
   "questions": [
     {
-      "id": "q1",
+      "id": "grade-8-pretest-q01",
       "type": "mcq",
       "number": 1,
       "level": "Applying",
       "topic": "8.EE.A.1",
       "standard": "8.EE.A.1",
-      "question": "Which expression is equivalent to (23)2/24?",
+      "question": "Which value is equivalent to (2³)² ÷ 2⁴?",
       "image": "/input/assets/grade-8-pretest/image1.png",
       "images": [
         "/input/assets/grade-8-pretest/image1.png"
@@ -55,18 +55,18 @@
         }
       ],
       "answer": "b",
-      "explanation": "Apply the exponent rules: (23)2 = 26, and 26/24 = 2(6-4) = 22 = 4).",
+      "explanation": "Apply the exponent rules: (2³)² = 2⁶, and 2⁶ ÷ 2⁴ = 2⁽⁶ ⁻ ⁴⁾ = 2² = 4.",
       "distractors": {},
       "correctAnswerText": "4"
     },
     {
-      "id": "q2",
+      "id": "grade-8-pretest-q02",
       "type": "mcq",
       "number": 2,
       "level": "Applying",
       "topic": "8.EE.A.1",
       "standard": "8.EE.A.1",
-      "question": "Which value is equivalent to 5-2 × 54?",
+      "question": "Which value is equivalent to 5⁻² × 5⁴?",
       "image": "/input/assets/grade-8-pretest/image2.png",
       "images": [
         "/input/assets/grade-8-pretest/image2.png"
@@ -95,12 +95,12 @@
         }
       ],
       "answer": "c",
-      "explanation": "When multiplying powers with the same base, add the exponents: 5-2 × 54 = 52 = 25.",
+      "explanation": "When multiplying powers with the same base, add the exponents: 5⁻² × 5⁴ = 5⁽⁻² ⁺ ⁴⁾ = 5² = 25.",
       "distractors": {},
       "correctAnswerText": "25"
     },
     {
-      "id": "q3",
+      "id": "grade-8-pretest-q03",
       "type": "mcq",
       "number": 3,
       "level": "Applying",
@@ -115,7 +115,7 @@
       "options": [
         {
           "id": "a",
-          "label": "1/2",
+          "label": "½",
           "image": null
         },
         {
@@ -135,12 +135,12 @@
         }
       ],
       "answer": "b",
-      "explanation": "Using points A and B, the slope is (6 - 2)/(3 - 1) = 4/2 = 2). The same rise-to-run ratio occurs between any two points on the line.",
+      "explanation": "Using points A and B, the slope is (6 - 2)/(3 - 1) = 4/2 = 2. The same rise-to-run ratio occurs between any two points on the line.",
       "distractors": {},
       "correctAnswerText": "2"
     },
     {
-      "id": "q4",
+      "id": "grade-8-pretest-q04",
       "type": "mcq",
       "number": 4,
       "level": "Applying",
@@ -180,7 +180,7 @@
       "correctAnswerText": "y = 2x - 3"
     },
     {
-      "id": "q5",
+      "id": "grade-8-pretest-q05",
       "type": "mcq",
       "number": 5,
       "level": "Applying",
@@ -220,7 +220,7 @@
       "correctAnswerText": "Infinitely many solutions"
     },
     {
-      "id": "q6",
+      "id": "grade-8-pretest-q06",
       "type": "mcq",
       "number": 6,
       "level": "Applying",
@@ -260,7 +260,7 @@
       "correctAnswerText": "No solution"
     },
     {
-      "id": "q7",
+      "id": "grade-8-pretest-q07",
       "type": "mcq",
       "number": 7,
       "level": "Applying",
@@ -300,7 +300,7 @@
       "correctAnswerText": "x = 5"
     },
     {
-      "id": "q8",
+      "id": "grade-8-pretest-q08",
       "type": "mcq",
       "number": 8,
       "level": "Applying",
@@ -340,7 +340,7 @@
       "correctAnswerText": "x < 8"
     },
     {
-      "id": "q9",
+      "id": "grade-8-pretest-q09",
       "type": "mcq",
       "number": 9,
       "level": "Applying",
@@ -380,13 +380,13 @@
       "correctAnswerText": "(2, 5)"
     },
     {
-      "id": "q10",
+      "id": "grade-8-pretest-q10",
       "type": "mcq",
       "number": 10,
       "level": "Applying",
       "topic": "8.EE.C.8a",
       "standard": "8.EE.C.8a",
-      "question": "Which point is a solution to both equations in the system?\nx + y = 6\ny = 2x",
+      "question": "Which point is a solution to both equations in the system? x + y = 6 y = 2x",
       "image": "/input/assets/grade-8-pretest/image10.png",
       "images": [
         "/input/assets/grade-8-pretest/image10.png"
@@ -420,13 +420,13 @@
       "correctAnswerText": "(2, 4)"
     },
     {
-      "id": "q11",
+      "id": "grade-8-pretest-q11",
       "type": "mcq",
       "number": 11,
       "level": "Applying",
       "topic": "8.EE.C.8b",
       "standard": "8.EE.C.8b",
-      "question": "Solve the system of equations.\n2x + y = 7\nx - y = 2",
+      "question": "Solve the system of equations. 2x + y = 7 x - y = 2",
       "image": "/input/assets/grade-8-pretest/image11.png",
       "images": [
         "/input/assets/grade-8-pretest/image11.png"
@@ -460,13 +460,13 @@
       "correctAnswerText": "(3, 1)"
     },
     {
-      "id": "q12",
+      "id": "grade-8-pretest-q12",
       "type": "mcq",
       "number": 12,
       "level": "Applying",
       "topic": "8.EE.C.8b",
       "standard": "8.EE.C.8b",
-      "question": "Consider the system:\ny = 3x + 2\n6x - 2y = -4\nHow many solutions does the system have?",
+      "question": "Consider the system: y = 3x + 2 6x - 2y = -4 How many solutions does the system have?",
       "image": "/input/assets/grade-8-pretest/image12.png",
       "images": [
         "/input/assets/grade-8-pretest/image12.png"
@@ -500,7 +500,7 @@
       "correctAnswerText": "Infinitely many solutions"
     },
     {
-      "id": "q13",
+      "id": "grade-8-pretest-q13",
       "type": "mcq",
       "number": 13,
       "level": "Applying",
@@ -540,13 +540,13 @@
       "correctAnswerText": "10 adult tickets and 10 student tickets"
     },
     {
-      "id": "q14",
+      "id": "grade-8-pretest-q14",
       "type": "mcq",
       "number": 14,
       "level": "Applying",
       "topic": "8.F.A.1",
       "standard": "8.F.A.1",
-      "question": "The table shows a relation.\nIs the relation a function?",
+      "question": "The table shows a relation in which the input 2 is paired with the outputs 6 and 8. Which change would make the relation a function?",
       "image": "/input/assets/grade-8-pretest/image14.png",
       "images": [
         "/input/assets/grade-8-pretest/image14.png"
@@ -555,38 +555,38 @@
       "options": [
         {
           "id": "a",
-          "label": "Yes, because every output is different.",
+          "label": "Change the output 8 paired with input 2 to 6.",
           "image": null
         },
         {
           "id": "b",
-          "label": "Yes, because each input has at least one output.",
+          "label": "Change the output 8 paired with input 2 to 10.",
           "image": null
         },
         {
           "id": "c",
-          "label": "No, because the input 2 is assigned two different outputs.",
+          "label": "Add another pair with input 2 and output 10.",
           "image": null
         },
         {
           "id": "d",
-          "label": "No, because the outputs are greater than the inputs.",
+          "label": "Add another pair with input 2 and output 4.",
           "image": null
         }
       ],
-      "answer": "c",
-      "explanation": "A function assigns exactly one output to each input. Since the input 2 is paired with both 6 and 8, the relation is not a function.",
+      "answer": "a",
+      "explanation": "A function assigns exactly one output to each input. Changing the output 8 to 6 means that input 2 is associated with only one output value, 6, so the relation becomes a function.",
       "distractors": {},
-      "correctAnswerText": "No, because the input 2 is assigned two different outputs."
+      "correctAnswerText": "Change the output 8 paired with input 2 to 6."
     },
     {
-      "id": "q15",
+      "id": "grade-8-pretest-q15",
       "type": "mcq",
       "number": 15,
       "level": "Applying",
       "topic": "8.F.A.1",
       "standard": "8.F.A.1",
-      "question": "Which set of ordered pairs represents a function?",
+      "question": "The relation {(2, 4), (3, 4), (4, 4)} is a function. Which ordered pair can be added while keeping the relation a function?",
       "image": "/input/assets/grade-8-pretest/image15.png",
       "images": [
         "/input/assets/grade-8-pretest/image15.png"
@@ -595,38 +595,38 @@
       "options": [
         {
           "id": "a",
-          "label": "{(1, 3), (1, 5), (2, 7)}",
+          "label": "(2, 6)",
           "image": null
         },
         {
           "id": "b",
-          "label": "{(2, 4), (3, 4), (4, 4)}",
+          "label": "(3, 5)",
           "image": null
         },
         {
           "id": "c",
-          "label": "{(1, 2), (2, 3), (2, 5)}",
+          "label": "(5, 4)",
           "image": null
         },
         {
           "id": "d",
-          "label": "{(3, 1), (3, 2), (3, 3)}",
+          "label": "(4, 7)",
           "image": null
         }
       ],
-      "answer": "b",
-      "explanation": "In choice B, each input is paired with exactly one output. Different inputs may have the same output and still form a function.",
+      "answer": "c",
+      "explanation": "The input 5 is not already used, so adding (5, 4) keeps exactly one output for each input. The other choices assign a second, different output to an existing input.",
       "distractors": {},
-      "correctAnswerText": "{(2, 4), (3, 4), (4, 4)}"
+      "correctAnswerText": "(5, 4)"
     },
     {
-      "id": "q16",
+      "id": "grade-8-pretest-q16",
       "type": "mcq",
       "number": 16,
       "level": "Applying",
       "topic": "8.F.A.3",
       "standard": "8.F.A.3",
-      "question": "Which table represents a nonlinear function?",
+      "question": "Use the changes in the y-values for equal increases in x to determine which set of ordered pairs represents a nonlinear function.",
       "image": "/input/assets/grade-8-pretest/image16.png",
       "images": [
         "/input/assets/grade-8-pretest/image16.png"
@@ -660,56 +660,54 @@
       "correctAnswerText": "{(0, 1), (1, 3), (2, 7), (3, 13)}"
     },
     {
-      "id": "q17",
+      "id": "grade-8-pretest-q17",
       "type": "mcq",
       "number": 17,
       "level": "Applying",
       "topic": "8.F.A.3",
       "standard": "8.F.A.3",
-      "question": "Which equation defines a linear function?",
-      "image": "/input/assets/grade-8-pretest/image17.png",
-      "images": [
-        "/input/assets/grade-8-pretest/image17.png"
-      ],
+      "question": "The function y = -4x + 7 is given. Which statement is correct?",
+      "image": null,
+      "images": [],
       "imageDescription": null,
       "options": [
         {
           "id": "a",
-          "label": "y = x2 + 2",
+          "label": "The point (2, -1) lies on the graph, and the function is linear.",
           "image": null
         },
         {
           "id": "b",
-          "label": "y = -4x + 7",
+          "label": "The point (2, 15) lies on the graph, and the function is linear.",
           "image": null
         },
         {
           "id": "c",
-          "label": "y = 1/x",
+          "label": "The point (2, -1) lies on the graph, and the function is nonlinear.",
           "image": null
         },
         {
           "id": "d",
-          "label": "y = x3 - 1",
+          "label": "The point (2, 15) lies on the graph, and the function is nonlinear.",
           "image": null
         }
       ],
-      "answer": "b",
-      "explanation": "The equation y = -4x + 7 is in the form y = mx + b, so its graph is a straight line.",
+      "answer": "a",
+      "explanation": "Substitute x = 2: y = -4(2) + 7 = -8 + 7 = -1, so (2, -1) lies on the graph. The equation is in the form y = mx + b, so it defines a linear function.",
       "distractors": {},
-      "correctAnswerText": "y = -4x + 7"
+      "correctAnswerText": "The point (2, -1) lies on the graph, and the function is linear."
     },
     {
-      "id": "q18",
+      "id": "grade-8-pretest-q18",
       "type": "mcq",
       "number": 18,
       "level": "Applying",
       "topic": "8.F.B.4",
       "standard": "8.F.B.4",
-      "question": "The table represents a linear relationship.\nWhich equation models the relationship?",
-      "image": "/input/assets/grade-8-pretest/image18.png",
+      "question": "The table represents a linear relationship. Which equation models the relationship?",
+      "image": "/input/assets/grade-8-pretest/image17.png",
       "images": [
-        "/input/assets/grade-8-pretest/image18.png"
+        "/input/assets/grade-8-pretest/image17.png"
       ],
       "imageDescription": null,
       "options": [
@@ -740,13 +738,53 @@
       "correctAnswerText": "y = 3x + 5"
     },
     {
-      "id": "q19",
+      "id": "grade-8-pretest-q19",
       "type": "mcq",
       "number": 19,
       "level": "Applying",
       "topic": "8.F.B.4",
       "standard": "8.F.B.4",
-      "question": "A taxi company charges a starting fee of $4 and $2.50 for each mile traveled. Which statement correctly identifies the rate of change and initial value?",
+      "question": "A taxi company charges a starting fee of $4 and $2.50 for each mile traveled. If m represents the number of miles and c represents the total cost, which equation models the relationship, and what is the cost of a 6-mile ride?",
+      "image": "/input/assets/grade-8-pretest/image18.png",
+      "images": [
+        "/input/assets/grade-8-pretest/image18.png"
+      ],
+      "imageDescription": null,
+      "options": [
+        {
+          "id": "a",
+          "label": "c = 2.50m + 4; $19.00",
+          "image": null
+        },
+        {
+          "id": "b",
+          "label": "c = 4m + 2.50; $26.50",
+          "image": null
+        },
+        {
+          "id": "c",
+          "label": "c = 6.50m; $39.00",
+          "image": null
+        },
+        {
+          "id": "d",
+          "label": "c = 2.50m; $15.00",
+          "image": null
+        }
+      ],
+      "answer": "a",
+      "explanation": "The rate of change is $2.50 per mile, and the initial value is $4, so c = 2.50m + 4. For 6 miles, c = 2.50(6) + 4 = 15 + 4 = 19. Therefore, the ride costs $19.00.",
+      "distractors": {},
+      "correctAnswerText": "c = 2.50m + 4; $19.00"
+    },
+    {
+      "id": "grade-8-pretest-q20",
+      "type": "mcq",
+      "number": 20,
+      "level": "Applying",
+      "topic": "8.F.B.5",
+      "standard": "8.F.B.5",
+      "question": "A graph showing the amount of water in a tank rises steadily for 10 minutes, remains horizontal from minute 10 to minute 15, and then falls steadily. At minute 10, the tank contains 500 liters of water. How much water is in the tank at minute 15?",
       "image": "/input/assets/grade-8-pretest/image19.png",
       "images": [
         "/input/assets/grade-8-pretest/image19.png"
@@ -755,69 +793,29 @@
       "options": [
         {
           "id": "a",
-          "label": "Rate of change: $4 per mile; initial value: $2.50",
+          "label": "0 liters",
           "image": null
         },
         {
           "id": "b",
-          "label": "Rate of change: $2.50 per mile; initial value: $4",
+          "label": "250 liters",
           "image": null
         },
         {
           "id": "c",
-          "label": "Rate of change: $6.50 per mile; initial value: $0",
+          "label": "500 liters",
           "image": null
         },
         {
           "id": "d",
-          "label": "Rate of change: $4 per mile; initial value: $6.50",
+          "label": "750 liters",
           "image": null
         }
       ],
-      "answer": "b",
-      "explanation": "The cost increases by $2.50 for each mile, so the rate of change is $2.50 per mile. The $4 starting fee is the cost when 0 miles have been traveled, so it is the initial value.",
+      "answer": "c",
+      "explanation": "The graph is horizontal from minute 10 to minute 15, so the amount of water does not change during that interval. Since the tank contains 500 liters at minute 10, it still contains 500 liters at minute 15.",
       "distractors": {},
-      "correctAnswerText": "Rate of change: $2.50 per mile; initial value: $4"
-    },
-    {
-      "id": "q20",
-      "type": "mcq",
-      "number": 20,
-      "level": "Applying",
-      "topic": "8.F.B.5",
-      "standard": "8.F.B.5",
-      "question": "A graph showing the amount of water in a tank rises steadily for 10 minutes, remains horizontal for 5 minutes, and then falls steadily. Which description best matches the graph?",
-      "image": "/input/assets/grade-8-pretest/image20.png",
-      "images": [
-        "/input/assets/grade-8-pretest/image20.png"
-      ],
-      "imageDescription": null,
-      "options": [
-        {
-          "id": "a",
-          "label": "The tank is filling, then remains at the same level, and then drains.",
-          "image": null
-        },
-        {
-          "id": "b",
-          "label": "The tank is draining, then fills, and then remains at the same level.",
-          "image": null
-        },
-        {
-          "id": "c",
-          "label": "The tank remains at the same level, then drains, and then fills.",
-          "image": null
-        },
-        {
-          "id": "d",
-          "label": "The tank fills at an increasing rate during the entire time.",
-          "image": null
-        }
-      ],
-      "answer": "a",
-      "explanation": "An increasing graph shows the amount of water rising, a horizontal segment shows no change, and a decreasing graph shows the amount of water falling.",
-      "distractors": {},
-      "correctAnswerText": "The tank is filling, then remains at the same level, and then drains."
+      "correctAnswerText": "500 liters"
     }
   ]
 }

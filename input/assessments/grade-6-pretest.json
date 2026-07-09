@@ -20,13 +20,13 @@
   },
   "questions": [
     {
-      "id": "q1",
+      "id": "grade-6-pretest-q01",
       "type": "mcq",
       "number": 1,
       "level": "Applying",
       "topic": "6.RP.A.1",
       "standard": "6.RP.A.1",
-      "question": "A pet shelter has 8 cats and 12 dogs. The shelter wants to create smaller groups with the same ratio of cats to dogs. Which group has the same ratio of cats to dogs?",
+      "question": "A pet shelter has 8 cats and 12 dogs. Which ratio statement correctly compares the number of cats to the total number of animals at the shelter?",
       "image": "/input/assets/grade-6-pretest/image1.png",
       "images": [
         "/input/assets/grade-6-pretest/image1.png"
@@ -35,32 +35,32 @@
       "options": [
         {
           "id": "a",
-          "label": "2 cats and 3 dogs",
+          "label": "For every 2 cats, there are 5 animals.",
           "image": null
         },
         {
           "id": "b",
-          "label": "3 cats and 2 dogs",
+          "label": "For every 3 cats, there are 5 animals.",
           "image": null
         },
         {
           "id": "c",
-          "label": "4 cats and 5 dogs",
+          "label": "For every 2 cats, there are 3 animals.",
           "image": null
         },
         {
           "id": "d",
-          "label": "6 cats and 10 dogs",
+          "label": "For every 5 cats, there are 2 animals.",
           "image": null
         }
       ],
       "answer": "a",
-      "explanation": "The ratio of cats to dogs is 8:12, which simplifies to 2:3. Therefore, a group of 2 cats and 3 dogs has the same ratio.",
+      "explanation": "There are 8 + 12 = 20 animals in all. The ratio of cats to total animals is 8:20, which is equivalent to 2:5. Therefore, for every 2 cats, there are 5 animals.",
       "distractors": {},
-      "correctAnswerText": "2 cats and 3 dogs"
+      "correctAnswerText": "For every 2 cats, there are 5 animals."
     },
     {
-      "id": "q2",
+      "id": "grade-6-pretest-q02",
       "type": "mcq",
       "number": 2,
       "level": "Applying",
@@ -100,13 +100,13 @@
       "correctAnswerText": "The cyclist travels 8 miles per hour."
     },
     {
-      "id": "q3",
+      "id": "grade-6-pretest-q03",
       "type": "mcq",
       "number": 3,
       "level": "Applying",
       "topic": "6.RP.A.3a",
       "standard": "6.RP.A.3a",
-      "question": "A bakery uses 2 cups of flour to make 3 loaves of bread. The table shows equivalent ratios of cups of flour to loaves of bread.\n\nCups of Flour | 2 | 4 | 6 | ?\nLoaves of Bread | 3 | 6 | 9 | 12\nHow many cups of flour are needed to make 12 loaves of bread?",
+      "question": "A bakery uses 2 cups of flour to make 3 loaves of bread. The table shows equivalent ratios of cups of flour to loaves of bread. Cups of Flour | 2 | 4 | 6 | ? Loaves of Bread | 3 | 6 | 9 | 12 How many cups of flour are needed to make 12 loaves of bread?",
       "image": "/input/assets/grade-6-pretest/image3.png",
       "images": [
         "/input/assets/grade-6-pretest/image3.png"
@@ -140,7 +140,7 @@
       "correctAnswerText": "8 cups"
     },
     {
-      "id": "q4",
+      "id": "grade-6-pretest-q04",
       "type": "mcq",
       "number": 4,
       "level": "Applying",
@@ -180,7 +180,7 @@
       "correctAnswerText": "$2.50"
     },
     {
-      "id": "q5",
+      "id": "grade-6-pretest-q05",
       "type": "mcq",
       "number": 5,
       "level": "Applying",
@@ -220,7 +220,7 @@
       "correctAnswerText": "84 students"
     },
     {
-      "id": "q6",
+      "id": "grade-6-pretest-q06",
       "type": "mcq",
       "number": 6,
       "level": "Applying",
@@ -260,7 +260,7 @@
       "correctAnswerText": "5,280 yards"
     },
     {
-      "id": "q7",
+      "id": "grade-6-pretest-q07",
       "type": "mcq",
       "number": 7,
       "level": "Applying",
@@ -300,13 +300,13 @@
       "correctAnswerText": "6 containers"
     },
     {
-      "id": "q8",
+      "id": "grade-6-pretest-q08",
       "type": "mcq",
       "number": 8,
       "level": "Applying",
       "topic": "6.NS.C.5",
       "standard": "6.NS.C.5",
-      "question": "At noon, the temperature was 4°C above zero. By midnight, the temperature was 7°C below zero. Which pair of integers correctly represents the two temperatures?",
+      "question": "A weather station uses positive integers for temperatures above 0°C and negative integers for temperatures below 0°C. At noon, the temperature is 4°C above 0°C. At midnight, the temperature is 7°C below 0°C. Which pair of integers should the weather station record?",
       "image": "/input/assets/grade-6-pretest/image8.png",
       "images": [
         "/input/assets/grade-6-pretest/image8.png"
@@ -335,12 +335,12 @@
         }
       ],
       "answer": "c",
-      "explanation": "A temperature 4°C above zero is represented by +4, and a temperature 7°C below zero is represented by -7. In this situation, 0°C represents the temperature that separates temperatures above zero from temperatures below zero.",
+      "explanation": "The weather station records temperatures above 0°C with positive integers and temperatures below 0°C with negative integers. Therefore, 4°C above 0°C is +4, and 7°C below 0°C is -7.",
       "distractors": {},
       "correctAnswerText": "+4 and -7"
     },
     {
-      "id": "q9",
+      "id": "grade-6-pretest-q09",
       "type": "mcq",
       "number": 9,
       "level": "Applying",
@@ -380,7 +380,7 @@
       "correctAnswerText": "-8"
     },
     {
-      "id": "q10",
+      "id": "grade-6-pretest-q10",
       "type": "mcq",
       "number": 10,
       "level": "Applying",
@@ -418,7 +418,7 @@
       "correctAnswerText": "(-4, -3)"
     },
     {
-      "id": "q11",
+      "id": "grade-6-pretest-q11",
       "type": "mcq",
       "number": 11,
       "level": "Applying",
@@ -456,7 +456,7 @@
       "correctAnswerText": "(-3, 4)"
     },
     {
-      "id": "q12",
+      "id": "grade-6-pretest-q12",
       "type": "mcq",
       "number": 12,
       "level": "Applying",
@@ -494,7 +494,7 @@
       "correctAnswerText": "7 units"
     },
     {
-      "id": "q13",
+      "id": "grade-6-pretest-q13",
       "type": "mcq",
       "number": 13,
       "level": "Applying",
@@ -534,13 +534,13 @@
       "correctAnswerText": "9t + 4"
     },
     {
-      "id": "q14",
+      "id": "grade-6-pretest-q14",
       "type": "mcq",
       "number": 14,
       "level": "Applying",
       "topic": "6.EE.A.2b",
       "standard": "6.EE.A.2b",
-      "question": "Consider the expression 5(3x + 2). Which statement correctly identifies parts of the expression?",
+      "question": "In the expression 5(3x + 2), let p represent the entire quantity 3x + 2. Which expression correctly represents 5(3x + 2) using p?",
       "image": "/input/assets/grade-6-pretest/image11.png",
       "images": [
         "/input/assets/grade-6-pretest/image11.png"
@@ -549,32 +549,32 @@
       "options": [
         {
           "id": "a",
-          "label": "5 is a coefficient of x, and 3x + 2 is a factor.",
+          "label": "5 + p",
           "image": null
         },
         {
           "id": "b",
-          "label": "3 is the coefficient of x, and 3x + 2 is a factor multiplied by 5.",
+          "label": "5p",
           "image": null
         },
         {
           "id": "c",
-          "label": "2 is the coefficient of x, and 5 + 3x is a sum.",
+          "label": "p ÷ 5",
           "image": null
         },
         {
           "id": "d",
-          "label": "3x and 2 are factors of 5.",
+          "label": "3p + 2",
           "image": null
         }
       ],
       "answer": "b",
-      "explanation": "In 3x, the number 3 is the coefficient of x. In the expression 5(3x + 2), the entire quantity 3x + 2 is treated as a single factor multiplied by 5.",
+      "explanation": "The quantity 3x + 2 is treated as a single factor. If p represents 3x + 2, then 5(3x + 2) can be written as 5p.",
       "distractors": {},
-      "correctAnswerText": "3 is the coefficient of x, and 3x + 2 is a factor multiplied by 5."
+      "correctAnswerText": "5p"
     },
     {
-      "id": "q15",
+      "id": "grade-6-pretest-q15",
       "type": "mcq",
       "number": 15,
       "level": "Applying",
@@ -614,7 +614,7 @@
       "correctAnswerText": "49 cm²"
     },
     {
-      "id": "q16",
+      "id": "grade-6-pretest-q16",
       "type": "mcq",
       "number": 16,
       "level": "Applying",
@@ -654,54 +654,56 @@
       "correctAnswerText": "12x + 20"
     },
     {
-      "id": "q17",
+      "id": "grade-6-pretest-q17",
       "type": "mcq",
       "number": 17,
       "level": "Applying",
       "topic": "6.EE.A.4",
       "standard": "6.EE.A.4",
-      "question": "Which pair of expressions is equivalent for every value of x?",
-      "image": null,
-      "images": [],
+      "question": "Which expression is equivalent to 3x + 2x + 4 for every value of x?",
+      "image": "/input/assets/grade-6-pretest/image14.png",
+      "images": [
+        "/input/assets/grade-6-pretest/image14.png"
+      ],
       "imageDescription": null,
       "options": [
         {
           "id": "a",
-          "label": "x + x + x + x and 4x",
+          "label": "5x + 4",
           "image": null
         },
         {
           "id": "b",
-          "label": "x + 4 and 4x",
+          "label": "5x + 8",
           "image": null
         },
         {
           "id": "c",
-          "label": "2x + 3 and 5x",
+          "label": "6x + 4",
           "image": null
         },
         {
           "id": "d",
-          "label": "x + x and x²",
+          "label": "9x",
           "image": null
         }
       ],
       "answer": "a",
-      "explanation": "Adding x four times is the same as multiplying x by 4. Therefore, x + x + x + x and 4x have the same value for every value of x.",
+      "explanation": "The like terms 3x and 2x combine to make 5x. Therefore, 3x + 2x + 4 and 5x + 4 have the same value for every value of x.",
       "distractors": {},
-      "correctAnswerText": "x + x + x + x and 4x"
+      "correctAnswerText": "5x + 4"
     },
     {
-      "id": "q18",
+      "id": "grade-6-pretest-q18",
       "type": "mcq",
       "number": 18,
       "level": "Applying",
       "topic": "6.EE.B.5",
       "standard": "6.EE.B.5",
       "question": "Which value of x makes the equation 3x + 4 = 19 true?",
-      "image": "/input/assets/grade-6-pretest/image14.png",
+      "image": "/input/assets/grade-6-pretest/image15.png",
       "images": [
-        "/input/assets/grade-6-pretest/image14.png"
+        "/input/assets/grade-6-pretest/image15.png"
       ],
       "imageDescription": null,
       "options": [
@@ -732,16 +734,16 @@
       "correctAnswerText": "5"
     },
     {
-      "id": "q19",
+      "id": "grade-6-pretest-q19",
       "type": "mcq",
       "number": 19,
       "level": "Applying",
       "topic": "6.EE.B.6",
       "standard": "6.EE.B.6",
       "question": "A school bus can carry 48 students. There are already 31 students on the bus. Let s represent the number of additional students who can get on the bus. Which expression represents the total number of students on the bus after s more students get on?",
-      "image": "/input/assets/grade-6-pretest/image15.png",
+      "image": "/input/assets/grade-6-pretest/image16.png",
       "images": [
-        "/input/assets/grade-6-pretest/image15.png"
+        "/input/assets/grade-6-pretest/image16.png"
       ],
       "imageDescription": null,
       "options": [
@@ -772,16 +774,16 @@
       "correctAnswerText": "31 + s"
     },
     {
-      "id": "q20",
+      "id": "grade-6-pretest-q20",
       "type": "mcq",
       "number": 20,
       "level": "Applying",
-      "topic": "6.EE.B.6",
-      "standard": "6.EE.B.6",
+      "topic": "6.EE.B.7",
+      "standard": "6.EE.B.7",
       "question": "Maya bought 4 identical notebooks for a total of $18. Let n represent the cost of one notebook. Which equation can be used to find n, and what is the value of n?",
-      "image": "/input/assets/grade-6-pretest/image16.png",
+      "image": "/input/assets/grade-6-pretest/image17.png",
       "images": [
-        "/input/assets/grade-6-pretest/image16.png"
+        "/input/assets/grade-6-pretest/image17.png"
       ],
       "imageDescription": null,
       "options": [

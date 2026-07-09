@@ -16,26 +16,47 @@ const pool = new Pool({
 });
 
 const assessmentsDir = path.join(process.cwd(), "input", "assessments");
+const catalogPath = path.join(process.cwd(), "input", "assessment-catalog.json");
 
 async function main() {
   await pool.query("select 1");
 
-  const files = (await fs.readdir(assessmentsDir))
-    .filter((file) => file.endsWith(".json"))
-    .sort();
+  const files = await getAssessmentFiles();
 
   let assessmentCount = 0;
   let questionCount = 0;
+  const activeAssessmentKeys = [];
 
   for (const file of files) {
-    const payload = JSON.parse(await fs.readFile(path.join(assessmentsDir, file), "utf8"));
+    const payload = JSON.parse(await fs.readFile(file, "utf8"));
     const result = await seedAssessment(payload);
+    activeAssessmentKeys.push(payload.assessment?.key || slugify(payload.assessment?.sourceDocument || payload.assessment?.title || "assessment"));
     assessmentCount += 1;
     questionCount += result.questions;
     console.log(`Seeded ${payload.assessment.title}: ${result.questions} question(s).`);
   }
 
+  await archiveInactivePretests(activeAssessmentKeys);
   console.log(`Seeded ${assessmentCount} assessment(s) and ${questionCount} question(s).`);
+}
+
+async function getAssessmentFiles() {
+  try {
+    const catalog = JSON.parse(await fs.readFile(catalogPath, "utf8"));
+    const items = Array.isArray(catalog.assessments) ? catalog.assessments : [];
+    if (items.length) {
+      return items
+        .map((item) => path.resolve(process.cwd(), item.path || path.join("input", "assessments", `${item.key}.json`)))
+        .sort();
+    }
+  } catch {
+    // Fall back to the folder scan for older local setups.
+  }
+
+  return (await fs.readdir(assessmentsDir))
+    .filter((file) => file.endsWith(".json"))
+    .map((file) => path.join(assessmentsDir, file))
+    .sort();
 }
 
 async function seedAssessment(payload) {
@@ -85,9 +106,11 @@ async function seedAssessment(payload) {
 
     const assessmentId = assessmentResult.rows[0].id;
     await client.query("delete from test_engine_assessment_questions where assessment_id = $1", [assessmentId]);
+    const currentQuestionKeys = [];
 
     for (const question of questions) {
       const questionKey = `${assessmentKey}:${question.id || `q${question.number}`}`;
+      currentQuestionKeys.push(questionKey);
       const questionResult = await client.query(`
         insert into test_engine_questions (
           external_question_key,
@@ -155,6 +178,14 @@ async function seedAssessment(payload) {
       ]);
     }
 
+    if (currentQuestionKeys.length) {
+      await client.query(`
+        delete from test_engine_questions
+        where metadata->>'assessmentKey' = $1
+          and external_question_key <> all($2::text[])
+      `, [assessmentKey, currentQuestionKeys]);
+    }
+
     await client.query("commit");
     return { questions: questions.length };
   } catch (error) {
@@ -162,6 +193,21 @@ async function seedAssessment(payload) {
     throw error;
   } finally {
     client.release();
+  }
+}
+
+async function archiveInactivePretests(activeAssessmentKeys) {
+  if (!activeAssessmentKeys.length) return;
+  const result = await pool.query(`
+    update test_engine_assessments
+    set status = 'archived',
+        updated_at = now()
+    where coalesce(assignment_type_code, 'assessment') = 'pretest'
+      and external_assessment_key <> all($1::text[])
+      and status <> 'archived'
+  `, [activeAssessmentKeys]);
+  if (result.rowCount) {
+    console.log(`Archived ${result.rowCount} inactive pretest assessment(s).`);
   }
 }
 

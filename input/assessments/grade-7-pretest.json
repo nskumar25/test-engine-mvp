@@ -20,13 +20,13 @@
   },
   "questions": [
     {
-      "id": "q1",
+      "id": "grade-7-pretest-q01",
       "type": "mcq",
       "number": 1,
       "level": "Applying",
       "topic": "7.RP.A.2a",
       "standard": "7.RP.A.2a",
-      "question": "The table shows the relationship between the number of movie tickets purchased and the total cost.\nWhich statement correctly describes the relationship?",
+      "question": "The table shows the relationship between the number of movie tickets purchased and the total cost. Which statement correctly describes the relationship?",
       "image": "/input/assets/grade-7-pretest/image1.png",
       "images": [
         "/input/assets/grade-7-pretest/image1.png"
@@ -60,13 +60,13 @@
       "correctAnswerText": "The relationship is proportional because the ratio of cost to tickets is always 7."
     },
     {
-      "id": "q2",
+      "id": "grade-7-pretest-q02",
       "type": "mcq",
       "number": 2,
       "level": "Applying",
       "topic": "7.RP.A.2b",
       "standard": "7.RP.A.2b",
-      "question": "The table shows the number of hours a machine operates and the number of parts it produces.\nWhat is the constant of proportionality?",
+      "question": "The table shows the number of hours a machine operates and the number of parts it produces. What is the constant of proportionality?",
       "image": "/input/assets/grade-7-pretest/image2.png",
       "images": [
         "/input/assets/grade-7-pretest/image2.png"
@@ -100,7 +100,7 @@
       "correctAnswerText": "15"
     },
     {
-      "id": "q3",
+      "id": "grade-7-pretest-q03",
       "type": "mcq",
       "number": 3,
       "level": "Applying",
@@ -140,13 +140,13 @@
       "correctAnswerText": "c = 8m"
     },
     {
-      "id": "q4",
+      "id": "grade-7-pretest-q04",
       "type": "mcq",
       "number": 4,
       "level": "Applying",
       "topic": "7.RP.A.2d",
       "standard": "7.RP.A.2d",
-      "question": "A runner travels at a constant rate of 6 miles per hour. On a graph, x represents time in hours and y represents distance in miles. What does the point (1, 6) represent?",
+      "question": "A runner's distance-time graph contains the point (1, 6), where x represents time in hours and y represents distance in miles. The relationship is proportional. Which point should also lie on the graph after 4 hours, and what does the point mean?",
       "image": "/input/assets/grade-7-pretest/image4.png",
       "images": [
         "/input/assets/grade-7-pretest/image4.png"
@@ -155,32 +155,32 @@
       "options": [
         {
           "id": "a",
-          "label": "The runner travels 1 mile in 6 hours.",
+          "label": "(4, 10); the runner travels 10 miles in 4 hours",
           "image": null
         },
         {
           "id": "b",
-          "label": "The runner travels 6 miles in 1 hour.",
+          "label": "(4, 24); the runner travels 24 miles in 4 hours",
           "image": null
         },
         {
           "id": "c",
-          "label": "The runner travels 6 miles in 6 hours.",
+          "label": "(24, 4); the runner travels 4 miles in 24 hours",
           "image": null
         },
         {
           "id": "d",
-          "label": "The runner begins 6 miles from the starting point.",
+          "label": "(6, 24); the runner travels 24 miles in 6 hours",
           "image": null
         }
       ],
       "answer": "b",
-      "explanation": "The point (1, 6) means that after 1 hour, the runner has traveled 6 miles. This point also shows that the unit rate is 6 miles per hour.",
+      "explanation": "The point (1, 6) shows that the runner travels 6 miles in 1 hour. At this constant rate, the runner travels 4 × 6 = 24 miles in 4 hours. Therefore, the point (4, 24) lies on the graph and means that the runner travels 24 miles in 4 hours.",
       "distractors": {},
-      "correctAnswerText": "The runner travels 6 miles in 1 hour."
+      "correctAnswerText": "(4, 24); the runner travels 24 miles in 4 hours"
     },
     {
-      "id": "q5",
+      "id": "grade-7-pretest-q05",
       "type": "mcq",
       "number": 5,
       "level": "Applying",
@@ -220,7 +220,7 @@
       "correctAnswerText": "$64.80"
     },
     {
-      "id": "q6",
+      "id": "grade-7-pretest-q06",
       "type": "mcq",
       "number": 6,
       "level": "Applying",
@@ -260,7 +260,7 @@
       "correctAnswerText": "An elevator rises 6 floors and then falls 6 floors."
     },
     {
-      "id": "q7",
+      "id": "grade-7-pretest-q07",
       "type": "mcq",
       "number": 7,
       "level": "Applying",
@@ -300,7 +300,7 @@
       "correctAnswerText": "-1.25 kilometers"
     },
     {
-      "id": "q8",
+      "id": "grade-7-pretest-q08",
       "type": "mcq",
       "number": 8,
       "level": "Applying",
@@ -340,7 +340,7 @@
       "correctAnswerText": "7°C"
     },
     {
-      "id": "q9",
+      "id": "grade-7-pretest-q09",
       "type": "mcq",
       "number": 9,
       "level": "Applying",
@@ -380,7 +380,7 @@
       "correctAnswerText": "7.2"
     },
     {
-      "id": "q10",
+      "id": "grade-7-pretest-q10",
       "type": "mcq",
       "number": 10,
       "level": "Applying",
@@ -420,7 +420,7 @@
       "correctAnswerText": "-10°C"
     },
     {
-      "id": "q11",
+      "id": "grade-7-pretest-q11",
       "type": "mcq",
       "number": 11,
       "level": "Applying",
@@ -460,7 +460,7 @@
       "correctAnswerText": "-3 meters"
     },
     {
-      "id": "q12",
+      "id": "grade-7-pretest-q12",
       "type": "mcq",
       "number": 12,
       "level": "Applying",
@@ -500,7 +500,7 @@
       "correctAnswerText": "12"
     },
     {
-      "id": "q13",
+      "id": "grade-7-pretest-q13",
       "type": "mcq",
       "number": 13,
       "level": "Applying",
@@ -520,12 +520,12 @@
         },
         {
           "id": "b",
-          "label": "0.41666...",
+          "label": "0.41666…",
           "image": null
         },
         {
           "id": "c",
-          "label": "0.51212...",
+          "label": "0.51212…",
           "image": null
         },
         {
@@ -540,7 +540,7 @@
       "correctAnswerText": "0.41666..."
     },
     {
-      "id": "q14",
+      "id": "grade-7-pretest-q14",
       "type": "mcq",
       "number": 14,
       "level": "Applying",
@@ -580,13 +580,13 @@
       "correctAnswerText": "$12.00"
     },
     {
-      "id": "q15",
+      "id": "grade-7-pretest-q15",
       "type": "mcq",
       "number": 15,
       "level": "Applying",
       "topic": "7.EE.A.1",
       "standard": "7.EE.A.1",
-      "question": "Which expression is equivalent to 1/2(6x - 8) + 2x?",
+      "question": "Which expression is equivalent to ½(6x - 8) + 2x?",
       "image": "/input/assets/grade-7-pretest/image15.png",
       "images": [
         "/input/assets/grade-7-pretest/image15.png"
@@ -615,12 +615,12 @@
         }
       ],
       "answer": "b",
-      "explanation": "Distribute 1/2: 1/2(6x - 8) = 3x - 4. Then combine like terms: 3x - 4 + 2x = 5x - 4.",
+      "explanation": "Distribute ½: ½(6x - 8) = 3x - 4. Then combine like terms: 3x - 4 + 2x = 5x - 4.",
       "distractors": {},
       "correctAnswerText": "5x - 4"
     },
     {
-      "id": "q16",
+      "id": "grade-7-pretest-q16",
       "type": "mcq",
       "number": 16,
       "level": "Applying",
@@ -660,56 +660,54 @@
       "correctAnswerText": "1.15p"
     },
     {
-      "id": "q17",
+      "id": "grade-7-pretest-q17",
       "type": "mcq",
       "number": 17,
       "level": "Applying",
       "topic": "7.EE.B.3",
       "standard": "7.EE.B.3",
-      "question": "A bank account has a balance of -$25.50. The account owner deposits $80.75 and then withdraws $12.25. What is the final balance?",
-      "image": "/input/assets/grade-7-pretest/image17.png",
-      "images": [
-        "/input/assets/grade-7-pretest/image17.png"
-      ],
+      "question": "A bank account has a balance of -$25.50. The account owner deposits $80.75, withdraws $12.25, and is charged two fees of $4.50 each. What is the final balance?",
+      "image": null,
+      "images": [],
       "imageDescription": null,
       "options": [
         {
           "id": "a",
-          "label": "$43.00",
+          "label": "$34.00",
           "image": null
         },
         {
           "id": "b",
-          "label": "$55.25",
+          "label": "$43.00",
           "image": null
         },
         {
           "id": "c",
-          "label": "$68.50",
+          "label": "$46.25",
           "image": null
         },
         {
           "id": "d",
-          "label": "$93.00",
+          "label": "$55.25",
           "image": null
         }
       ],
       "answer": "a",
-      "explanation": "Calculate -25.50 + 80.75 - 12.25. The balance after the deposit is $55.25. After the withdrawal, $55.25 - $12.25 = $43.00.",
+      "explanation": "Calculate -25.50 + 80.75 - 12.25 - 2(4.50). First, -25.50 + 80.75 = 55.25. Then, 55.25 - 12.25 = 43.00. The two fees total $9.00, so 43.00 - 9.00 = 34.00. Therefore, the final balance is $34.00.",
       "distractors": {},
-      "correctAnswerText": "$43.00"
+      "correctAnswerText": "$34.00"
     },
     {
-      "id": "q18",
+      "id": "grade-7-pretest-q18",
       "type": "mcq",
       "number": 18,
       "level": "Applying",
       "topic": "7.EE.B.4a",
       "standard": "7.EE.B.4a",
-      "question": "Three friends share the cost of a trip equally. Each friend pays $2 for a snack in addition to an equal share of the travel cost. Each friend pays $27 in total. If x represents one friend's share of the travel cost, which equation can be used to find x, and what is the solution?",
-      "image": "/input/assets/grade-7-pretest/image18.png",
+      "question": "Three friends share the cost of a trip equally. Each friend pays $2 for a snack in addition to an equal share of the travel cost. Together, the three friends pay $27 in total. If x represents one friend's share of the travel cost, which equation can be used to find x, and what is the solution?",
+      "image": "/input/assets/grade-7-pretest/image17.png",
       "images": [
-        "/input/assets/grade-7-pretest/image18.png"
+        "/input/assets/grade-7-pretest/image17.png"
       ],
       "imageDescription": null,
       "options": [
@@ -740,16 +738,16 @@
       "correctAnswerText": "3(x + 2) = 27; x = 7"
     },
     {
-      "id": "q19",
+      "id": "grade-7-pretest-q19",
       "type": "mcq",
       "number": 19,
       "level": "Applying",
       "topic": "7.EE.B.4b",
       "standard": "7.EE.B.4b",
       "question": "A recreation center charges a $10 registration fee and $5 for each class. Maya can spend less than $35. If x represents the number of classes she takes, which inequality and solution correctly represent the situation?",
-      "image": "/input/assets/grade-7-pretest/image19.png",
+      "image": "/input/assets/grade-7-pretest/image18.png",
       "images": [
-        "/input/assets/grade-7-pretest/image19.png"
+        "/input/assets/grade-7-pretest/image18.png"
       ],
       "imageDescription": null,
       "options": [
@@ -780,44 +778,44 @@
       "correctAnswerText": "5x + 10 < 35; x < 5, shown by an open circle at 5 and shading to the left"
     },
     {
-      "id": "q20",
+      "id": "grade-7-pretest-q20",
       "type": "mcq",
       "number": 20,
       "level": "Applying",
       "topic": "7.EE.B.4b",
       "standard": "7.EE.B.4b",
-      "question": "A school club has $48 to spend on supplies. It pays a $12 delivery fee and $6 for each package of markers. If p represents the number of packages the club can buy, which inequality and solution correctly represent the situation?",
-      "image": "/input/assets/grade-7-pretest/image20.png",
+      "question": "A school club pays a $12 delivery fee and $6 for each package of markers. To qualify for a bulk-order reward, the total purchase must cost more than $48. If p represents the number of packages, which inequality and solution correctly represent the situation?",
+      "image": "/input/assets/grade-7-pretest/image19.png",
       "images": [
-        "/input/assets/grade-7-pretest/image20.png"
+        "/input/assets/grade-7-pretest/image19.png"
       ],
       "imageDescription": null,
       "options": [
         {
           "id": "a",
-          "label": "6p + 12 < 48; p < 6",
-          "image": null
-        },
-        {
-          "id": "b",
           "label": "6p + 12 > 48; p > 6",
           "image": null
         },
         {
+          "id": "b",
+          "label": "6p + 12 < 48; p < 6",
+          "image": null
+        },
+        {
           "id": "c",
-          "label": "12p + 6 < 48; p < 3.5",
+          "label": "12p + 6 > 48; p > 3.5",
           "image": null
         },
         {
           "id": "d",
-          "label": "6p - 12 < 48; p < 10",
+          "label": "6p - 12 > 48; p > 10",
           "image": null
         }
       ],
       "answer": "a",
-      "explanation": "The total cost is represented by 6p + 12, and it must be less than $48. Solving 6p + 12 < 48 gives 6p < 36, so p < 6. Since p represents a whole number of packages, the club can buy at most 5 packages.",
+      "explanation": "The total cost is represented by 6p + 12, and it must be more than $48. Solving 6p + 12 > 48 gives 6p > 36, so p > 6. Since p represents a whole number of packages, the club must buy at least 7 packages.",
       "distractors": {},
-      "correctAnswerText": "6p + 12 < 48; p < 6"
+      "correctAnswerText": "6p + 12 > 48; p > 6"
     }
   ]
 }
