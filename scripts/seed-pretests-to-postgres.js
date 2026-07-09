@@ -2,11 +2,11 @@ const fs = require("fs/promises");
 const path = require("path");
 const { Pool } = require("pg");
 
-const databaseUrl = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  console.error("Missing DATABASE_URL or NEON_DATABASE_URL.");
-  console.error("Set one of them before running npm run seed:pretests.");
+  console.error("Missing DATABASE_URL.");
+  console.error("Set it before running npm run seed:pretests.");
   process.exit(1);
 }
 

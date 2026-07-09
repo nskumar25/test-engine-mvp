@@ -1,18 +1,27 @@
 # Assessment Test Engine MVP
 
-Student-facing web assessment MVP with:
+Student and admin assessment MVP with:
 
-- JSON-based assessment input
-- MCQ questions
-- Embedded question and option images
-- Question navigation grid
-- Calculator and scratch pad tools
-- Silent copy/selection friction
-- Submission evaluation
-- ILP/practice plan generation
-- Local demo storage with a PostgreSQL API path for production
+- JavaScript frontend
+- MCQ assessments and worksheets
+- Image support in questions and answer choices
+- Student dashboard with assigned work
+- Admin assignment, question, result, and ILP views
+- C# / ASP.NET Core API for PostgreSQL
 
-## Run Frontend Locally
+## Architecture
+
+```text
+GitHub Pages frontend
+  -> C# ASP.NET Core API
+  -> PostgreSQL
+```
+
+The browser does not connect directly to PostgreSQL. It calls the API, and the API connects to PostgreSQL using `DATABASE_URL`.
+
+## Frontend
+
+Run locally:
 
 ```powershell
 npm run dev
@@ -24,110 +33,106 @@ Open:
 http://127.0.0.1:5173/
 ```
 
-Admin dashboard:
+Admin console:
 
 ```text
 http://127.0.0.1:5173/?admin=1
 ```
 
-## Current Input
-
-The app currently loads:
-
-```text
-input/pre-test-for-demo.json
-```
-
-Images are stored in:
-
-```text
-input/assets/pre-test-for-demo/
-```
-
-## PostgreSQL Backend
-
-Production should use a backend API between the browser and PostgreSQL:
-
-```text
-Frontend
-  -> Node API
-  -> PostgreSQL
-  -> Existing student registration table/view
-```
-
-Run the schema:
-
-```text
-database/postgres-schema.sql
-```
-
-Run the API locally:
-
-```powershell
-$env:DATABASE_URL="postgres://user:password@host:5432/database"
-$env:STUDENT_VIEW="test_engine_registered_students"
-npm run api
-```
-
-Sync students from local PostgreSQL to Neon:
-
-```powershell
-$env:LOCAL_DATABASE_URL="postgres://postgres:LOCAL_PASSWORD@localhost:5432/postgres"
-$env:NEON_DATABASE_URL="postgresql://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require"
-npm run sync:students
-```
-
-The frontend is configured in:
+Frontend API settings are in:
 
 ```text
 src/config.js
 ```
 
-For local API testing it currently uses:
+## C# API
 
-```js
-window.ASSESSMENT_DATA_PROVIDER = "api";
-window.ASSESSMENT_API_BASE_URL = "http://127.0.0.1:9000";
-```
-
-When the API is hosted, update only `ASSESSMENT_API_BASE_URL`.
-
-## Shared Live Testing
-
-For multiple team members to test with the same database, use:
+Project:
 
 ```text
-GitHub Pages frontend
-  -> Render Node API
-  -> Neon PostgreSQL
+backend/AstuteAssessment.Api
 ```
 
-The repo includes `render.yaml` for deploying `api/postgres-api.js` to Render.
+Run locally on the same port the frontend already expects:
 
-Render environment variables:
+```powershell
+$env:DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE"
+$env:DATABASE_SSL="false"
+$env:STUDENT_VIEW="test_engine_registered_students"
+$env:CORS_ORIGIN="http://127.0.0.1:5173"
+
+npm run api:csharp
+```
+
+Health check:
 
 ```text
-DATABASE_URL=<Neon pooled connection string>
+http://127.0.0.1:9001/health
+```
+
+Main endpoints:
+
+```text
+GET  /api/students
+GET  /api/student-filters
+GET  /api/assessments
+GET  /api/assignments
+GET  /api/assignment-events
+GET  /api/attempts
+POST /api/assignments
+POST /api/assignments/cancel
+POST /api/assignments/activity
+POST /api/attempts
+```
+
+## PostgreSQL
+
+Schema:
+
+```text
+database/postgres-schema.sql
+```
+
+The API reads registered students through:
+
+```text
+test_engine_registered_students
+```
+
+For production, point that view at the real student registration tables.
+
+## Deployment
+
+The included `render.yaml` deploys the C# API as a Docker web service.
+
+Set these environment variables in the API host:
+
+```text
+DATABASE_URL=<your PostgreSQL connection string>
 DATABASE_SSL=true
 STUDENT_VIEW=test_engine_registered_students
-API_HOST=0.0.0.0
 CORS_ORIGIN=https://nskumar25.github.io
 ```
 
-After Render deploys, test:
+If your PostgreSQL server does not use SSL, set:
 
 ```text
-https://YOUR-RENDER-SERVICE.onrender.com/health
-https://YOUR-RENDER-SERVICE.onrender.com/api/student-filters
+DATABASE_SSL=false
 ```
 
-Then update `src/config.js` for live:
+The public student/admin links can stay the same as long as `src/config.js` points to the deployed C# API URL.
 
-```js
-window.ASSESSMENT_DATA_PROVIDER = "api";
-window.ASSESSMENT_API_BASE_URL = "https://YOUR-RENDER-SERVICE.onrender.com";
+## DOCX Conversion
+
+Convert Word pretests into JSON:
+
+```powershell
+npm run convert:pretests
 ```
 
-## GitHub Pages
+Converted assessments are written to:
 
-GitHub Pages can host the frontend only. PostgreSQL requires a separate backend host such as Render, Railway, Fly.io, Vercel serverless functions, or your own server.
+```text
+input/assessments
+input/assessment-catalog.json
+```

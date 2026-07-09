@@ -12,14 +12,14 @@ The app still defaults to `local` so GitHub Pages remains usable without backend
 ```text
 GitHub Pages student/admin frontend
         ->
-Hosted Node API
+Hosted C# ASP.NET Core API
         ->
 PostgreSQL
         ->
 Existing student registration table/view
 ```
 
-The browser must never connect directly to PostgreSQL. The Node API stores attempts and reads student registration data through a safe mapped view.
+The browser must never connect directly to PostgreSQL. The C# API stores attempts and reads student registration data through a safe mapped view.
 
 ## PostgreSQL Tables
 
@@ -52,7 +52,7 @@ The raw JSON is intentionally also stored so the UI can evolve without losing hi
 ## Migration Order
 
 1. Keep questions in `input/pre-test-for-demo.json`.
-2. Save submitted attempts to PostgreSQL through `api/postgres-api.js`.
+2. Save submitted attempts to PostgreSQL through `backend/AstuteAssessment.Api`.
 3. Connect student lookup to your existing registration table/view.
 4. Add assessment assignment rules.
 5. Move questions and assets into PostgreSQL/object storage.

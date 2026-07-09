@@ -6,14 +6,13 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "node api/postgres-api.js",
+    "start": "npm run api:csharp",
     "dev": "node server.js",
-    "api": "node api/postgres-api.js",
+    "api": "npm run api:csharp",
     "convert:pretests": "node scripts/convert-pretests-from-docx.js",
-    "sync:students": "node scripts/sync-students-to-neon.js",
     "seed:pretests": "node scripts/seed-pretests-to-postgres.js",
     "migrate:assignment-model": "node scripts/migrate-assignment-model.js",
-    "verify:neon": "node scripts/verify-neon-sync.js"
+    "api:csharp": "dotnet run --project backend/AstuteAssessment.Api/AstuteAssessment.Api.csproj --urls http://127.0.0.1:9001"
   },
   "dependencies": {
     "pg": "^8.22.0"
