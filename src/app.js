@@ -240,6 +240,7 @@ function render() {
   if (!questions.length) return;
 
   if (isAdminMode()) {
+    document.body.classList.add("page-scroll");
     renderAdminDashboard();
     return;
   }
@@ -247,9 +248,12 @@ function render() {
   saveState();
 
   if (state.submitted) {
+    document.body.classList.add("page-scroll");
     renderSubmitted();
     return;
   }
+
+  document.body.classList.remove("page-scroll");
 
   if (!state.started) {
     renderStartScreen();
@@ -2161,7 +2165,7 @@ function renderSubmitted() {
 
   if (resultOptions.showResults === false) {
     root.innerHTML = `
-      <main class="shell locked-shell submitted-shell">
+      <main class="submitted-page submitted-shell">
         <div class="submitted-actionbar">
           <button class="primary-action" data-action="go-dashboard">Go to Dashboard</button>
         </div>
@@ -2179,7 +2183,7 @@ function renderSubmitted() {
   }
 
   root.innerHTML = `
-    <main class="shell locked-shell submitted-shell">
+    <main class="submitted-page submitted-shell">
       <div class="submitted-actionbar">
         <button class="primary-action" data-action="go-dashboard">Go to Dashboard</button>
       </div>

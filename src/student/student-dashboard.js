@@ -1,39 +1,45 @@
 function renderStudentDashboard(student, dashboardData) {
+  document.body.classList.add("page-scroll");
   const availableAssignments = dashboardData.availableAssignments || [];
   const completedAssignments = dashboardData.completedAssignments || [];
   const unavailableAssignments = (dashboardData.assignments || [])
     .filter((assignment) => !availableAssignments.some((item) => String(item.id) === String(assignment.id))
       && !completedAssignments.some((item) => String(item.id) === String(assignment.id)));
   const attempts = dashboardData.attempts || [];
+  const studentInitial = String(student.name || student.email || "S").trim().charAt(0).toUpperCase();
   root.innerHTML = `
     <main class="student-dashboard-shell">
       <section class="student-dashboard">
         <header class="student-dashboard-head">
-          <div>
-            <p class="eyebrow">Student dashboard</p>
-            <h1>${escapeHtml(student.name || "Student")}</h1>
-            <p>${escapeHtml(student.email || student.username || student.id || "")}</p>
+          <div class="student-profile-lockup">
+            <div class="student-avatar">${escapeHtml(studentInitial)}</div>
+            <div>
+              <p class="eyebrow">Student dashboard</p>
+              <h1>${escapeHtml(student.name || "Student")}</h1>
+              <p>${escapeHtml(student.email || student.username || student.id || "")}</p>
+            </div>
           </div>
           <button class="secondary-action" data-action="student-sign-out">Sign out</button>
         </header>
 
-        <div class="student-dashboard-summary">
-          <span><strong>${availableAssignments.length}</strong> available</span>
-          <span><strong>${completedAssignments.length}</strong> completed</span>
-          <span><strong>${attempts.length}</strong> submitted</span>
-          <span><strong>${escapeHtml(student.gradeLevel || "-")}</strong> grade</span>
+        <div class="student-dashboard-strip">
+          <nav class="student-dashboard-tabs" aria-label="Student dashboard sections">
+            <button class="active" data-student-tab="available" type="button">Assigned</button>
+            <button data-student-tab="unavailable" type="button">Unavailable</button>
+            <button data-student-tab="history" type="button">History</button>
+          </nav>
+          <div class="student-dashboard-summary compact">
+            <span><strong>${availableAssignments.length}</strong> available</span>
+            <span><strong>${completedAssignments.length}</strong> completed</span>
+            <span><strong>${escapeHtml(student.gradeLevel || "-")}</strong> grade</span>
+          </div>
         </div>
-
-        <nav class="student-dashboard-tabs" aria-label="Student dashboard sections">
-          <button class="active" data-student-tab="available" type="button">Assigned</button>
-          <button data-student-tab="unavailable" type="button">Not available</button>
-          <button data-student-tab="history" type="button">History</button>
-        </nav>
 
         <section class="student-dashboard-section" data-student-tab-panel="available">
           <div class="student-section-head">
             <p class="eyebrow">Available</p>
             <h2>Assigned work</h2>
+            <span>${availableAssignments.length} item(s)</span>
           </div>
           <div class="student-assessment-list" aria-label="Assigned work">
             ${availableAssignments.length
@@ -46,6 +52,7 @@ function renderStudentDashboard(student, dashboardData) {
           <div class="student-section-head">
             <p class="eyebrow">Not available</p>
             <h2>Assignments you cannot start right now</h2>
+            <span>${unavailableAssignments.length} item(s)</span>
           </div>
           <div class="student-assessment-list" aria-label="Unavailable assignments">
             ${unavailableAssignments.length
@@ -58,6 +65,7 @@ function renderStudentDashboard(student, dashboardData) {
           <div class="student-section-head">
             <p class="eyebrow">History</p>
             <h2>Completed and submitted work</h2>
+            <span>${attempts.length} submission(s)</span>
           </div>
           <div class="student-history-list" aria-label="Completed and submitted work">
             ${renderCompletedAssessmentHistory(completedAssignments, attempts)}
@@ -117,7 +125,7 @@ function renderStudentReadOnlyAssignmentCard(assignment, attempts = []) {
         <p class="eyebrow">${escapeHtml(assignmentType)}</p>
         <h2>${escapeHtml(assignment.assessmentTitle || assignment.assessmentKey || "Assessment")}</h2>
         <div class="student-assessment-meta">
-          <span>${escapeHtml(status)}</span>
+          <span class="student-status-chip">${escapeHtml(status)}</span>
           ${assignment.dueAt ? `<span>Due ${escapeHtml(formatDateTime(assignment.dueAt))}</span>` : ""}
         </div>
       </div>
@@ -141,7 +149,7 @@ function renderStudentAssignmentCard(student, assignment, attempts = []) {
         <h2>${escapeHtml(assignment.assessmentTitle || assignment.assessmentKey || "Assessment")}</h2>
         <div class="student-assessment-meta">
           <span>${duration} minutes</span>
-          <span>${attemptsLeft}/${attemptLimit} attempts left</span>
+          <span class="student-status-chip">${attemptsLeft}/${attemptLimit} attempts left</span>
           ${historyCount ? `<span>${historyCount} prior assignment${historyCount === 1 ? "" : "s"}</span>` : ""}
           ${assignment.dueAt ? `<span>Due ${escapeHtml(formatDateTime(assignment.dueAt))}</span>` : ""}
         </div>
