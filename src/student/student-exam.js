@@ -74,7 +74,7 @@ function renderAssessmentWorkspace() {
         </div>
       </aside>
 
-      <section class="exam-window ${state.toolsOpen ? "" : "tools-closed"}">
+      <section class="exam-window ${state.toolsOpen ? "" : "tools-closed"} layout-${escapeAttribute(state.questionLayout || "stacked")}" style="--text-scale:${Number(state.textScale || 0)}pt">
         <header class="topbar">
           <div class="assessment-title">
             <p class="eyebrow">Assessment</p>
@@ -82,6 +82,9 @@ function renderAssessmentWorkspace() {
           </div>
 
           <div class="top-actions">
+            <button class="icon-button" data-action="toggle-question-layout" title="Switch question layout" aria-label="Switch question layout">${icons.layout}</button>
+            <button class="icon-button text-tool" data-action="increase-text" title="Increase text size" aria-label="Increase text size">${icons.text}</button>
+            <button class="icon-button" data-action="read-aloud" title="Read question aloud" aria-label="Read question aloud">${icons.read}</button>
             <button class="timer" data-action="toggle-timer" data-timer aria-label="Toggle timer">${renderTimerContent()}</button>
             <button class="icon-button" data-action="fullscreen" title="Enter fullscreen">${icons.fullscreen}</button>
           </div>
@@ -97,9 +100,14 @@ function renderAssessmentWorkspace() {
               <span>Question ${state.currentIndex + 1} of ${questions.length}</span>
             </div>
 
-            <h2>${escapeHtml(question.question)}</h2>
+            ${state.studentNotice ? `<div class="student-notice">${escapeHtml(state.studentNotice)}</div>` : ""}
 
-            ${renderQuestionMedia(question)}
+            <div class="question-visual-layout">
+              <div class="question-text-block">
+                <h2>${escapeHtml(question.question)}</h2>
+              </div>
+              ${renderQuestionMedia(question)}
+            </div>
 
             <div class="options">
               ${question.options.map((option) => renderOption(question, option)).join("")}
@@ -125,6 +133,7 @@ function renderAssessmentWorkspace() {
           </div>
         </footer>
       </section>
+      ${state.reviewing ? renderSubmitDialog() : ""}
     </main>
   `;
 

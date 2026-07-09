@@ -33,6 +33,9 @@ const icons = {
   pencil: "&#9998;",
   eraser: "&#8998;",
   clear: "&#10005;",
+  layout: "&#9636;",
+  text: "A+",
+  read: "&#128266;",
   zoom: "&#128269;",
   shield: "&#128737;",
   warn: "&#9888;",
@@ -105,6 +108,9 @@ function getInitialState(total) {
           calculatorOpen: Boolean(parsed.calculatorOpen),
           scratchOpen: parsed.scratchOpen !== false,
           timerMode: parsed.timerMode || "remaining",
+          textScale: Number(parsed.textScale || 0),
+          questionLayout: parsed.questionLayout || "stacked",
+          studentNotice: parsed.studentNotice || "",
           studentLookupError: parsed.studentLookupError || "",
           reviewing: Boolean(parsed.reviewing)
         };
@@ -124,6 +130,9 @@ function getInitialState(total) {
     calculatorOpen: false,
     scratchOpen: true,
     timerMode: "remaining",
+    textScale: 0,
+    questionLayout: "stacked",
+    studentNotice: "",
     started: false,
     startedAt: null,
     student: {
@@ -169,7 +178,6 @@ function installSecurityGuards() {
   document.addEventListener("cut", guard);
   document.addEventListener("paste", guard);
   document.addEventListener("contextmenu", guard);
-  document.addEventListener("selectstart", guard);
   document.addEventListener("dragstart", guard);
 
   document.addEventListener("keydown", (event) => {
@@ -191,6 +199,7 @@ function installTimer() {
     if (!state.started || state.submitted) return;
 
     if (state.remainingSeconds <= 1) {
+      state.remainingSeconds = 0;
       submitAssessment();
       return;
     }
@@ -244,11 +253,6 @@ function render() {
 
   if (!state.started) {
     renderStartScreen();
-    return;
-  }
-
-  if (state.reviewing) {
-    renderSubmitReview();
     return;
   }
 
@@ -921,6 +925,38 @@ function renderSubmitReview() {
   });
 }
 
+function renderSubmitDialog() {
+  const answeredCount = getAnsweredCount();
+  const skippedCount = getSkippedCount();
+  const unansweredCount = Math.max(0, questions.length - answeredCount);
+
+  return `
+    <div class="submit-dialog-backdrop" role="presentation">
+      <section class="submit-dialog" role="dialog" aria-modal="true" aria-labelledby="submit-dialog-title">
+        <div>
+          <p class="eyebrow">Submit assessment</p>
+          <h2 id="submit-dialog-title">Are you sure you want to submit?</h2>
+          <p class="review-confirmation-message">
+            Once submitted, your answers will be recorded and the assessment will close.
+          </p>
+        </div>
+
+        <div class="review-summary compact-review-summary">
+          <span><strong>${answeredCount}</strong> answered</span>
+          <span><strong>${skippedCount}</strong> skipped</span>
+          <span><strong>${unansweredCount}</strong> unanswered</span>
+          <span><strong>${escapeHtml(formatDuration(state.remainingSeconds))}</strong> remaining</span>
+        </div>
+
+        <footer class="review-actions">
+          <button class="secondary-action" data-action="cancel-submit">No, continue</button>
+          <button class="submit-action" data-action="confirm-submit">Yes, submit</button>
+        </footer>
+      </section>
+    </div>
+  `;
+}
+
 function renderReviewCell(question, index) {
   const answered = Boolean(state.answers[question.id]);
   const skipped = Boolean(state.visited?.[question.id]) && !answered;
@@ -1061,12 +1097,12 @@ function renderOption(question, option) {
   const isEliminated = Boolean(state.eliminated?.[question.id]?.[option.id]);
 
   return `
-    <button class="option ${selected ? "selected" : ""} ${isEliminated ? "eliminated" : ""}" data-option-id="${escapeAttribute(option.id)}" ${isEliminated ? "aria-disabled=\"true\"" : ""}>
+    <button class="option ${selected ? "selected" : ""} ${isEliminated ? "eliminated" : ""}" data-option-id="${escapeAttribute(option.id)}">
       <span class="option-letter">${escapeHtml(option.id.toUpperCase())}</span>
       <span class="option-body">
         <span>${escapeHtml(option.label)}</span>
         ${option.image ? `<img src="${escapeAttribute(assetUrl(option.image))}" alt="" draggable="false" />` : ""}
-        ${isEliminated ? `<small class="eliminated-note">Eliminated</small>` : ""}
+        ${isEliminated ? `<small class="eliminated-note">Eliminated. Select this option to restore and choose it.</small>` : ""}
       </span>
       ${assessment.tools?.eliminator ? `<span class="eliminate" data-eliminate-id="${escapeAttribute(option.id)}" title="${isEliminated ? "Restore this option" : "Eliminate this option"}">${isEliminated ? "+" : "-"}</span>` : ""}
     </button>
@@ -1121,6 +1157,14 @@ function renderCalculator() {
 }
 
 function bindActions() {
+  document.querySelector(".question-pane")?.addEventListener("mouseup", () => {
+    window.setTimeout(showSelectionReadTool, 0);
+  });
+
+  document.querySelector(".question-pane")?.addEventListener("keyup", () => {
+    window.setTimeout(showSelectionReadTool, 0);
+  });
+
   document.querySelectorAll("[data-question-index]").forEach((button) => {
     button.addEventListener("click", () => {
       setState(markVisited({
@@ -1133,9 +1177,20 @@ function bindActions() {
     button.addEventListener("click", () => {
       const question = questions[state.currentIndex];
       const optionId = button.dataset.optionId;
-      if (state.eliminated?.[question.id]?.[optionId]) return;
+      const questionEliminated = { ...(state.eliminated?.[question.id] || {}) };
+      const wasEliminated = Boolean(questionEliminated[optionId]);
+      if (wasEliminated) {
+        questionEliminated[optionId] = false;
+      }
       setState({
-        answers: { ...state.answers, [question.id]: optionId }
+        answers: { ...state.answers, [question.id]: optionId },
+        eliminated: {
+          ...(state.eliminated || {}),
+          [question.id]: questionEliminated
+        },
+        studentNotice: wasEliminated
+          ? "This option was restored and selected."
+          : ""
       }, { preserveQuestionScroll: true });
     });
   });
@@ -1147,9 +1202,17 @@ function bindActions() {
       const optionId = button.dataset.eliminateId;
       const allEliminated = state.eliminated || {};
       const questionEliminated = allEliminated[question.id] || {};
+      const currentlyEliminated = Boolean(questionEliminated[optionId]);
+      const eliminatedCount = Object.values(questionEliminated).filter(Boolean).length;
+      if (!currentlyEliminated && eliminatedCount >= Math.max(0, question.options.length - 1)) {
+        setState({
+          studentNotice: "At least one answer choice must remain available."
+        }, { preserveQuestionScroll: true });
+        return;
+      }
       const nextQuestionEliminated = {
         ...questionEliminated,
-        [optionId]: !questionEliminated[optionId]
+        [optionId]: !currentlyEliminated
       };
       const nextAnswers = { ...state.answers };
       if (nextQuestionEliminated[optionId] && nextAnswers[question.id] === optionId) {
@@ -1160,7 +1223,10 @@ function bindActions() {
         eliminated: {
           ...allEliminated,
           [question.id]: nextQuestionEliminated
-        }
+        },
+        studentNotice: nextQuestionEliminated[optionId]
+          ? "Choice eliminated. This is only a scratch mark, not an answer selection."
+          : "Choice restored."
       }, { preserveQuestionScroll: true });
     });
   });
@@ -1201,6 +1267,25 @@ function bindActions() {
 
   document.querySelector("[data-action='toggle-timer']")?.addEventListener("click", () => {
     setState({ timerMode: state.timerMode === "elapsed" ? "remaining" : "elapsed" });
+  });
+
+  document.querySelector("[data-action='toggle-question-layout']")?.addEventListener("click", () => {
+    setState({
+      questionLayout: state.questionLayout === "side" ? "stacked" : "side",
+      studentNotice: ""
+    }, { preserveQuestionScroll: true });
+  });
+
+  document.querySelector("[data-action='increase-text']")?.addEventListener("click", () => {
+    const nextScale = Number(state.textScale || 0) >= 4 ? 0 : Number(state.textScale || 0) + 1;
+    setState({
+      textScale: nextScale,
+      studentNotice: nextScale ? `Text size increased to +${nextScale}.` : "Text size reset."
+    }, { preserveQuestionScroll: true });
+  });
+
+  document.querySelector("[data-action='read-aloud']")?.addEventListener("click", () => {
+    readCurrentQuestionAloud();
   });
 
   document.querySelectorAll("[data-calc-key]").forEach((button) => {
@@ -1248,6 +1333,14 @@ function bindActions() {
   document.querySelector("[data-action='submit']")?.addEventListener("click", () => {
     setState({ reviewing: true });
   });
+
+  document.querySelector("[data-action='cancel-submit']")?.addEventListener("click", () => {
+    setState({ reviewing: false });
+  });
+
+  document.querySelector("[data-action='confirm-submit']")?.addEventListener("click", () => {
+    submitAssessment();
+  });
 }
 
 function markVisited(patch = {}) {
@@ -1262,12 +1355,68 @@ function markVisited(patch = {}) {
   };
 }
 
+function readCurrentQuestionAloud() {
+  if (!("speechSynthesis" in window)) {
+    setState({ studentNotice: "Read aloud is not available in this browser." }, { preserveQuestionScroll: true });
+    return;
+  }
+  const selectedText = getSelectedAssessmentText();
+  if (selectedText) {
+    speakText(selectedText);
+    setState({ studentNotice: "Reading selected text aloud." }, { preserveQuestionScroll: true });
+    return;
+  }
+  const question = questions[state.currentIndex];
+  if (!question) return;
+  const optionText = (question.options || [])
+    .map((option) => `${String(option.id || "").toUpperCase()}. ${option.label || ""}`)
+    .join(". ");
+  speakText(`${question.question}. ${optionText}`);
+  setState({ studentNotice: "Reading question aloud." }, { preserveQuestionScroll: true });
+}
+
+function speakText(text) {
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.92;
+  utterance.pitch = 1;
+  window.speechSynthesis.speak(utterance);
+}
+
+function getSelectedAssessmentText() {
+  const selection = window.getSelection?.();
+  const text = String(selection?.toString() || "").trim();
+  if (!text) return "";
+  const anchor = selection.anchorNode?.parentElement;
+  return anchor?.closest?.(".question-pane") ? text : "";
+}
+
+function showSelectionReadTool() {
+  document.querySelector(".selection-read-tool")?.remove();
+  const selectedText = getSelectedAssessmentText();
+  if (!selectedText || !("speechSynthesis" in window)) return;
+  const range = window.getSelection().getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "selection-read-tool";
+  button.textContent = "Read";
+  button.style.left = `${Math.min(window.innerWidth - 92, Math.max(12, rect.left))}px`;
+  button.style.top = `${Math.max(12, rect.top - 42)}px`;
+  button.addEventListener("click", () => {
+    speakText(selectedText);
+    button.remove();
+  });
+  document.body.appendChild(button);
+}
+
 function submitAssessment() {
   const evaluation = buildEvaluation();
   pendingAttemptSave = saveAttempt(evaluation);
   setState({
     remainingSeconds: Math.max(0, state.remainingSeconds),
     submitted: true,
+    reviewing: false,
     evaluation
   });
 }
