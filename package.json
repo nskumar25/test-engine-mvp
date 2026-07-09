@@ -9,6 +9,7 @@
     "start": "node api/postgres-api.js",
     "dev": "node server.js",
     "api": "node api/postgres-api.js",
+    "convert:pretests": "node scripts/convert-pretests-from-docx.js",
     "sync:students": "node scripts/sync-students-to-neon.js",
     "seed:pretests": "node scripts/seed-pretests-to-postgres.js",
     "migrate:assignment-model": "node scripts/migrate-assignment-model.js",
