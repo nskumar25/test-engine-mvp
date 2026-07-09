@@ -2,15 +2,15 @@ function renderStudentDashboard(student, dashboardData) {
   document.body.classList.add("page-scroll");
   const availableAssignments = dashboardData.availableAssignments || [];
   const completedAssignments = dashboardData.completedAssignments || [];
-  const unavailableAssignments = (dashboardData.assignments || [])
-    .filter((assignment) => !availableAssignments.some((item) => String(item.id) === String(assignment.id))
-      && !completedAssignments.some((item) => String(item.id) === String(assignment.id)));
-  const attempts = dashboardData.attempts || [];
+  const attempts = [...(dashboardData.attempts || [])]
+    .sort((a, b) => String(b.submittedAt || "").localeCompare(String(a.submittedAt || "")));
+  const performance = buildStudentPerformance(attempts, availableAssignments);
   const studentInitial = String(student.name || student.email || "S").trim().charAt(0).toUpperCase();
+
   root.innerHTML = `
     <main class="student-dashboard-shell">
-      <section class="student-dashboard">
-        <header class="student-dashboard-head">
+      <section class="student-dashboard clean">
+        <header class="student-dashboard-hero">
           <div class="student-profile-lockup">
             <div class="student-avatar">${escapeHtml(studentInitial)}</div>
             <div>
@@ -22,24 +22,29 @@ function renderStudentDashboard(student, dashboardData) {
           <button class="secondary-action" data-action="student-sign-out">Sign out</button>
         </header>
 
-        <div class="student-dashboard-strip">
-          <nav class="student-dashboard-tabs" aria-label="Student dashboard sections">
-            <button class="active" data-student-tab="available" type="button">Assigned</button>
-            <button data-student-tab="unavailable" type="button">Unavailable</button>
-            <button data-student-tab="history" type="button">History</button>
-          </nav>
-          <div class="student-dashboard-summary compact">
-            <span><strong>${availableAssignments.length}</strong> available</span>
-            <span><strong>${completedAssignments.length}</strong> completed</span>
+        <section class="student-focus-panel">
+          <div>
+            <p class="eyebrow">Ready</p>
+            <h2>${availableAssignments.length ? "Assigned work is ready" : "No assignments available"}</h2>
+            <p>${availableAssignments.length
+              ? "Start the assignment when you are ready. Your submitted work will appear in performance."
+              : "Your dashboard will update when a new assessment or worksheet is assigned."}</p>
+          </div>
+          <div class="student-dashboard-summary">
+            <span><strong>${availableAssignments.length}</strong> assigned</span>
+            <span><strong>${attempts.length}</strong> submitted</span>
+            <span><strong>${performance.averageScore}%</strong> average</span>
             <span><strong>${escapeHtml(student.gradeLevel || "-")}</strong> grade</span>
           </div>
-        </div>
+        </section>
 
-        <section class="student-dashboard-section" data-student-tab-panel="available">
+        <section class="student-dashboard-section primary">
           <div class="student-section-head">
-            <p class="eyebrow">Available</p>
-            <h2>Assigned work</h2>
-            <span>${availableAssignments.length} item(s)</span>
+            <div>
+              <p class="eyebrow">Assigned</p>
+              <h2>Start an assignment</h2>
+            </div>
+            <span>${availableAssignments.length} available</span>
           </div>
           <div class="student-assessment-list" aria-label="Assigned work">
             ${availableAssignments.length
@@ -48,28 +53,28 @@ function renderStudentDashboard(student, dashboardData) {
           </div>
         </section>
 
-        <section class="student-dashboard-section" data-student-tab-panel="unavailable" hidden>
-          <div class="student-section-head">
-            <p class="eyebrow">Not available</p>
-            <h2>Assignments you cannot start right now</h2>
-            <span>${unavailableAssignments.length} item(s)</span>
-          </div>
-          <div class="student-assessment-list" aria-label="Unavailable assignments">
-            ${unavailableAssignments.length
-              ? unavailableAssignments.map((assignment) => renderStudentReadOnlyAssignmentCard(assignment, attempts)).join("")
-              : `<p class="empty-review">No unavailable assignments right now.</p>`}
-          </div>
-        </section>
+        <section class="student-dashboard-grid">
+          <article class="student-performance-card">
+            <div class="student-section-head">
+              <div>
+                <p class="eyebrow">Performance</p>
+                <h2>Your progress</h2>
+              </div>
+              <strong>${performance.averageScore}%</strong>
+            </div>
+            ${renderStudentPerformance(performance)}
+          </article>
 
-        <section class="student-dashboard-section" data-student-tab-panel="history" hidden>
-          <div class="student-section-head">
-            <p class="eyebrow">History</p>
-            <h2>Completed and submitted work</h2>
-            <span>${attempts.length} submission(s)</span>
-          </div>
-          <div class="student-history-list" aria-label="Completed and submitted work">
+          <article class="student-performance-card">
+            <div class="student-section-head">
+              <div>
+                <p class="eyebrow">History</p>
+                <h2>Recent submissions</h2>
+              </div>
+              <span>${attempts.length} total</span>
+            </div>
             ${renderCompletedAssessmentHistory(completedAssignments, attempts)}
-          </div>
+          </article>
         </section>
       </section>
     </main>
@@ -79,18 +84,6 @@ function renderStudentDashboard(student, dashboardData) {
     localStorage.removeItem(STORAGE_KEY);
     state = getInitialState(questions.length);
     renderStartScreen();
-  });
-
-  document.querySelectorAll("[data-student-tab]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const selected = button.dataset.studentTab;
-      document.querySelectorAll("[data-student-tab]").forEach((tab) => {
-        tab.classList.toggle("active", tab.dataset.studentTab === selected);
-      });
-      document.querySelectorAll("[data-student-tab-panel]").forEach((panel) => {
-        panel.hidden = panel.dataset.studentTabPanel !== selected;
-      });
-    });
   });
 
   document.querySelectorAll("[data-action='start-assigned-assessment']").forEach((button) => {
@@ -110,47 +103,23 @@ function renderStudentDashboard(student, dashboardData) {
   });
 }
 
-function renderStudentReadOnlyAssignmentCard(assignment, attempts = []) {
-  const attemptLimit = Number(assignment.attemptLimit || 1);
-  const attemptCount = getAssignmentAttemptUsage(assignment, attempts);
-  const assignmentType = formatAssignmentType(getAssignmentType(assignment));
-  const status = assignment.status === "cancelled"
-    ? "Access removed"
-    : attemptCount >= attemptLimit || assignment.status === "completed"
-    ? "Completed"
-    : "Not available";
-  return `
-    <article class="student-assessment-card">
-      <div>
-        <p class="eyebrow">${escapeHtml(assignmentType)}</p>
-        <h2>${escapeHtml(assignment.assessmentTitle || assignment.assessmentKey || "Assessment")}</h2>
-        <div class="student-assessment-meta">
-          <span class="student-status-chip">${escapeHtml(status)}</span>
-          ${assignment.dueAt ? `<span>Due ${escapeHtml(formatDateTime(assignment.dueAt))}</span>` : ""}
-        </div>
-      </div>
-      <span class="muted-cell">View only</span>
-    </article>
-  `;
-}
-
 function renderStudentAssignmentCard(student, assignment, attempts = []) {
   const settings = assignment.metadata || {};
   const duration = Number(settings.durationMinutes || assignment.durationMinutes || assignment.metadata?.assessment?.durationMinutes || 30);
   const attemptLimit = Number(assignment.attemptLimit || 1);
   const attemptCount = getAssignmentAttemptUsage(assignment, attempts);
   const attemptsLeft = Math.max(0, attemptLimit - attemptCount);
-  const historyCount = assignment.metadata?.assignmentHistory?.length || 0;
   const assignmentType = formatAssignmentType(getAssignmentType(assignment));
+  const latestScore = getLatestAttemptScoreForAssignment(assignment, attempts);
   return `
-    <article class="student-assessment-card">
+    <article class="student-assessment-card clean">
       <div>
         <p class="eyebrow">${escapeHtml(assignmentType)}</p>
         <h2>${escapeHtml(assignment.assessmentTitle || assignment.assessmentKey || "Assessment")}</h2>
         <div class="student-assessment-meta">
           <span>${duration} minutes</span>
           <span class="student-status-chip">${attemptsLeft}/${attemptLimit} attempts left</span>
-          ${historyCount ? `<span>${historyCount} prior assignment${historyCount === 1 ? "" : "s"}</span>` : ""}
+          ${latestScore !== "-" ? `<span>Last score ${escapeHtml(latestScore)}</span>` : ""}
           ${assignment.dueAt ? `<span>Due ${escapeHtml(formatDateTime(assignment.dueAt))}</span>` : ""}
         </div>
       </div>
@@ -167,8 +136,7 @@ function renderCompletedAssessmentHistory(completedAssignments, attempts) {
       type: formatAssignmentType(getAssignmentType(assignment)),
       status: "Completed",
       submittedAt: getLatestAttemptDateForAssignment(assignment, attempts),
-      score: getLatestAttemptScoreForAssignment(assignment, attempts),
-      attempts: `${getAssignmentAttemptUsage(assignment, attempts)}/${Number(assignment.attemptLimit || 1)}`
+      score: getLatestAttemptScoreForAssignment(assignment, attempts)
     })),
     ...attempts
       .filter((attempt) => !assignmentIds.has(String(getAttemptAssignmentKey(attempt))))
@@ -179,31 +147,110 @@ function renderCompletedAssessmentHistory(completedAssignments, attempts) {
           type: formatAssignmentType(attempt.assignmentType || attempt.assessment?.assignmentType || "assessment"),
           status: "Submitted",
           submittedAt: attempt.submittedAt || "",
-          score: `${score.percentage}%`,
-          attempts: "-"
+          score: `${score.percentage}%`
         };
       })
-  ];
+  ].sort((a, b) => String(b.submittedAt || "").localeCompare(String(a.submittedAt || "")));
 
-  if (!historyRows.length) return `<p class="empty-review">No completed assignments yet.</p>`;
+  if (!historyRows.length) return `<p class="empty-review">No submitted work yet.</p>`;
 
   return `
-    <div class="student-history-table-wrap">
+    <div class="student-history-table-wrap compact">
       <table class="student-history-table">
-        <thead><tr><th>Assignment</th><th>Type</th><th>Status</th><th>Score</th><th>Attempts</th><th>Submitted</th></tr></thead>
+        <thead><tr><th>Assignment</th><th>Score</th><th>Submitted</th></tr></thead>
         <tbody>
-          ${historyRows.map((row) => `
+          ${historyRows.slice(0, 6).map((row) => `
             <tr>
-              <td>${escapeHtml(row.title)}</td>
-              <td>${escapeHtml(row.type)}</td>
-              <td>${escapeHtml(row.status)}</td>
+              <td><strong>${escapeHtml(row.title)}</strong><small>${escapeHtml(row.type)} / ${escapeHtml(row.status)}</small></td>
               <td>${escapeHtml(row.score || "-")}</td>
-              <td>${escapeHtml(row.attempts || "-")}</td>
               <td>${escapeHtml(row.submittedAt ? formatDateTime(row.submittedAt) : "-")}</td>
             </tr>
           `).join("")}
         </tbody>
       </table>
+    </div>
+  `;
+}
+
+function buildStudentPerformance(attempts = [], availableAssignments = []) {
+  const scored = attempts.map((attempt) => ({
+    attempt,
+    score: normalizeScore(attempt),
+    timing: normalizeTiming(attempt)
+  }));
+  const averageScore = scored.length
+    ? Math.round(scored.reduce((sum, row) => sum + row.score.percentage, 0) / scored.length)
+    : 0;
+  const bestScore = scored.length
+    ? Math.max(...scored.map((row) => row.score.percentage))
+    : 0;
+  const latest = scored[0] || null;
+  const topicMap = new Map();
+  scored.forEach(({ attempt }) => {
+    const topics = attempt.summary?.topicBreakdown || buildTopicBreakdown(attempt.responses || []);
+    topics.forEach((topic) => {
+      const key = topic.topic || "General";
+      if (!topicMap.has(key)) topicMap.set(key, { topic: key, correct: 0, total: 0 });
+      const current = topicMap.get(key);
+      current.correct += Number(topic.correct || 0);
+      current.total += Number(topic.total || 0);
+    });
+  });
+  const topics = Array.from(topicMap.values())
+    .map((topic) => ({
+      ...topic,
+      percentage: topic.total ? Math.round((topic.correct / topic.total) * 100) : 0
+    }))
+    .sort((a, b) => a.percentage - b.percentage);
+  return {
+    averageScore,
+    bestScore,
+    latest,
+    submittedCount: attempts.length,
+    assignedCount: availableAssignments.length,
+    focusTopics: topics.slice(0, 3),
+    strongestTopics: [...topics].sort((a, b) => b.percentage - a.percentage).slice(0, 2)
+  };
+}
+
+function renderStudentPerformance(performance) {
+  return `
+    <div class="student-performance-stats">
+      <span><strong>${performance.averageScore}%</strong> average</span>
+      <span><strong>${performance.bestScore}%</strong> best</span>
+      <span><strong>${performance.submittedCount}</strong> submitted</span>
+      <span><strong>${performance.assignedCount}</strong> assigned</span>
+    </div>
+    ${performance.latest ? `
+      <div class="student-latest-score">
+        <span>Latest score</span>
+        <strong>${performance.latest.score.percentage}%</strong>
+        <small>${escapeHtml(performance.latest.attempt.assessment?.title || performance.latest.attempt.assessmentTitle || "Assessment")}</small>
+      </div>
+    ` : `<p class="empty-review">Performance will appear after the first submission.</p>`}
+    <div class="student-topic-panel">
+      <div>
+        <h3>Focus</h3>
+        ${renderStudentTopicList(performance.focusTopics, "No focus areas yet.")}
+      </div>
+      <div>
+        <h3>Strengths</h3>
+        ${renderStudentTopicList(performance.strongestTopics, "No strengths yet.")}
+      </div>
+    </div>
+  `;
+}
+
+function renderStudentTopicList(topics, emptyText) {
+  if (!topics.length) return `<p class="muted-cell">${escapeHtml(emptyText)}</p>`;
+  return `
+    <div class="student-topic-list">
+      ${topics.map((topic) => `
+        <span>
+          <b>${escapeHtml(topic.topic)}</b>
+          <em>${topic.percentage}%</em>
+        </span>
+      `).join("")}
     </div>
   `;
 }

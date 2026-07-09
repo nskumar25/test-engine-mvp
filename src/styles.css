@@ -359,6 +359,11 @@ img {
   gap: 14px;
 }
 
+.student-dashboard.clean {
+  width: min(1120px, 100%);
+  gap: 16px;
+}
+
 .student-dashboard-head {
   display: flex;
   align-items: center;
@@ -369,6 +374,23 @@ img {
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 18px 44px rgba(43, 56, 63, 0.1);
+}
+
+.student-dashboard-hero,
+.student-focus-panel,
+.student-performance-card {
+  border: 1px solid #dfe6df;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 44px rgba(43, 56, 63, 0.08);
+}
+
+.student-dashboard-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
 }
 
 .student-profile-lockup {
@@ -403,6 +425,36 @@ img {
   color: #596a68;
 }
 
+.student-dashboard-hero h1,
+.student-dashboard-hero p,
+.student-focus-panel h2,
+.student-focus-panel p {
+  margin: 0;
+}
+
+.student-dashboard-hero h1 {
+  margin-top: 4px;
+  font-size: 1.7rem;
+}
+
+.student-dashboard-hero p,
+.student-focus-panel p {
+  color: #596a68;
+}
+
+.student-focus-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+}
+
+.student-focus-panel h2 {
+  margin-top: 4px;
+  font-size: 1.35rem;
+}
+
 .student-dashboard-strip {
   display: flex;
   align-items: center;
@@ -428,7 +480,7 @@ img {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border: 1px solid #dfe6df;
   border-radius: 8px;
   background: #ffffff;
@@ -486,6 +538,18 @@ img {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.student-dashboard-section.primary {
+  background: #ffffff;
+  box-shadow: 0 18px 44px rgba(43, 56, 63, 0.07);
+}
+
+.student-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 14px;
+  align-items: start;
+}
+
 .student-section-head h2,
 .student-section-head p {
   margin: 0;
@@ -519,6 +583,11 @@ img {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 12px 30px rgba(43, 56, 63, 0.08);
+}
+
+.student-assessment-card.clean {
+  min-height: 112px;
+  box-shadow: none;
 }
 
 .student-assessment-card h2 {
@@ -585,6 +654,114 @@ img {
 
 .student-history-table tr:last-child td {
   border-bottom: 0;
+}
+
+.student-history-table-wrap.compact {
+  box-shadow: none;
+}
+
+.student-history-table-wrap.compact .student-history-table {
+  min-width: 620px;
+}
+
+.student-history-table td strong,
+.student-history-table td small {
+  display: block;
+}
+
+.student-history-table td small {
+  margin-top: 3px;
+  color: #66747a;
+  font-size: 0.8rem;
+}
+
+.student-performance-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.student-performance-card .student-section-head strong {
+  color: #245d3a;
+  font-size: 1.9rem;
+}
+
+.student-performance-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.student-performance-stats span,
+.student-latest-score,
+.student-topic-panel > div {
+  border: 1px solid #e3e9e6;
+  border-radius: 8px;
+  background: #fbfbf8;
+}
+
+.student-performance-stats span {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  color: #596a68;
+}
+
+.student-performance-stats strong {
+  color: #17212b;
+  font-size: 1.3rem;
+}
+
+.student-latest-score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  align-items: center;
+  padding: 14px;
+}
+
+.student-latest-score span,
+.student-latest-score small {
+  color: #596a68;
+}
+
+.student-latest-score strong {
+  grid-row: span 2;
+  color: #245d3a;
+  font-size: 2rem;
+}
+
+.student-topic-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.student-topic-panel > div {
+  padding: 12px;
+}
+
+.student-topic-panel h3 {
+  margin: 0 0 10px;
+  font-size: 0.96rem;
+}
+
+.student-topic-list {
+  display: grid;
+  gap: 8px;
+}
+
+.student-topic-list span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #52606b;
+}
+
+.student-topic-list em {
+  color: #17212b;
+  font-style: normal;
+  font-weight: 800;
 }
 
 .shell {
@@ -3233,6 +3410,18 @@ img {
 
   .student-dashboard-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-focus-panel,
+  .student-dashboard-grid,
+  .student-topic-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .student-dashboard-hero,
+  .student-assessment-card.clean {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 
