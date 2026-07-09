@@ -28,10 +28,20 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: Prepare static site
+        shell: bash
+        run: |
+          mkdir site
+          cp index.html site/
+          cp .nojekyll site/
+          cp -R src site/
+          cp -R input site/
+          if [ -d data ]; then cp -R data site/; fi
+
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: site
 
       - name: Deploy
         id: deployment
