@@ -82,9 +82,6 @@ function renderAssessmentWorkspace() {
           </div>
 
           <div class="top-actions">
-            <button class="icon-button" data-action="toggle-question-layout" title="Switch question layout" aria-label="Switch question layout">${icons.layout}</button>
-            <button class="icon-button text-tool" data-action="increase-text" title="Increase text size" aria-label="Increase text size">${icons.text}</button>
-            <button class="icon-button" data-action="read-aloud" title="Read question aloud" aria-label="Read question aloud">${icons.read}</button>
             <button class="timer" data-action="toggle-timer" data-timer aria-label="Toggle timer">${renderTimerContent()}</button>
             <button class="icon-button" data-action="fullscreen" title="Enter fullscreen">${icons.fullscreen}</button>
           </div>
@@ -98,6 +95,12 @@ function renderAssessmentWorkspace() {
           <article class="question-pane">
             <div class="question-head">
               <span>Question ${state.currentIndex + 1} of ${questions.length}</span>
+              <div class="question-window-tools" aria-label="Question tools">
+                <button class="icon-button" data-action="toggle-question-layout" title="Switch question layout" aria-label="Switch question layout">${icons.layout}</button>
+                <button class="icon-button text-tool" data-action="decrease-text" title="Decrease text size" aria-label="Decrease text size">A-</button>
+                <button class="icon-button text-tool" data-action="increase-text" title="Increase text size" aria-label="Increase text size">${icons.text}</button>
+                <button class="icon-button" data-action="read-aloud" title="Read question aloud" aria-label="Read question aloud">${icons.read}</button>
+              </div>
             </div>
 
             ${state.studentNotice ? `<div class="student-notice">${escapeHtml(state.studentNotice)}</div>` : ""}

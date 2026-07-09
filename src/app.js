@@ -1113,7 +1113,7 @@ function renderQuestionMedia(question) {
   if (question.image) {
     return `
       <figure class="question-image">
-        <img src="${escapeAttribute(assetUrl(question.image))}" alt="${escapeAttribute(question.imageDescription || "")}" draggable="false" />
+        <img src="${escapeAttribute(assetUrl(question.image))}" data-zoom-target="${escapeAttribute(assetUrl(question.image))}" alt="${escapeAttribute(question.imageDescription || "")}" draggable="false" />
         ${assessment.tools?.imageZoom !== false ? `<button class="image-zoom" data-zoom-image="${escapeAttribute(assetUrl(question.image))}" title="Open image zoom">${icons.zoom} Zoom</button>` : ""}
       </figure>
     `;
@@ -1284,6 +1284,14 @@ function bindActions() {
     }, { preserveQuestionScroll: true });
   });
 
+  document.querySelector("[data-action='decrease-text']")?.addEventListener("click", () => {
+    const nextScale = Number(state.textScale || 0) <= -2 ? 0 : Number(state.textScale || 0) - 1;
+    setState({
+      textScale: nextScale,
+      studentNotice: nextScale ? `Text size changed to ${nextScale}.` : "Text size reset."
+    }, { preserveQuestionScroll: true });
+  });
+
   document.querySelector("[data-action='read-aloud']")?.addEventListener("click", () => {
     readCurrentQuestionAloud();
   });
@@ -1319,7 +1327,16 @@ function bindActions() {
   });
 
   document.querySelectorAll("[data-zoom-image]").forEach((button) => {
-    button.addEventListener("click", () => openImageZoom(button.dataset.zoomImage));
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openImageZoom(button.dataset.zoomImage);
+    });
+  });
+
+  document.querySelectorAll("[data-zoom-target]").forEach((image) => {
+    image.addEventListener("click", () => {
+      if (assessment.tools?.imageZoom !== false) openImageZoom(image.dataset.zoomTarget);
+    });
   });
 
   document.querySelector("[data-action='previous']")?.addEventListener("click", () => {
