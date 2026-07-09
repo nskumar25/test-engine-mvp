@@ -5,50 +5,34 @@ function renderAdminQuestionsPage(context = {}) {
   const rows = filterQuestionRows(allRows);
   const selectedId = adminQuestionFilterState.selectedQuestionId || rows[0]?.id || "";
   const selected = rows.find((row) => row.id === selectedId) || rows[0] || null;
-  const quality = summarizeQuestionQuality(allRows);
-  const activeView = adminQuestionFilterState.view || "normal";
+  const selectedIndex = selected ? rows.findIndex((row) => row.id === selected.id) : -1;
 
   return `
     <section class="admin-page-shell question-library-dashboard">
       <article class="admin-card question-filter-card">
-        <div class="admin-card-head">
+        <div class="admin-card-head compact-head">
           <div>
             <p class="eyebrow">Question Library</p>
-            <h2>Review and classify questions</h2>
+            <h2>Review questions</h2>
           </div>
+          <span class="assignment-count">${rows.length} of ${allRows.length} question(s)</span>
         </div>
         ${renderQuestionFilters()}
-        <div class="question-view-tabs" role="tablist" aria-label="Question view">
-          ${[
-            ["normal", "Normal Questions"],
-            ["image", "Image View"]
-          ].map(([view, label]) => `
-            <button type="button" class="${activeView === view ? "active" : ""}" data-question-view="${view}">${label}</button>
-          `).join("")}
-        </div>
       </article>
-
-      <div class="results-summary-grid question-summary-grid">
-        <article><span>Questions</span><strong>${quality.total}</strong></article>
-        <article><span>Topics</span><strong>${quality.topics}</strong></article>
-        <article><span>With Images</span><strong>${quality.withImages}</strong></article>
-        <article><span>Need Review</span><strong>${quality.needsReview}</strong></article>
-        <article><span>Worksheet Ready</span><strong>${quality.worksheetReady}</strong></article>
-      </div>
 
       <div class="admin-split question-library-workspace">
         <article class="admin-card">
-          <div class="admin-card-head">
+          <div class="admin-card-head compact-head">
             <div>
-              <p class="eyebrow">Filtered Questions</p>
-              <h2>${rows.length} questions</h2>
+              <p class="eyebrow">Question List</p>
+              <h2>${selectedIndex >= 0 ? `Viewing ${selectedIndex + 1} of ${rows.length}` : `${rows.length} questions`}</h2>
             </div>
           </div>
           ${renderQuestionTable(rows, selected?.id || "")}
         </article>
 
         <article class="admin-card question-preview-card">
-          ${selected ? renderQuestionPreview(selected) : `<p class="empty-review">Select a question to preview details.</p>`}
+          ${selected ? renderQuestionPreview(selected, selectedIndex, rows.length) : `<p class="empty-review">Select a question to preview details.</p>`}
         </article>
       </div>
     </section>
@@ -63,15 +47,14 @@ function bindQuestionLibraryControls() {
       renderAdminDashboard();
     });
     field.addEventListener("change", () => {
+      if (field.dataset.questionFilter === "assignmentType") {
+        adminQuestionFilterState.assessment = "";
+        adminQuestionFilterState.topic = "";
+      }
+      if (field.dataset.questionFilter === "assessment") {
+        adminQuestionFilterState.topic = "";
+      }
       adminQuestionFilterState[field.dataset.questionFilter] = field.value;
-      adminQuestionFilterState.selectedQuestionId = "";
-      renderAdminDashboard();
-    });
-  });
-
-  document.querySelectorAll("[data-question-view]").forEach((button) => {
-    button.addEventListener("click", () => {
-      adminQuestionFilterState.view = button.dataset.questionView || "normal";
       adminQuestionFilterState.selectedQuestionId = "";
       renderAdminDashboard();
     });
@@ -84,11 +67,14 @@ function bindQuestionLibraryControls() {
     });
   });
 
-  document.querySelectorAll("[data-question-usage]").forEach((field) => {
-    field.addEventListener("change", () => {
-      const map = getQuestionUsageMap();
-      map[field.dataset.questionUsage] = field.value;
-      localStorage.setItem("assessment-engine-question-usage", JSON.stringify(map));
+  document.querySelectorAll("[data-action='move-question-detail']").forEach((button) => {
+    button.addEventListener("click", () => {
+      const rows = filterQuestionRows(buildQuestionRows(window.assessmentAdminContext || {}));
+      const currentIndex = rows.findIndex((row) => row.id === adminQuestionFilterState.selectedQuestionId);
+      const fallbackIndex = currentIndex >= 0 ? currentIndex : 0;
+      const direction = button.dataset.direction === "previous" ? -1 : 1;
+      const next = rows[Math.max(0, Math.min(rows.length - 1, fallbackIndex + direction))];
+      adminQuestionFilterState.selectedQuestionId = next?.id || "";
       renderAdminDashboard();
     });
   });
@@ -96,51 +82,37 @@ function bindQuestionLibraryControls() {
 
 function renderQuestionFilters() {
   const rows = buildQuestionRows(window.assessmentAdminContext || {});
-  const assessments = uniqueValues(rows.flatMap((row) => row.assessments));
-  const topics = uniqueValues(rows.map((row) => row.topic));
-  const optionCounts = uniqueValues(rows.map((row) => String(row.optionCount)));
+  const assignmentTypes = uniqueQuestionAssignmentTypes(rows);
+  const tests = uniqueValues(rows
+    .filter((row) => !adminQuestionFilterState.assignmentType || row.assignmentType === adminQuestionFilterState.assignmentType)
+    .map((row) => row.assessmentTitle));
+  const standards = uniqueValues(rows
+    .filter((row) => (!adminQuestionFilterState.assignmentType || row.assignmentType === adminQuestionFilterState.assignmentType)
+      && (!adminQuestionFilterState.assessment || row.assessmentTitle === adminQuestionFilterState.assessment))
+    .map((row) => row.standard));
+
   return `
     <div class="results-filter-grid question-filter-grid">
       <label>
         Assignment
+        <select data-question-filter="assignmentType">
+          <option value="">All types</option>
+          ${assignmentTypes.map((item) => `<option value="${escapeAttribute(item.value)}" ${adminQuestionFilterState.assignmentType === item.value ? "selected" : ""}>${escapeHtml(item.label)}</option>`).join("")}
+        </select>
+      </label>
+      <label>
+        Test
         <select data-question-filter="assessment">
-          <option value="">All assignments</option>
-          ${assessments.map((title) => `<option value="${escapeAttribute(title)}" ${adminQuestionFilterState.assessment === title ? "selected" : ""}>${escapeHtml(title)}</option>`).join("")}
+          <option value="">All tests</option>
+          ${tests.map((title) => `<option value="${escapeAttribute(title)}" ${adminQuestionFilterState.assessment === title ? "selected" : ""}>${escapeHtml(title)}</option>`).join("")}
         </select>
       </label>
       <label>
-        Topic
+        Standard
         <select data-question-filter="topic">
-          <option value="">All topics</option>
-          ${topics.map((topic) => `<option value="${escapeAttribute(topic)}" ${adminQuestionFilterState.topic === topic ? "selected" : ""}>${escapeHtml(topic)}</option>`).join("")}
+          <option value="">All standards</option>
+          ${standards.map((standard) => `<option value="${escapeAttribute(standard)}" ${adminQuestionFilterState.topic === standard ? "selected" : ""}>${escapeHtml(standard)}</option>`).join("")}
         </select>
-      </label>
-      <label>
-        Media
-        <select data-question-filter="media">
-          <option value="">All</option>
-          <option value="with-image" ${adminQuestionFilterState.media === "with-image" ? "selected" : ""}>Has image</option>
-          <option value="without-image" ${adminQuestionFilterState.media === "without-image" ? "selected" : ""}>No image</option>
-        </select>
-      </label>
-      <label>
-        Explanation
-        <select data-question-filter="explanation">
-          <option value="">All</option>
-          <option value="complete" ${adminQuestionFilterState.explanation === "complete" ? "selected" : ""}>Complete</option>
-          <option value="missing" ${adminQuestionFilterState.explanation === "missing" ? "selected" : ""}>Missing</option>
-        </select>
-      </label>
-      <label>
-        Options
-        <select data-question-filter="optionCount">
-          <option value="">Any</option>
-          ${optionCounts.map((count) => `<option value="${escapeAttribute(count)}" ${adminQuestionFilterState.optionCount === count ? "selected" : ""}>${escapeHtml(count)}</option>`).join("")}
-        </select>
-      </label>
-      <label>
-        Search
-        <input data-question-filter="search" type="search" value="${escapeAttribute(adminQuestionFilterState.search || "")}" placeholder="Prompt or topic" />
       </label>
     </div>
   `;
@@ -154,13 +126,10 @@ function renderQuestionTable(rows, selectedId) {
           <tr>
             <th>ID</th>
             <th>Question</th>
-            <th>Used In</th>
-            <th>Topic / Skill</th>
-            <th>Prompt</th>
+            <th>Standard</th>
             <th>Answer</th>
-            <th>Options</th>
-            <th>Quality</th>
-            <th>Use</th>
+            <th>Assigned To</th>
+            <th>Prompt</th>
             <th></th>
           </tr>
         </thead>
@@ -169,44 +138,41 @@ function renderQuestionTable(rows, selectedId) {
             <tr class="${row.id === selectedId ? "selected-row" : ""}">
               <td><code>${escapeHtml(row.questionId)}</code></td>
               <td><strong>Q${row.number}</strong></td>
-              <td>${escapeHtml(row.assessments.join(", "))}</td>
-              <td>${escapeHtml(row.topic)}</td>
-              <td class="question-prompt-cell">${escapeHtml(row.prompt)}</td>
+              <td>${escapeHtml(row.standard)}</td>
               <td><em class="status-pill completed">${escapeHtml(row.answer)}</em></td>
-              <td>${row.optionCount}</td>
-              <td>${renderQuestionQualityPills(row)}</td>
-              <td>
-                <select data-question-usage="${escapeAttribute(row.id)}">
-                  ${["Assessment", "Worksheet", "Both"].map((usage) => `<option value="${usage}" ${row.usage === usage ? "selected" : ""}>${usage}</option>`).join("")}
-                </select>
-              </td>
-              <td><button class="table-action" data-action="view-question-detail" data-question-id="${escapeAttribute(row.id)}">Preview</button></td>
+              <td>${escapeHtml(row.assessmentTitle)}</td>
+              <td class="question-prompt-cell">${escapeHtml(row.prompt)}</td>
+              <td><button class="table-action" data-action="view-question-detail" data-question-id="${escapeAttribute(row.id)}">View</button></td>
             </tr>
-          `).join("") : `<tr><td colspan="10">No questions match the selected filters.</td></tr>`}
+          `).join("") : `<tr><td colspan="7">No questions match the selected filters.</td></tr>`}
         </tbody>
       </table>
     </div>
   `;
 }
 
-function renderQuestionPreview(row) {
+function renderQuestionPreview(row, selectedIndex, rowCount) {
+  const answerOption = (row.question.options || []).find((option) =>
+    String(option.id).toLowerCase() === String(row.question.answer).toLowerCase()
+  );
   return `
-    <div class="result-detail-head">
+    <div class="result-detail-head question-detail-head">
       <div>
-        <p class="eyebrow">Question Preview</p>
+        <p class="eyebrow">${escapeHtml(row.assignmentTypeLabel)} / ${escapeHtml(row.standard)}</p>
         <h2>Question ${row.number}</h2>
-        <span>${escapeHtml(row.assessments.join(", "))}</span>
+        <span>${escapeHtml(row.assessmentTitle)}</span>
       </div>
       <strong>${escapeHtml(row.answer)}</strong>
     </div>
 
-    <section>
-      <h3>Question ID</h3>
-      <p class="empty-review">${escapeHtml(row.questionId)}</p>
-    </section>
+    <div class="question-detail-meta">
+      <span><strong>ID</strong>${escapeHtml(row.questionId)}</span>
+      <span><strong>Options</strong>${row.optionCount}</span>
+      <span><strong>Media</strong>${row.hasImage ? "Image" : "Text"}</span>
+    </div>
 
     <section>
-      <h3>Prompt</h3>
+      <h3>Question</h3>
       <p class="question-preview-prompt">${escapeHtml(row.prompt)}</p>
       ${row.question.image ? renderAdminQuestionImage(row.question.image, "Question image") : ""}
     </section>
@@ -225,21 +191,19 @@ function renderQuestionPreview(row) {
     </section>
 
     <section>
-      <h3>Explanation</h3>
-      <p class="empty-review">${escapeHtml(row.question.explanation || "No explanation has been added yet.")}</p>
+      <h3>Answer</h3>
+      <p class="empty-review">${escapeHtml(`${row.answer}${answerOption ? `. ${answerOption.label || answerOption.text || ""}` : ""}`)}</p>
     </section>
 
-    <section>
-      <h3>Quality Checks</h3>
-      <div class="quality-check-list">
-        ${row.quality.length ? row.quality.map((item) => `<span class="quality-issue">${escapeHtml(item)}</span>`).join("") : `<span class="quality-ok">Ready</span>`}
-      </div>
-    </section>
+    <div class="question-preview-actions">
+      <button type="button" class="secondary-action" data-action="move-question-detail" data-direction="previous" ${selectedIndex <= 0 ? "disabled" : ""}>Previous</button>
+      <span>${selectedIndex + 1} of ${rowCount}</span>
+      <button type="button" class="primary-action" data-action="move-question-detail" data-direction="next" ${selectedIndex >= rowCount - 1 ? "disabled" : ""}>Next</button>
+    </div>
   `;
 }
 
 function buildQuestionRows(context = {}) {
-  const usageMap = getQuestionUsageMap();
   const library = Array.isArray(context.questionLibrary) && context.questionLibrary.length
     ? context.questionLibrary
     : [{ assessment, questions }];
@@ -248,6 +212,7 @@ function buildQuestionRows(context = {}) {
     const assessmentMeta = item.assessment || {};
     const assessmentTitle = assessmentMeta.title || "Assessment";
     const assessmentKey = assessmentMeta.key || getAssessmentKeyFromTitle(assessmentTitle);
+    const assignmentType = String(assessmentMeta.assignmentType || inferQuestionAssignmentType(assessmentMeta)).toLowerCase();
     return (item.questions || []).map((question, index) => {
       const questionId = String(question.id || `${assessmentKey}-q${question.number || index + 1}`);
       const id = `${assessmentKey}:${questionId}`;
@@ -255,78 +220,33 @@ function buildQuestionRows(context = {}) {
         id,
         questionId,
         assessmentKey,
-        assessments: [assessmentTitle],
+        assessmentTitle,
+        assignmentType,
+        assignmentTypeLabel: getQuestionAssignmentTypeLabel(assignmentType),
         question,
         number: question.number || index + 1,
-        topic: question.topic || question.standard || "General",
+        standard: question.standard || question.topic || "General",
+        topic: question.standard || question.topic || "General",
         prompt: question.question || "",
         answer: String(question.answer || "").toUpperCase(),
         optionCount: question.options?.length || 0,
-        hasImage: Boolean(question.image || question.images?.length || question.options?.some((option) => option.image)),
-        hasExplanation: Boolean(question.explanation),
-        usage: usageMap[id] || "Both",
-        quality: []
+        hasImage: Boolean(question.image || question.images?.length || question.options?.some((option) => option.image))
       };
-      row.quality = getQuestionQualityIssues(question);
       return row;
     });
   });
 }
 
 function filterQuestionRows(rows) {
-  const search = String(adminQuestionFilterState.search || "").toLowerCase().trim();
-  const view = adminQuestionFilterState.view || "normal";
   return rows.filter((row) => {
-    const matchesSearch = !search || [row.prompt, row.topic, row.answer, row.questionId, ...row.assessments]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(search));
-    return (!adminQuestionFilterState.assessment || row.assessments.includes(adminQuestionFilterState.assessment))
-      && (view === "image" ? row.hasImage : true)
-      && (!adminQuestionFilterState.topic || row.topic === adminQuestionFilterState.topic)
-      && (!adminQuestionFilterState.optionCount || String(row.optionCount) === adminQuestionFilterState.optionCount)
-      && (!adminQuestionFilterState.media || (adminQuestionFilterState.media === "with-image" ? row.hasImage : !row.hasImage))
-      && (!adminQuestionFilterState.explanation || (adminQuestionFilterState.explanation === "complete" ? row.hasExplanation : !row.hasExplanation))
-      && matchesSearch;
+    return (!adminQuestionFilterState.assignmentType || row.assignmentType === adminQuestionFilterState.assignmentType)
+      && (!adminQuestionFilterState.assessment || row.assessmentTitle === adminQuestionFilterState.assessment)
+      && (!adminQuestionFilterState.topic || row.standard === adminQuestionFilterState.topic);
   });
-}
-
-function getQuestionQualityIssues(question) {
-  const issues = [];
-  const options = question.options || [];
-  if (!question.topic) issues.push("Missing topic");
-  if (!question.answer) issues.push("Missing answer");
-  if (!question.explanation) issues.push("Missing explanation");
-  if (!options.length) issues.push("Missing options");
-  if (options.length && !options.some((option) => String(option.id).toLowerCase() === String(question.answer).toLowerCase())) {
-    issues.push("Answer not in options");
-  }
-  const optionTexts = options.map((option) => String(option.text || option.label || "").trim().toLowerCase()).filter(Boolean);
-  if (new Set(optionTexts).size !== optionTexts.length) issues.push("Duplicate option text");
-  if (question.imageDescription && !question.image) issues.push("Image not extracted");
-  return issues;
-}
-
-function summarizeQuestionQuality(rows) {
-  return {
-    total: rows.length,
-    topics: uniqueValues(rows.map((row) => row.topic)).length,
-    withImages: rows.filter((row) => row.hasImage).length,
-    needsReview: rows.filter((row) => row.quality.length).length,
-    worksheetReady: rows.filter((row) => row.usage === "Worksheet" || row.usage === "Both").length
-  };
-}
-
-function renderQuestionQualityPills(row) {
-  if (!row.quality.length) return `<span class="quality-ok">Ready</span>`;
-  return `<div class="quality-check-list">${row.quality.slice(0, 2).map((item) => `<span class="quality-issue">${escapeHtml(item)}</span>`).join("")}</div>`;
 }
 
 function renderAdminQuestionImage(src, label) {
   return `<img class="admin-question-image" src="${escapeAttribute(src)}" alt="${escapeAttribute(label)}" />`;
-}
-
-function getQuestionUsageMap() {
-  return JSON.parse(localStorage.getItem("assessment-engine-question-usage") || "{}");
 }
 
 function getAssessmentKeyFromTitle(title) {
@@ -334,4 +254,41 @@ function getAssessmentKeyFromTitle(title) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "") || "assessment";
+}
+
+function inferQuestionAssignmentType(assessmentMeta) {
+  const title = String(assessmentMeta.title || assessmentMeta.sourceDocument || "").toLowerCase();
+  if (title.includes("worksheet")) return "worksheet";
+  if (title.includes("practice")) return "practice";
+  if (title.includes("diagnostic")) return "diagnostic";
+  if (title.includes("benchmark")) return "benchmark";
+  if (title.includes("quiz")) return "quiz";
+  if (title.includes("pretest") || title.includes("pre-test")) return "pretest";
+  return "assessment";
+}
+
+function getQuestionAssignmentTypeLabel(code) {
+  const labels = {
+    assessment: "Assessment",
+    pretest: "Pre-test",
+    worksheet: "Worksheet",
+    practice: "Practice",
+    diagnostic: "Diagnostic",
+    benchmark: "Benchmark",
+    quiz: "Quiz"
+  };
+  return labels[String(code || "assessment").toLowerCase()] || "Assessment";
+}
+
+function uniqueQuestionAssignmentTypes(rows) {
+  const seen = new Map();
+  for (const row of rows) {
+    if (!seen.has(row.assignmentType)) {
+      seen.set(row.assignmentType, {
+        value: row.assignmentType,
+        label: row.assignmentTypeLabel
+      });
+    }
+  }
+  return [...seen.values()].sort((a, b) => a.label.localeCompare(b.label));
 }
