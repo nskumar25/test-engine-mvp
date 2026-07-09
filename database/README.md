@@ -91,6 +91,36 @@ npm run seed:pretests
 
 The admin assignment page reads the catalog in local mode and `/api/assessments` in API mode.
 
+## Assignment Model Migration
+
+Create the assignment type and assignment event tables with:
+
+```powershell
+cd "E:\Python\Test Engine"
+
+$env:DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DBNAME"
+npm run migrate:assignment-model
+```
+
+To run the same migration against local PostgreSQL and Neon in one command:
+
+```powershell
+cd "E:\Python\Test Engine"
+
+$env:LOCAL_DATABASE_URL="postgresql://postgres:LOCAL_PASSWORD@localhost:5432/postgres"
+$env:NEON_DATABASE_URL="postgresql://USER:PASSWORD@HOST.neon.tech/DBNAME?sslmode=require"
+
+npm run migrate:assignment-model
+```
+
+This creates or updates:
+
+- `test_engine_assignment_types`
+- `test_engine_assignment_events`
+- `test_engine_assessments.assignment_type_code`
+
+The migration is idempotent, so it is safe to run again after local or Neon refreshes.
+
 ## Migration Path
 
 1. Run `database/postgres-schema.sql` in the existing PostgreSQL database or a separate schema in the same database.

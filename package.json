@@ -11,6 +11,7 @@
     "api": "node api/postgres-api.js",
     "sync:students": "node scripts/sync-students-to-neon.js",
     "seed:pretests": "node scripts/seed-pretests-to-postgres.js",
+    "migrate:assignment-model": "node scripts/migrate-assignment-model.js",
     "verify:neon": "node scripts/verify-neon-sync.js"
   },
   "dependencies": {
