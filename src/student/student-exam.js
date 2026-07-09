@@ -103,8 +103,6 @@ function renderAssessmentWorkspace() {
               </div>
             </div>
 
-            ${state.studentNotice ? `<div class="student-notice">${escapeHtml(state.studentNotice)}</div>` : ""}
-
             <div class="question-visual-layout">
               <div class="question-text-block">
                 <h2>${escapeHtml(question.question)}</h2>

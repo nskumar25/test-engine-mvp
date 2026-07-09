@@ -2211,10 +2211,18 @@ img {
 }
 
 .question-head {
+  position: sticky;
+  top: -16px;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+  margin: -16px -22px 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #edf2ef;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
   color: #60706d;
   font-weight: 800;
   font-size: 0.95rem;
@@ -2253,7 +2261,7 @@ img {
 }
 
 .question-pane h2 {
-  margin: 10px 0 14px;
+  margin: 4px 0 12px;
   max-width: 920px;
   font-size: calc(1.6rem + var(--text-scale));
   line-height: 1.32;
@@ -2284,16 +2292,6 @@ img {
 
 .layout-side .question-image {
   height: min(42vh, 380px);
-}
-
-.student-notice {
-  margin: 0 0 10px;
-  padding: 9px 12px;
-  border: 1px solid #efd2a5;
-  border-radius: 8px;
-  background: #fff8ea;
-  color: #74511a;
-  font-size: 0.92rem;
 }
 
 .selection-read-tool {
@@ -2723,14 +2721,14 @@ img {
 }
 
 .submit-action {
-  background: #c86b2d;
+  background: #2f5d50;
   color: #ffffff;
-  border: 1px solid #c86b2d;
+  border: 1px solid #2f5d50;
 }
 
 .submit-action:hover {
-  background: #af5b22;
-  border-color: #af5b22;
+  background: #264e43;
+  border-color: #264e43;
 }
 
 .submit-slot {
@@ -2748,6 +2746,8 @@ img {
 }
 
 .locked-shell {
+  min-height: 100vh;
+  height: auto;
   display: grid;
   place-items: center;
   grid-template-columns: 1fr;
@@ -2756,10 +2756,14 @@ img {
 }
 
 .submitted-shell {
+  min-height: 100vh;
+  height: auto;
+  max-height: none;
   align-content: start;
   place-items: stretch center;
   gap: 16px;
   padding-top: 0;
+  overflow-y: auto;
 }
 
 .submitted-actionbar {
@@ -2777,6 +2781,7 @@ img {
 
 .result-panel {
   width: min(620px, calc(100vw - 40px));
+  max-height: none;
   padding: 40px;
   text-align: center;
 }

@@ -949,8 +949,8 @@ function renderSubmitDialog() {
         </div>
 
         <footer class="review-actions">
-          <button class="secondary-action" data-action="cancel-submit">No, continue</button>
-          <button class="submit-action" data-action="confirm-submit">Yes, submit</button>
+          <button class="secondary-action" data-action="cancel-submit">No</button>
+          <button class="primary-action" data-action="confirm-submit">Yes</button>
         </footer>
       </section>
     </div>
@@ -1188,9 +1188,7 @@ function bindActions() {
           ...(state.eliminated || {}),
           [question.id]: questionEliminated
         },
-        studentNotice: wasEliminated
-          ? "This option was restored and selected."
-          : ""
+        studentNotice: ""
       }, { preserveQuestionScroll: true });
     });
   });
@@ -1205,9 +1203,7 @@ function bindActions() {
       const currentlyEliminated = Boolean(questionEliminated[optionId]);
       const eliminatedCount = Object.values(questionEliminated).filter(Boolean).length;
       if (!currentlyEliminated && eliminatedCount >= Math.max(0, question.options.length - 1)) {
-        setState({
-          studentNotice: "At least one answer choice must remain available."
-        }, { preserveQuestionScroll: true });
+        setState({}, { preserveQuestionScroll: true });
         return;
       }
       const nextQuestionEliminated = {
@@ -1224,9 +1220,7 @@ function bindActions() {
           ...allEliminated,
           [question.id]: nextQuestionEliminated
         },
-        studentNotice: nextQuestionEliminated[optionId]
-          ? "Choice eliminated. This is only a scratch mark, not an answer selection."
-          : "Choice restored."
+        studentNotice: ""
       }, { preserveQuestionScroll: true });
     });
   });
@@ -1280,7 +1274,7 @@ function bindActions() {
     const nextScale = Number(state.textScale || 0) >= 4 ? 0 : Number(state.textScale || 0) + 1;
     setState({
       textScale: nextScale,
-      studentNotice: nextScale ? `Text size increased to +${nextScale}.` : "Text size reset."
+      studentNotice: ""
     }, { preserveQuestionScroll: true });
   });
 
@@ -1288,7 +1282,7 @@ function bindActions() {
     const nextScale = Number(state.textScale || 0) <= -2 ? 0 : Number(state.textScale || 0) - 1;
     setState({
       textScale: nextScale,
-      studentNotice: nextScale ? `Text size changed to ${nextScale}.` : "Text size reset."
+      studentNotice: ""
     }, { preserveQuestionScroll: true });
   });
 
@@ -1374,13 +1368,11 @@ function markVisited(patch = {}) {
 
 function readCurrentQuestionAloud() {
   if (!("speechSynthesis" in window)) {
-    setState({ studentNotice: "Read aloud is not available in this browser." }, { preserveQuestionScroll: true });
     return;
   }
   const selectedText = getSelectedAssessmentText();
   if (selectedText) {
     speakText(selectedText);
-    setState({ studentNotice: "Reading selected text aloud." }, { preserveQuestionScroll: true });
     return;
   }
   const question = questions[state.currentIndex];
@@ -1389,7 +1381,6 @@ function readCurrentQuestionAloud() {
     .map((option) => `${String(option.id || "").toUpperCase()}. ${option.label || ""}`)
     .join(". ");
   speakText(`${question.question}. ${optionText}`);
-  setState({ studentNotice: "Reading question aloud." }, { preserveQuestionScroll: true });
 }
 
 function speakText(text) {
