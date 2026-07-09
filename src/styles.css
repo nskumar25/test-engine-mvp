@@ -732,7 +732,7 @@ img {
 
 .admin-kpis {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 14px;
 }
 
@@ -1155,6 +1155,11 @@ img {
 .status-pill.expired {
   background: #fff0df;
   color: #86500c;
+}
+
+.status-pill.active {
+  background: #e9f7f1;
+  color: #176147;
 }
 
 .table-action {

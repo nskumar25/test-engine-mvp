@@ -244,6 +244,7 @@ async function startStudentAssignment(student, assignment) {
     assignmentSettings: assignment.metadata || {},
     student
   });
+  sendAssignmentActivityHeartbeat(true);
 }
 
 function renderStudentDashboardError(message) {

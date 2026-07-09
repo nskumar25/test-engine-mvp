@@ -104,6 +104,13 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "POST" && url.pathname === "/api/assignments/activity") {
+      const payload = await readJson(request);
+      const saved = await markAssignmentActivity(payload);
+      sendJson(response, 200, saved);
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/api/students") {
       const students = await listStudents({
         search: url.searchParams.get("search") || "",
@@ -307,6 +314,8 @@ async function listAssignments() {
       a.attempt_limit,
       a.status,
       a.metadata,
+      s.display_name as student_name,
+      s.email as student_email,
       ass.external_assessment_key,
       ass.title as assessment_title,
       count(distinct t.id)::int as assessment_attempt_count,
@@ -314,6 +323,8 @@ async function listAssignments() {
     from test_engine_assignments a
     join test_engine_assessments ass
       on ass.id = a.assessment_id
+    left join test_engine_registered_students s
+      on s.student_external_id = a.student_external_id
     left join test_engine_attempts t
       on (t.assessment_id = a.assessment_id or (t.assessment_id is null and t.assessment_title = ass.title))
       and t.student_external_id = a.student_external_id
@@ -331,6 +342,8 @@ async function listAssignments() {
       a.attempt_limit,
       a.status,
       a.metadata,
+      s.display_name,
+      s.email,
       ass.external_assessment_key,
       ass.title
     order by a.assigned_at desc
@@ -349,6 +362,8 @@ async function listAssignments() {
     return {
     id: row.id,
     studentId: row.student_external_id,
+    studentName: row.student_name || row.student_external_id,
+    studentEmail: row.student_email || "",
     assignedAt: row.assigned_at,
     dueAt: row.due_at,
     attemptLimit: row.attempt_limit,
@@ -663,6 +678,32 @@ async function cancelAssignments(payload) {
   }
 }
 
+async function markAssignmentActivity(payload = {}) {
+  const assignmentId = payload.assignmentId || payload.assignmentKey;
+  if (!assignmentId) return { ok: false, updated: 0 };
+  const activityAt = payload.activityAt || new Date().toISOString();
+  const activityType = payload.activityType || "active";
+  const metadata = {
+    lastActivityAt: activityAt,
+    lastActivityEvent: activityType
+  };
+  const result = await pool.query(`
+    update test_engine_assignments
+    set status = case
+          when status = 'assigned' then 'started'
+          else status
+        end,
+        metadata = metadata || $2::jsonb
+    where id = $1
+      and status <> 'cancelled'
+    returning id
+  `, [
+    assignmentId,
+    JSON.stringify(metadata)
+  ]);
+  return { ok: true, updated: result.rowCount, activityAt };
+}
+
 async function saveAttempt(attempt) {
   const client = await pool.connect();
   try {
@@ -753,7 +794,8 @@ async function saveAttempt(attempt) {
         set status = case
           when greatest(0, completed.count - coalesce(nullif(a.metadata->>'attemptBaseline', '')::int, 0)) >= a.attempt_limit then 'completed'
           else 'assigned'
-        end
+        end,
+            metadata = (a.metadata - 'lastActivityAt' - 'lastActivityEvent') || jsonb_build_object('lastSubmittedAt', now())
         from (
           select count(*)::int as count
           from test_engine_attempts

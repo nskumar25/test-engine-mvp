@@ -59,6 +59,7 @@ let zoomImageSrc = "";
 let assignmentSelectionMode = "visible";
 let assignmentSelectionFilters = {};
 let pendingAttemptSave = Promise.resolve();
+let lastAssignmentActivityPing = 0;
 
 const root = document.getElementById("root");
 
@@ -207,7 +208,21 @@ function installTimer() {
     state.remainingSeconds -= 1;
     saveState();
     updateTimerOnly();
+    sendAssignmentActivityHeartbeat();
   }, 1000);
+}
+
+function sendAssignmentActivityHeartbeat(force = false) {
+  const assignmentId = state.assignment?.id || state.assignment?.assignmentId || state.assignmentKey;
+  if (!assignmentId) return;
+  const now = Date.now();
+  if (!force && now - lastAssignmentActivityPing < 30000) return;
+  lastAssignmentActivityPing = now;
+  getDataAdapter().markAssignmentActivity?.({
+    assignmentId,
+    activityType: force ? "started" : "active",
+    activityAt: new Date(now).toISOString()
+  }).catch(() => {});
 }
 
 function getAnsweredCount() {
@@ -1707,10 +1722,15 @@ const localDataAdapter = {
       const next = assignments.map((assignment) => {
         if (String(assignment.id) !== String(assignmentId)) return assignment;
         const attemptCount = Number(assignment.attemptCount || 0) + 1;
+        const { lastActivityAt, lastActivityEvent, ...restMetadata } = assignment.metadata || {};
         return {
           ...assignment,
           attemptCount,
-          status: attemptCount >= Number(assignment.attemptLimit || 1) ? "completed" : "assigned"
+          status: attemptCount >= Number(assignment.attemptLimit || 1) ? "completed" : "assigned",
+          metadata: {
+            ...restMetadata,
+            lastSubmittedAt: new Date().toISOString()
+          }
         };
       });
       localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(next));
@@ -1883,6 +1903,29 @@ const localDataAdapter = {
     ));
     localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(next));
     return { ok: true, cancelled: assignmentIds.size };
+  },
+
+  async markAssignmentActivity(payload = {}) {
+    const assignmentId = payload.assignmentId || payload.assignmentKey;
+    if (!assignmentId) return { ok: false, updated: 0 };
+    const previous = await this.listAssignments();
+    const activityAt = payload.activityAt || new Date().toISOString();
+    let updated = 0;
+    const next = previous.map((assignment) => {
+      if (String(assignment.id) !== String(assignmentId)) return assignment;
+      updated += 1;
+      return {
+        ...assignment,
+        status: assignment.status === "assigned" ? "started" : assignment.status,
+        metadata: {
+          ...(assignment.metadata || {}),
+          lastActivityAt: activityAt,
+          lastActivityEvent: payload.activityType || "active"
+        }
+      };
+    });
+    localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(next));
+    return { ok: true, updated, activityAt };
   }
 };
 
@@ -1985,6 +2028,16 @@ const apiDataAdapter = {
       body: JSON.stringify(payload)
     });
     if (!response.ok) throw new Error("Could not unassign assessment");
+    return response.json();
+  },
+
+  async markAssignmentActivity(payload) {
+    const response = await fetch(`${API_BASE_URL}/api/assignments/activity`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error("Could not update assignment activity");
     return response.json();
   }
 };

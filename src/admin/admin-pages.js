@@ -1,7 +1,9 @@
 function renderAdminOverviewPage(context) {
+  const activeAssignments = getActiveAssignmentRows(context.assignments);
   return `
     <section class="admin-page-shell">
       <div class="admin-kpis">
+        <article><span>Taking Now</span><strong>${activeAssignments.length}</strong></article>
         <article><span>Questions</span><strong>${questions.length}</strong></article>
         <article><span>Submitted</span><strong>${context.attempts.length}</strong></article>
         <article><span>Students Tested</span><strong>${context.completedStudents}</strong></article>
@@ -36,8 +38,52 @@ function renderAdminOverviewPage(context) {
           </div>
           ${renderRecentAttempts(context.latestAttempts)}
         </article>
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <p class="eyebrow">Live Activity</p>
+              <h2>Students Taking Tests</h2>
+            </div>
+            <span class="status-pill active">${activeAssignments.length} active</span>
+          </div>
+          ${renderActiveAssignments(activeAssignments)}
+        </article>
       </div>
     </section>
+  `;
+}
+
+function getActiveAssignmentRows(assignments = []) {
+  const activeCutoff = Date.now() - 5 * 60 * 1000;
+  return (assignments || [])
+    .map((assignment) => {
+      const activityAt = assignment.metadata?.lastActivityAt;
+      return {
+        ...assignment,
+        activityTime: activityAt ? new Date(activityAt).getTime() : 0
+      };
+    })
+    .filter((assignment) => {
+      const status = String(assignment.status || "").toLowerCase();
+      return assignment.activityTime >= activeCutoff
+        && !["completed", "cancelled"].includes(status);
+    })
+    .sort((a, b) => b.activityTime - a.activityTime);
+}
+
+function renderActiveAssignments(assignments) {
+  if (!assignments.length) return `<p class="empty-review">No students are active right now.</p>`;
+  return `
+    <div class="recent-attempts active-assignment-list">
+      ${assignments.slice(0, 8).map((assignment) => {
+        const title = assignment.assessmentTitle || assignment.assessmentKey || "Assigned assessment";
+        const student = assignment.studentName || assignment.studentId || "Student";
+        return `<div>
+          <strong>${escapeHtml(student)}</strong>
+          <span>${escapeHtml(title)} / ${formatDateTime(assignment.metadata?.lastActivityAt)}</span>
+        </div>`;
+      }).join("")}
+    </div>
   `;
 }
 
